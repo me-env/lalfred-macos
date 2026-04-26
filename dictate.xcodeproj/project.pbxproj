@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3D82CA2E2F9EC65D00E7E00E /* APIKeyInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D82CA2D2F9EC65D00E7E00E /* APIKeyInput.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3D82C9E92F9EA82500E7E00E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		3D82C9DB2F9EA82400E7E00E /* dictate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = dictate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D82C9E82F9EA82500E7E00E /* dictateTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = dictateTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D82C9F22F9EA82500E7E00E /* dictateUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = dictateUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D82CA2D2F9EC65D00E7E00E /* APIKeyInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyInput.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +84,7 @@
 				3D82C9EB2F9EA82500E7E00E /* dictateTests */,
 				3D82C9F52F9EA82500E7E00E /* dictateUITests */,
 				3D82C9DC2F9EA82400E7E00E /* Products */,
+				3D82CA2D2F9EC65D00E7E00E /* APIKeyInput.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -236,6 +242,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3D82CA2E2F9EC65D00E7E00E /* APIKeyInput.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

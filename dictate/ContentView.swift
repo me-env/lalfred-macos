@@ -8,20 +8,6 @@
 import SwiftUI
 
 
-struct APIKeyInput: View {
-  @State var apiKey: String = ""
-  
-  var body: some View {
-    HStack {
-      Text("11L Key")
-      SecureField("11L Key", text: $apiKey)
-        .onSubmit {
-          print("ouii", $apiKey)
-        }
-    }
-  }
-}
-
 struct GeneralTabView: View {
   var body: some View {
     VStack {
@@ -41,13 +27,6 @@ enum Tabs {
 struct TabsView: View {
   @State var currentTab: Tabs = .home
   
-  var houseTabImage: String {
-    if currentTab == .home {
-      return "house.fill"
-    }
-    return "house"
-  }
-
   var body: some View {
     TabView(selection: $currentTab) {
       GeneralTabView()
@@ -71,7 +50,6 @@ struct TabsView: View {
 }
 
 struct ContentView: View {
-  
   var body: some View {
     TabsView()
   }
