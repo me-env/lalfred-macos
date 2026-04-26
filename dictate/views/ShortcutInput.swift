@@ -41,8 +41,6 @@ struct ShortcutInput: View {
     )
     capturedShortcut = shortcut
     Self.shortcutStore.save(shortcut)
-    print("Captured shortcut: \(shortcut)")
-    
     isCapturingKeys = false
     return .handled
   }
@@ -68,7 +66,7 @@ struct ShortcutInput: View {
       .onHover(perform: onHover)
       .background {
         RoundedRectangle(cornerRadius: innerRecCorderRadier + padding)
-          .foregroundStyle(hovered ? .black : .clear)
+          .foregroundStyle(hovered || isCapturingKeys ? .black : .clear)
       }
       .onTapGesture {
         self.recordShortcut()

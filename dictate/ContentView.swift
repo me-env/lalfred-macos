@@ -12,6 +12,7 @@ struct GeneralTabView: View {
   var body: some View {
     VStack {
       ShortcutInput().padding(.vertical)
+      PermissionsInput().padding(.vertical)
       APIKeyInput().padding(.vertical)
     }
     .padding()
