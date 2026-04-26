@@ -7,10 +7,13 @@
 
 import SwiftUI
 import AVFoundation
-import ApplicationServices
 import AppKit
 
 struct PermissionsInput: View {
+  @Environment(\.scenePhase) private var scenePhase
+
+  private let accessibilityPermissionService = AccessibilityPermissionService()
+
   @State private var microphoneGranted: Bool = false
   @State private var accessibilityGranted: Bool = false
   
@@ -48,6 +51,11 @@ struct PermissionsInput: View {
     .onAppear {
       refreshStatuses()
     }
+    .onChange(of: scenePhase) { _, newPhase in
+      if newPhase == .active {
+        refreshStatuses()
+      }
+    }
   }
   
   @ViewBuilder
@@ -70,7 +78,8 @@ struct PermissionsInput: View {
   
   private func refreshStatuses() {
     microphoneGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
-    accessibilityGranted = AXIsProcessTrusted()
+    accessibilityGranted = accessibilityPermissionService.isTrusted()
+    print("[PermissionsInput] refreshStatuses accessibilityGranted=\(accessibilityGranted)")
   }
   
   private func requestMicrophonePermission() {
@@ -96,12 +105,17 @@ struct PermissionsInput: View {
   }
   
   private func requestAccessibilityPermission() {
-    let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true] as CFDictionary
-    accessibilityGranted = AXIsProcessTrustedWithOptions(options)
-    
-    if !accessibilityGranted,
-       let settingsURL = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-      NSWorkspace.shared.open(settingsURL)
+    accessibilityGranted = accessibilityPermissionService.requestPrompt()
+    print("[PermissionsInput] requestAccessibilityPermission immediate result=\(accessibilityGranted)")
+
+    // The trust prompt and Settings grant are asynchronous, refresh shortly after.
+    Task {
+      try? await Task.sleep(for: .seconds(0.8))
+      refreshStatuses()
+
+      if !accessibilityGranted {
+        accessibilityPermissionService.openSettings()
+      }
     }
   }
 }

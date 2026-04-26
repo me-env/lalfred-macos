@@ -41,6 +41,7 @@ struct ShortcutInput: View {
     )
     capturedShortcut = shortcut
     Self.shortcutStore.save(shortcut)
+    NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
     isCapturingKeys = false
     return .handled
   }

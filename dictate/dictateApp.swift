@@ -9,9 +9,14 @@ import SwiftUI
 
 @main
 struct dictateApp: App {
+  @State private var runtimeCoordinator = AppRuntimeCoordinator()
+
   var body: some Scene {
     WindowGroup {
       ContentView()
+        .onAppear {
+          runtimeCoordinator.start()
+        }
     }
   }
 }
