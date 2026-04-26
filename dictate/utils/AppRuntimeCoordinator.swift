@@ -17,66 +17,115 @@ final class AppRuntimeCoordinator {
 
     private let indicator = IndicatorPanelController()
     private let pasteService = PasteAtCursorService()
+    private let recordingService = AudioRecordingService()
+    private let scribeClient = ScribeClient()
+
     private var hotKeyMonitor: GlobalHotKeyMonitor?
     private var state: RuntimeState = .idle
     private var lastPressDate: Date = .distantPast
     private let minimumPressInterval: TimeInterval = 0.30
 
     func start() {
-        guard hotKeyMonitor == nil else { return }
+        guard hotKeyMonitor == nil else {
+            return
+        }
 
-        print("[AppRuntimeCoordinator] Starting runtime coordinator")
         hotKeyMonitor = GlobalHotKeyMonitor { [weak self] in
             self?.handleShortcutPress()
         }
     }
 
     private func handleShortcutPress() {
-        let now = Date()
-        if now.timeIntervalSince(lastPressDate) < minimumPressInterval {
-            print("[AppRuntimeCoordinator] Ignored shortcut press due to debounce")
+        guard !isDebouncedPress() else {
             return
         }
-        lastPressDate = now
-
-        print("[AppRuntimeCoordinator] Shortcut pressed. state=\(String(describing: state))")
 
         switch state {
         case .idle:
-            state = .listening
-            indicator.show(message: "Listening…", tint: .green)
-            print("[AppRuntimeCoordinator] Indicator set to Listening")
-
+            beginListening()
         case .listening:
-            state = .processing
             Task {
-                await fakeProcessAndPasteResponse()
+                await finishListeningAndProcess()
             }
-
         case .processing:
-            print("[AppRuntimeCoordinator] Ignored shortcut press while processing")
+            return
         }
     }
 
-    private func fakeProcessAndPasteResponse() async {
-        print("[AppRuntimeCoordinator] Fake processing started")
+    private func isDebouncedPress() -> Bool {
+        let now = Date()
+        guard now.timeIntervalSince(lastPressDate) >= minimumPressInterval else {
+            return true
+        }
+
+        lastPressDate = now
+        return false
+    }
+
+    private func beginListening() {
+        do {
+            try recordingService.startRecording()
+            state = .listening
+            indicator.show(message: "Listening…", tint: .green)
+        } catch {
+            let message = errorMessage(for: error)
+            indicator.show(message: message, tint: .red, autoHideAfter: 1.8)
+        }
+    }
+
+    private func finishListeningAndProcess() async {
+        guard state == .listening else {
+            return
+        }
+
+        state = .processing
         indicator.show(message: "Processing…", tint: .orange)
 
-        try? await Task.sleep(for: .seconds(0.8))
+        do {
+            let audioFileURL = try await recordingService.stopRecording()
+            defer { removeTemporaryFileIfNeeded(at: audioFileURL) }
 
-        let responseText = "Oui"
-        print("[AppRuntimeCoordinator] Fake API response: '\(responseText)'")
-        let didPaste = pasteService.paste(responseText)
-        print("[AppRuntimeCoordinator] pasteService result: \(didPaste)")
-
-        if didPaste {
-            indicator.show(message: "Pasted: \(responseText)", tint: .blue, autoHideAfter: 1.0)
-            print("[AppRuntimeCoordinator] Indicator set to pasted success")
-        } else {
-            indicator.show(message: "Paste failed (check Accessibility)", tint: .red, autoHideAfter: 1.6)
-            print("[AppRuntimeCoordinator] Indicator set to paste failure")
+            let transcript = try await scribeClient.transcribeAudio(at: audioFileURL)
+            handleTranscriptSuccess(transcript)
+        } catch {
+            handleProcessingFailure(error)
         }
 
         state = .idle
+    }
+
+    private func handleTranscriptSuccess(_ transcript: String) {
+        let cleanedTranscript = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanedTranscript.isEmpty else {
+            indicator.show(message: "No speech recognized", tint: .red, autoHideAfter: 1.4)
+            return
+        }
+
+        let didPaste = pasteService.paste(cleanedTranscript)
+        guard didPaste else {
+            indicator.show(message: "Paste failed (check Accessibility)", tint: .red, autoHideAfter: 1.8)
+            return
+        }
+
+        indicator.show(message: "Pasted", tint: .blue, autoHideAfter: 1.0)
+    }
+
+    private func handleProcessingFailure(_ error: Error) {
+        let message = errorMessage(for: error)
+        indicator.show(message: message, tint: .red, autoHideAfter: 1.8)
+    }
+
+    private func removeTemporaryFileIfNeeded(at url: URL) {
+        try? FileManager.default.removeItem(at: url)
+    }
+
+    private func errorMessage(for error: Error) -> String {
+        if let localizedError = error as? LocalizedError,
+           let description = localizedError.errorDescription,
+           !description.isEmpty {
+            return description
+        }
+
+        return "Something went wrong"
     }
 }
