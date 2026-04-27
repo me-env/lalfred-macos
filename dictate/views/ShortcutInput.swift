@@ -16,7 +16,8 @@ struct ShortcutInput: View {
   
   @State private var capturedShortcut: Shortcut
   @State private var hovered: Bool = false
-  @FocusState private var isCapturingKeys: Bool
+  @State private var isCapturingKeys: Bool = false
+  @FocusState private var isFocused: Bool
   
   init() {
     _capturedShortcut = State(
@@ -26,6 +27,9 @@ struct ShortcutInput: View {
   
   func recordShortcut() {
     isCapturingKeys = true
+    DispatchQueue.main.async {
+      isFocused = true
+    }
   }
   
   func onKeyPress(key: KeyPress) -> KeyPress.Result {
@@ -43,18 +47,12 @@ struct ShortcutInput: View {
     Self.shortcutStore.save(shortcut)
     NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
     isCapturingKeys = false
+    isFocused = false
     return .handled
   }
   
   let innerRecCorderRadier: CGFloat = 4
   let padding: CGFloat = 4
-  
-  var sectionTitle: some View {
-    VStack(alignment: .leading) {
-      Text("Toggle Recording").font(.default)
-      Text("Starts and stops recordings").font(.caption)
-    }
-  }
   
   func onHover(isHovered: Bool) {
     print("hover \(isHovered)")
@@ -74,8 +72,8 @@ struct ShortcutInput: View {
       }
       .backgroundStyle(.clear)
       .disabled(isCapturingKeys)
-      .focusable()
-      .focused($isCapturingKeys)
+      .focusable(isCapturingKeys)
+      .focused($isFocused)
       .onKeyPress(phases: [.down], action: self.onKeyPress)
   }
   
@@ -97,10 +95,12 @@ struct ShortcutInput: View {
   }
   
   var body: some View {
-    HStack {
-      sectionTitle
-      Spacer()
-      shortcutSection
+    SectionBox("Keyboard Shortcut", caption: "Starts and stops recording") {
+      HStack {
+        Text("Toggle Recording")
+        Spacer()
+        shortcutSection
+      }
     }
   }
 }

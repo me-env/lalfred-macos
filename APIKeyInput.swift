@@ -35,26 +35,13 @@ struct APIKeyInput: View {
   }
   
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text("11L API Key")
-        .font(.headline)
-      
+    SectionBox("11L API Key", caption: "Stored securely in your macOS Keychain.") {
       SecureField("Enter your API key", text: $apiKey)
         .textFieldStyle(.roundedBorder)
         .onSubmit {
           persistAPIKey()
         }
-      
-      Text("Stored securely in your macOS Keychain.")
-        .font(.caption)
-        .foregroundStyle(.secondary)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(12)
-    .background(
-      .quaternary.opacity(0.2),
-      in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-    )
   }
 }
 

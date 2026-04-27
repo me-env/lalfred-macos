@@ -4,6 +4,8 @@
 <dict>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
+	<key>LSUIElement</key>
+	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app requires microphone access to convert your speech to text</string>
 </dict>

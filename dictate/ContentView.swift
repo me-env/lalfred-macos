@@ -11,18 +11,25 @@ import SwiftUI
 struct GeneralTabView: View {
   var body: some View {
     VStack {
-      ShortcutInput().padding(.vertical)
-      PermissionsInput().padding(.vertical)
-      APIKeyInput().padding(.vertical)
+      PreferencesInput()
+      ShortcutInput()
+      PermissionsInput()
+      APIKeyInput()
     }
+    .frame(maxWidth: 600)
     .padding()
     .textFieldStyle(.roundedBorder)
+    .onAppear {
+      DispatchQueue.main.async {
+        NSApp.keyWindow?.makeFirstResponder(nil)
+      }
+    }
   }
 }
 
 enum Tabs {
   case home
-  case models
+  case dictionary
 }
 
 struct TabsView: View {
@@ -32,20 +39,19 @@ struct TabsView: View {
     TabView(selection: $currentTab) {
       GeneralTabView()
         .tabItem {
-          Text("Home")
-          Image(systemName: currentTab == .home ? "house.fill" : "house")
+          Text("General")
+          Image(systemName: currentTab == .home ? "gearshape.fill" : "gearshape")
         }
         .tag(Tabs.home)
       
-      GeneralTabView()
+      DictionaryTabView()
         .tabItem {
-          Text("Models")
-          Image(systemName: currentTab == .models ? "book.fill" : "book")
+          Text("Dictionary")
+          Image(systemName: currentTab == .dictionary ? "book.fill" : "book")
         }
-        .tag(Tabs.models)
+        .tag(Tabs.dictionary)
     }
-
-    .tabViewStyle(.sidebarAdaptable)
+    .tabViewStyle(.tabBarOnly)
     .navigationTitle("Dictate")
   }
 }

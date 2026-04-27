@@ -18,10 +18,7 @@ struct PermissionsInput: View {
   @State private var accessibilityGranted: Bool = false
   
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text("Permissions")
-        .font(.headline)
-      
+    SectionBox("Permissions", caption: "Accessibility is required for global shortcut handling and paste into other apps.") {
       permissionRow(
         title: "Microphone",
         granted: microphoneGranted,
@@ -29,7 +26,7 @@ struct PermissionsInput: View {
       ) {
         requestMicrophonePermission()
       }
-      
+
       permissionRow(
         title: "Accessibility",
         granted: accessibilityGranted,
@@ -37,17 +34,7 @@ struct PermissionsInput: View {
       ) {
         requestAccessibilityPermission()
       }
-      
-      Text("Accessibility is required for global shortcut handling and paste into other apps.")
-        .font(.caption)
-        .foregroundStyle(.secondary)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(12)
-    .background(
-      .quaternary.opacity(0.2),
-      in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-    )
     .onAppear {
       refreshStatuses()
     }

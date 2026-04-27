@@ -10,13 +10,19 @@ import SwiftUI
 @main
 struct dictateApp: App {
   @State private var runtimeCoordinator = AppRuntimeCoordinator()
+  @AppStorage("showMenuBarExtra") private var showMenuBarExtra = true
+
+  init() {
+    runtimeCoordinator.start()
+  }
 
   var body: some Scene {
-    WindowGroup {
+    Settings {
       ContentView()
-        .onAppear {
-          runtimeCoordinator.start()
-        }
+    }
+    MenuBarExtra("ELDictate", image: "MenuBarIcon", isInserted: $showMenuBarExtra) {
+      StatusMenu()
     }
   }
+  
 }
