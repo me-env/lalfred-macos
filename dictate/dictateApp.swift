@@ -13,6 +13,7 @@ struct dictateApp: App {
   @AppStorage("showMenuBarExtra") private var showMenuBarExtra = true
 
   init() {
+    LaunchAtLoginService().synchronizeStoredPreference()
     runtimeCoordinator.start()
   }
 

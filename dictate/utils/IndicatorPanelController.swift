@@ -16,9 +16,9 @@ final class IndicatorPanelController {
     }
 
     private enum Layout {
-        static let width: CGFloat = 560
-        static let height: CGFloat = 160
-        static let topInset: CGFloat = 28
+        static let width: CGFloat = 260
+        static let height: CGFloat = 90
+        static let topInset: CGFloat = 20
     }
 
     private let panel: NSPanel
@@ -79,28 +79,36 @@ final class IndicatorPanelController {
 private struct IndicatorView: View {
     let message: String
     let tint: Color
+    @State private var isPresented = false
 
     var body: some View {
         VStack(spacing: 5) {
             RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .fill(tint)
-                .frame(width: 72, height: 8)
+                .frame(width: 56, height: 6)
             Text(message)
-                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.55)
                 .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, 36)
-        .frame(width: 220, height: 50)
+        .padding(.horizontal, 18)
+        .frame(width: 180, height: 42)
         .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(.ultraThinMaterial)
         )
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .strokeBorder(.white.opacity(0.18), lineWidth: 1)
+        }
+        .scaleEffect(isPresented ? 1 : 0.01, anchor: .top)
+        .opacity(isPresented ? 1 : 0)
+        .onAppear {
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.78)) {
+                isPresented = true
+            }
         }
     }
 }
