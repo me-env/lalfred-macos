@@ -31,6 +31,10 @@ final class AppRuntimeCoordinator {
     guard hotKeyMonitor == nil else {
       return
     }
+
+    recordingService.onAudioLevelUpdate = { [weak self] level in
+      self?.indicator.updateListeningLevel(CGFloat(level))
+    }
     
     hotKeyMonitor = GlobalHotKeyMonitor { [weak self] in
       self?.handleShortcutPress()
@@ -75,7 +79,7 @@ final class AppRuntimeCoordinator {
     recordingService.cancelRecording()
     state = .idle
     escapeHotKeyMonitor?.deactivate()
-    indicator.show(message: "Recording canceled", tint: .red, autoHideAfter: 1.2)
+    indicator.showStatus(message: "Cancel", autoHideAfter: 1.2)
   }
   
   private func beginListening() {
@@ -83,10 +87,10 @@ final class AppRuntimeCoordinator {
       try recordingService.startRecording()
       state = .listening
       escapeHotKeyMonitor?.activate()
-      indicator.show(message: "Listening…", tint: .green)
+      indicator.showListening()
     } catch {
       let message = errorMessage(for: error)
-      indicator.show(message: message, tint: .red, autoHideAfter: 1.8)
+      indicator.showStatus(message: message, autoHideAfter: 1.8)
     }
   }
   
@@ -97,7 +101,7 @@ final class AppRuntimeCoordinator {
     
     state = .processing
     escapeHotKeyMonitor?.deactivate()
-    indicator.show(message: "Processing…", tint: .orange)
+    indicator.showStatus(message: "Processing")
     
     do {
       let audioFileURL = try await recordingService.stopRecording()
@@ -115,22 +119,22 @@ final class AppRuntimeCoordinator {
   private func handleTranscriptSuccess(_ transcript: String) {
     let cleanedTranscript = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !cleanedTranscript.isEmpty else {
-      indicator.show(message: "No speech recognized", tint: .red, autoHideAfter: 1.4)
+      indicator.showStatus(message: "No speech recognized", autoHideAfter: 1.4)
       return
     }
     
     let didPaste = pasteService.paste(cleanedTranscript)
     guard didPaste else {
-      indicator.show(message: "Paste failed (check Accessibility)", tint: .red, autoHideAfter: 1.8)
+      indicator.showStatus(message: "Paste failed (check Accessibility)", autoHideAfter: 1.8)
       return
     }
     
-    indicator.show(message: "Pasted", tint: .blue, autoHideAfter: 1.0)
+    indicator.showStatus(message: "Pasted", autoHideAfter: 1.0)
   }
   
   private func handleProcessingFailure(_ error: Error) {
     let message = errorMessage(for: error)
-    indicator.show(message: message, tint: .red, autoHideAfter: 1.8)
+    indicator.showStatus(message: message, autoHideAfter: 1.8)
   }
   
   private func removeTemporaryFileIfNeeded(at url: URL) {

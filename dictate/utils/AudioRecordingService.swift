@@ -35,6 +35,9 @@ final class AudioRecordingService: NSObject {
     private var recorder: AVAudioRecorder?
     private var activeFileURL: URL?
     private var stopContinuation: CheckedContinuation<URL, Error>?
+    private var meteringTimer: Timer?
+
+    var onAudioLevelUpdate: ((Float) -> Void)?
 
     var isRecording: Bool {
         recorder?.isRecording == true
@@ -53,12 +56,15 @@ final class AudioRecordingService: NSObject {
 
         recorder = nextRecorder
         activeFileURL = fileURL
+        startMeteringUpdates()
     }
 
     func stopRecording() async throws -> URL {
         guard let recorder, recorder.isRecording else {
             throw RecordingError.notRecording
         }
+
+        stopMeteringUpdates()
 
         return try await withCheckedThrowingContinuation { continuation in
             stopContinuation = continuation
@@ -67,6 +73,7 @@ final class AudioRecordingService: NSObject {
     }
 
     func cancelRecording() {
+        stopMeteringUpdates()
         recorder?.stop()
         recorder = nil
 
@@ -110,12 +117,42 @@ final class AudioRecordingService: NSObject {
 
         let recorder = try AVAudioRecorder(url: fileURL, settings: settings)
         recorder.delegate = self
-        recorder.isMeteringEnabled = false
+        recorder.isMeteringEnabled = true
         recorder.prepareToRecord()
         return recorder
     }
 
+    private func startMeteringUpdates() {
+        stopMeteringUpdates()
+
+        meteringTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+            self?.publishAudioLevel()
+        }
+    }
+
+    private func stopMeteringUpdates() {
+        meteringTimer?.invalidate()
+        meteringTimer = nil
+    }
+
+    private func publishAudioLevel() {
+        guard let recorder, recorder.isRecording else { return }
+
+        recorder.updateMeters()
+        let averagePower = recorder.averagePower(forChannel: 0)
+        let normalizedLevel = normalizeAveragePower(averagePower)
+        onAudioLevelUpdate?(normalizedLevel)
+    }
+
+    private func normalizeAveragePower(_ averagePower: Float) -> Float {
+        let minimumDecibels: Float = -50
+        if averagePower <= minimumDecibels { return 0 }
+        if averagePower >= 0 { return 1 }
+        return (averagePower - minimumDecibels) / -minimumDecibels
+    }
+
     private func finishRecording(successfully: Bool) {
+        stopMeteringUpdates()
         guard let continuation = stopContinuation else {
             return
         }
