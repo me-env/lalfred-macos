@@ -28,15 +28,28 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		3D82C9DB2F9EA82400E7E00E /* dictate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = dictate.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D82C9DB2F9EA82400E7E00E /* ELDictate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ELDictate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D82C9E82F9EA82500E7E00E /* dictateTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = dictateTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D82C9F22F9EA82500E7E00E /* dictateUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = dictateUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D82CA2D2F9EC65D00E7E00E /* APIKeyInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyInput.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3D82CA652F9ED82400E7E00E /* Exceptions for "dictate" folder in "dictate" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3D82C9DA2F9EA82400E7E00E /* dictate */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3D82C9DD2F9EA82400E7E00E /* dictate */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3D82CA652F9ED82400E7E00E /* Exceptions for "dictate" folder in "dictate" target */,
+			);
 			path = dictate;
 			sourceTree = "<group>";
 		};
@@ -91,7 +104,7 @@
 		3D82C9DC2F9EA82400E7E00E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3D82C9DB2F9EA82400E7E00E /* dictate.app */,
+				3D82C9DB2F9EA82400E7E00E /* ELDictate.app */,
 				3D82C9E82F9EA82500E7E00E /* dictateTests.xctest */,
 				3D82C9F22F9EA82500E7E00E /* dictateUITests.xctest */,
 			);
@@ -120,7 +133,7 @@
 			packageProductDependencies = (
 			);
 			productName = dictate;
-			productReference = 3D82C9DB2F9EA82400E7E00E /* dictate.app */;
+			productReference = 3D82C9DB2F9EA82400E7E00E /* ELDictate.app */;
 			productType = "com.apple.product-type.application";
 		};
 		3D82C9E72F9EA82500E7E00E /* dictateTests */ = {
@@ -404,12 +417,23 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = S3KKH29Z65;
+				DEVELOPMENT_TEAM = SB5YL724FZ;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = dictate/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Dictate needs microphone access to capture your speech.";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -418,7 +442,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = fr.safiapp.dictate;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = ELDictate;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -437,12 +461,23 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = S3KKH29Z65;
+				DEVELOPMENT_TEAM = SB5YL724FZ;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = dictate/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Dictate needs microphone access to capture your speech.";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -451,7 +486,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = fr.safiapp.dictate;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = ELDictate;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

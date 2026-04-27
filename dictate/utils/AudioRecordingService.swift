@@ -8,7 +8,6 @@
 import Foundation
 import AVFoundation
 
-@MainActor
 final class AudioRecordingService: NSObject {
     enum RecordingError: LocalizedError {
         case microphonePermissionMissing
