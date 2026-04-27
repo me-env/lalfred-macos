@@ -114,25 +114,32 @@ private struct IndicatorView: View {
   
   @State private var scale: CGFloat = 0.01
   @State private var opacity: Double = 0
+  @State private var contentScale: CGFloat = 1
+  @State private var contentOffsetY: CGFloat = 0
+  @State private var contentBounceTask: Task<Void, Never>?
   
   var body: some View {
     VStack(spacing: 0) {
       contentView
     }
     .padding(.horizontal, 9)
-    .frame(width: 76, height: 21)
+    .frame(width: 54, height: 21)
     .background(
-      RoundedRectangle(cornerRadius: 9, style: .continuous)
+      RoundedRectangle(cornerRadius: 18, style: .continuous)
         .fill(Color.black)
     )
     .overlay {
-      RoundedRectangle(cornerRadius: 9, style: .continuous)
+      RoundedRectangle(cornerRadius: 18, style: .continuous)
         .strokeBorder(.white.opacity(0.18), lineWidth: 1)
     }
-    .scaleEffect(scale, anchor: .top)
+    .scaleEffect(scale * contentScale, anchor: .top)
+    .offset(y: contentOffsetY)
     .opacity(opacity)
     .onChange(of: viewModel.shouldAnimateAppearance) { _, shouldAnimate in
       applyAppearanceAnimation(shouldAnimate: shouldAnimate)
+    }
+    .onChange(of: contentBounceKey) { _, _ in
+      applyContentBounceAnimationIfNeeded()
     }
     .onAppear {
       applyAppearanceAnimation(shouldAnimate: viewModel.shouldAnimateAppearance)
@@ -145,27 +152,79 @@ private struct IndicatorView: View {
     case .listening(let level):
       ListeningWaveView(level: level)
     case .status(let message):
-      Text(message)
-        .font(.system(size: 9, weight: .semibold, design: .rounded))
-        .lineLimit(2)
-        .multilineTextAlignment(.center)
-        .minimumScaleFactor(0.55)
-        .foregroundStyle(.white)
-        .frame(maxWidth: .infinity)
+      if let symbolName = statusSymbolName(for: message) {
+        Image(systemName: symbolName)
+          .font(.system(size: 11, weight: .semibold))
+          .foregroundStyle(.white)
+          .symbolRenderingMode(.hierarchical)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else {
+        Text(message)
+          .font(.system(size: 9, weight: .semibold, design: .rounded))
+          .lineLimit(2)
+          .multilineTextAlignment(.center)
+          .minimumScaleFactor(0.55)
+          .foregroundStyle(.white)
+          .frame(maxWidth: .infinity)
+      }
+    }
+  }
+
+  private func statusSymbolName(for message: String) -> String? {
+    switch message.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+    case "processing":
+      return "arrow.trianglehead.2.clockwise.rotate.90"
+    case "cancel":
+      return "xmark.circle.fill"
+    case "pasted":
+      return "clipboard.fill"
+    default:
+      return nil
+    }
+  }
+
+  private var contentBounceKey: String {
+    switch viewModel.content {
+    case .listening:
+      return "listening"
+    case .status(let message):
+      return "status:\(message)"
     }
   }
 
   private func applyAppearanceAnimation(shouldAnimate: Bool) {
     if shouldAnimate {
-      scale = 0.01
+      scale = 0.84
       opacity = 0
-      withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+      withAnimation(.spring(response: 0.22, dampingFraction: 0.62, blendDuration: 0.04)) {
         scale = 1
         opacity = 1
       }
     } else {
       scale = 1
       opacity = 1
+    }
+  }
+
+  private func applyContentBounceAnimationIfNeeded() {
+    guard !viewModel.shouldAnimateAppearance else { return }
+
+    contentBounceTask?.cancel()
+    contentScale = 1
+    contentOffsetY = 0
+
+    withAnimation(.easeOut(duration: 0.08)) {
+      contentScale = 0.94
+      contentOffsetY = -1
+    }
+
+    contentBounceTask = Task { @MainActor in
+      try? await Task.sleep(for: .milliseconds(75))
+      guard !Task.isCancelled else { return }
+      withAnimation(.spring(response: 0.22, dampingFraction: 0.78, blendDuration: 0.04)) {
+        contentScale = 1
+        contentOffsetY = 0
+      }
     }
   }
 }

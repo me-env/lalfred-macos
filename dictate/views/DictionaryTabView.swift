@@ -15,53 +15,134 @@ struct DictionaryTabView: View {
         (try? JSONDecoder().decode([String].self, from: savedWordsData)) ?? []
     }
 
+    private var sanitizedInput: String {
+        newWord.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+  
+    var body: some View {
+        VStack {
+            SectionBox("Dictionary", caption: "Press Return to add. Use the trash icon to remove.") {
+                inputField
+                wordContent
+            }
+        }
+        .frame(maxWidth: 600)
+        .padding()
+        .onAppear {
+            DispatchQueue.main.async {
+                NSApp.keyWindow?.makeFirstResponder(nil)
+            }
+        }
+    }
+
+    private var inputField: some View {
+        TextField("Add a word", text: $newWord)
+            .textFieldStyle(.plain)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(.background)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(.separator.opacity(0.35), lineWidth: 1)
+            )
+            .onSubmit { addWord() }
+    }
+
+    @ViewBuilder
+    private var wordContent: some View {
+        if words.isEmpty {
+            emptyState
+        } else {
+            wordList
+        }
+    }
+
+    private var emptyState: some View {
+        ContentUnavailableView(
+            "No words yet",
+            systemImage: "text.book.closed",
+            description: Text("Add names, tools, or jargon you want to transcribe accurately.")
+        )
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+    }
+
+    private var wordList: some View {
+        ScrollView {
+            LazyVStack(spacing: 8) {
+                ForEach(words, id: \.self) { word in
+                    WordRow(word: word) {
+                        removeWord(word)
+                    }
+                }
+            }
+            .padding(.vertical, 2)
+        }
+        .frame(minHeight: 220)
+    }
+
     private func saveWords(_ words: [String]) {
         savedWordsData = (try? JSONEncoder().encode(words)) ?? Data()
     }
 
     private func addWord() {
-        let trimmed = newWord.trimmingCharacters(in: .whitespaces)
+        let trimmed = sanitizedInput
         guard !trimmed.isEmpty else { return }
+
         var current = words
+        guard !current.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) else {
+            newWord = ""
+            return
+        }
+
         current.append(trimmed)
         saveWords(current)
         newWord = ""
     }
 
-    private func deleteWords(at offsets: IndexSet) {
+    private func removeWord(_ word: String) {
         var current = words
-        current.remove(atOffsets: offsets)
+        current.removeAll(where: { $0 == word })
         saveWords(current)
     }
+}
+
+private struct WordRow: View {
+    let word: String
+    let onRemove: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                TextField("Add a word…", text: $newWord)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit { addWord() }
-                Button(action: addWord) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
-                }
-                .buttonStyle(.plain)
-                .disabled(newWord.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-            .padding()
+        HStack(spacing: 10) {
+            Text(word)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            if words.isEmpty {
-                Spacer()
-                Text("No words yet")
-                    .foregroundStyle(.secondary)
-                Spacer()
-            } else {
-                List {
-                    ForEach(words, id: \.self) { word in
-                        Text(word)
-                    }
-                    .onDelete(perform: deleteWords)
-                }
+            Button(role: .destructive, action: onRemove) {
+                Image(systemName: "trash")
+            }
+            .buttonStyle(.borderless)
+            .help("Remove \(word)")
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(.background)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(.separator.opacity(0.35), lineWidth: 1)
+        )
+        .contextMenu {
+            Button(role: .destructive, action: onRemove) {
+                Label("Remove", systemImage: "trash")
             }
         }
     }
+}
+
+#Preview {
+    DictionaryTabView()
 }
