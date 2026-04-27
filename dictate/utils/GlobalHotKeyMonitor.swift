@@ -80,7 +80,7 @@ final class GlobalHotKeyMonitor {
                 guard status == noErr,
                       receivedID.id == monitor.hotKeyID.id,
                       receivedID.signature == monitor.hotKeyID.signature else {
-                    return noErr
+                    return OSStatus(eventNotHandledErr)
                 }
 
                 Task { @MainActor in

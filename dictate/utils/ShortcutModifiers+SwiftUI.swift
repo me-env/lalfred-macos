@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 extension ShortcutModifiers {
   init(eventModifiers: SwiftUI.EventModifiers) {
@@ -24,6 +25,26 @@ extension ShortcutModifiers {
       shortcutModifiers.insert(.shift)
     }
     
+    self = shortcutModifiers
+  }
+
+  init(eventModifierFlags: NSEvent.ModifierFlags) {
+    var shortcutModifiers: ShortcutModifiers = []
+    let flags = eventModifierFlags.intersection(.deviceIndependentFlagsMask)
+
+    if flags.contains(.command) {
+      shortcutModifiers.insert(.command)
+    }
+    if flags.contains(.option) {
+      shortcutModifiers.insert(.option)
+    }
+    if flags.contains(.control) {
+      shortcutModifiers.insert(.control)
+    }
+    if flags.contains(.shift) {
+      shortcutModifiers.insert(.shift)
+    }
+
     self = shortcutModifiers
   }
 }

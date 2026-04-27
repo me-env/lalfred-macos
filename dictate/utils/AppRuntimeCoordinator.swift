@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Carbon.HIToolbox
 
 @MainActor
 final class AppRuntimeCoordinator {
@@ -21,6 +22,7 @@ final class AppRuntimeCoordinator {
   private let scribeClient = ScribeClient()
   
   private var hotKeyMonitor: GlobalHotKeyMonitor?
+  private var escapeHotKeyMonitor: EscapeHotKeyMonitor?
   private var state: RuntimeState = .idle
   private var lastPressDate: Date = .distantPast
   private let minimumPressInterval: TimeInterval = 0.30
@@ -32,6 +34,9 @@ final class AppRuntimeCoordinator {
     
     hotKeyMonitor = GlobalHotKeyMonitor { [weak self] in
       self?.handleShortcutPress()
+    }
+    escapeHotKeyMonitor = EscapeHotKeyMonitor { [weak self] in
+      self?.handleEscapePress()
     }
   }
   
@@ -61,11 +66,23 @@ final class AppRuntimeCoordinator {
     lastPressDate = now
     return false
   }
+
+  private func handleEscapePress() {
+    guard state == .listening else {
+      return
+    }
+
+    recordingService.cancelRecording()
+    state = .idle
+    escapeHotKeyMonitor?.deactivate()
+    indicator.show(message: "Recording canceled", tint: .red, autoHideAfter: 1.2)
+  }
   
   private func beginListening() {
     do {
       try recordingService.startRecording()
       state = .listening
+      escapeHotKeyMonitor?.activate()
       indicator.show(message: "Listening…", tint: .green)
     } catch {
       let message = errorMessage(for: error)
@@ -79,6 +96,7 @@ final class AppRuntimeCoordinator {
     }
     
     state = .processing
+    escapeHotKeyMonitor?.deactivate()
     indicator.show(message: "Processing…", tint: .orange)
     
     do {
@@ -127,5 +145,100 @@ final class AppRuntimeCoordinator {
     }
     
     return "Something went wrong"
+  }
+}
+
+private final class EscapeHotKeyMonitor {
+  private var hotKeyRef: EventHotKeyRef?
+  private var eventHandlerRef: EventHandlerRef?
+  private let hotKeyID = EventHotKeyID(signature: OSType(0x44494354), id: 2) // 'DICT'
+
+  private let onTrigger: @MainActor () -> Void
+
+  init(onTrigger: @escaping @MainActor () -> Void) {
+    self.onTrigger = onTrigger
+    installHandlerIfNeeded()
+  }
+
+  deinit {
+    deactivate()
+    if let eventHandlerRef {
+      RemoveEventHandler(eventHandlerRef)
+    }
+  }
+
+  func activate() {
+    guard hotKeyRef == nil else {
+      return
+    }
+
+    let status = RegisterEventHotKey(
+      UInt32(kVK_Escape),
+      0,
+      hotKeyID,
+      GetApplicationEventTarget(),
+      0,
+      &hotKeyRef
+    )
+
+    if status != noErr {
+      hotKeyRef = nil
+      print("Failed to register Escape hot key: \(status)")
+    }
+  }
+
+  func deactivate() {
+    if let hotKeyRef {
+      UnregisterEventHotKey(hotKeyRef)
+      self.hotKeyRef = nil
+    }
+  }
+
+  private func installHandlerIfNeeded() {
+    guard eventHandlerRef == nil else { return }
+
+    var eventSpec = EventTypeSpec(
+      eventClass: OSType(kEventClassKeyboard),
+      eventKind: UInt32(kEventHotKeyPressed)
+    )
+
+    let selfPointer = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+    InstallEventHandler(
+      GetApplicationEventTarget(),
+      { _, event, userData in
+        guard let event,
+              let userData else {
+          return noErr
+        }
+
+        let monitor = Unmanaged<EscapeHotKeyMonitor>.fromOpaque(userData).takeUnretainedValue()
+
+        var receivedID = EventHotKeyID()
+        let status = GetEventParameter(
+          event,
+          EventParamName(kEventParamDirectObject),
+          EventParamType(typeEventHotKeyID),
+          nil,
+          MemoryLayout<EventHotKeyID>.size,
+          nil,
+          &receivedID
+        )
+
+        guard status == noErr,
+              receivedID.id == monitor.hotKeyID.id,
+              receivedID.signature == monitor.hotKeyID.signature else {
+          return OSStatus(eventNotHandledErr)
+        }
+
+        Task { @MainActor in
+          monitor.onTrigger()
+        }
+        return noErr
+      },
+      1,
+      &eventSpec,
+      selfPointer,
+      &eventHandlerRef
+    )
   }
 }

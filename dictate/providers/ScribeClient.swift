@@ -31,15 +31,18 @@ struct ScribeClient {
   private let apiKeyStore: APIKeyDefaultsStore
   private let session: URLSession
   private let endpoint: URL
+  private let userDefaults: UserDefaults
   
   init(
     apiKeyStore: APIKeyDefaultsStore = APIKeyDefaultsStore(key: "apiKey.11l"),
     session: URLSession = .shared,
-    endpoint: URL = URL(string: "https://api.elevenlabs.io/v1/speech-to-text")!
+    endpoint: URL = URL(string: "https://api.elevenlabs.io/v1/speech-to-text")!,
+    userDefaults: UserDefaults = .standard
   ) {
     self.apiKeyStore = apiKeyStore
     self.session = session
     self.endpoint = endpoint
+    self.userDefaults = userDefaults
   }
   
   func transcribeAudio(at fileURL: URL) async throws -> String {
@@ -108,7 +111,12 @@ struct ScribeClient {
     let model = "scribe_v2"
     
     appendField("model_id", value: model, boundary: boundary, lineBreak: lineBreak, body: &body)
-    print("Using model \(model)")
+    appendField("no_verbatim", value: "true", boundary: boundary, lineBreak: lineBreak, body: &body)
+    
+    let keyterms = loadKeyterms()
+    keyterms.forEach { keyterm in
+      appendField("keyterms", value: keyterm, boundary: boundary, lineBreak: lineBreak, body: &body)
+    }
     
     let filename = fileURL.lastPathComponent
     let mimeType = mimeType(for: fileURL.pathExtension)
@@ -147,6 +155,29 @@ struct ScribeClient {
     default:
       return "application/octet-stream"
     }
+  }
+  
+  private func loadKeyterms() -> [String] {
+    guard let data = userDefaults.data(forKey: "savedWords"),
+          let rawWords = try? JSONDecoder().decode([String].self, from: data) else {
+      return []
+    }
+    
+    var seen = Set<String>()
+    return rawWords
+      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+      .filter { !$0.isEmpty }
+      .filter { $0.count <= 50 }
+      .filter {
+        let normalized = $0.lowercased()
+        if seen.contains(normalized) {
+          return false
+        }
+        seen.insert(normalized)
+        return true
+      }
+      .prefix(1000)
+      .map { $0 }
   }
 }
 
