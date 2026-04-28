@@ -48,16 +48,19 @@ struct APIKeyDefaultsStore {
     guard let data = apiKey.data(using: .utf8) else {
       return
     }
-    
+
     let query = baseQuery()
-    SecItemDelete(query as CFDictionary)
-    
-    var item = query
-    item[kSecValueData as String] = data
-    item[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
-    SecItemAdd(item as CFDictionary, nil)
-    
-    // Ensure old plaintext storage is removed.
+    let attributes: [String: Any] = [kSecValueData as String: data]
+
+    let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+
+    if updateStatus == errSecItemNotFound {
+      var item = query
+      item[kSecValueData as String] = data
+      item[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
+      SecItemAdd(item as CFDictionary, nil)
+    }
+
     legacyStore.remove()
   }
   
