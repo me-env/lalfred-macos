@@ -18,7 +18,7 @@ struct PermissionsInput: View {
   @State private var accessibilityGranted: Bool = false
   
   var body: some View {
-    SectionBox("Permissions", caption: "Accessibility is required for global shortcut handling and paste into other apps.") {
+    SectionBox("Permissions", caption: "Accessibility is required to paste text from transcription into other apps.") {
       permissionRow(
         title: "Microphone",
         granted: microphoneGranted,
