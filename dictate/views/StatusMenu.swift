@@ -3,12 +3,22 @@ import AppKit
 
 struct StatusMenu: View {
   @Environment(\.openSettings) private var openSettings
+  @State private var localKeyMonitor: Any?
+  @State private var lastOpenSettingsDate: Date = .distantPast
   
   var body: some View {
-    settingsButton
-    Divider()
-    versionLabel
-    quitButton
+    Group {
+      settingsButton
+      Divider()
+      versionLabel
+      quitButton
+    }
+    .onAppear {
+      installLocalSettingsShortcutMonitorIfNeeded()
+    }
+    .onDisappear {
+      removeLocalSettingsShortcutMonitor()
+    }
   }
   
   private var settingsButton: some View {
@@ -22,6 +32,12 @@ struct StatusMenu: View {
 
   @MainActor
   private func openAppSettings() {
+    let now = Date()
+    guard now.timeIntervalSince(lastOpenSettingsDate) > 0.25 else {
+      return
+    }
+    lastOpenSettingsDate = now
+
     openSettings()
 
     // In a MenuBarExtra key-equivalent path, the menu can still own focus
@@ -30,6 +46,29 @@ struct StatusMenu: View {
       NSApp.activate()
       NSRunningApplication.current.activate(options: [.activateAllWindows])
     }
+  }
+
+  private func installLocalSettingsShortcutMonitorIfNeeded() {
+    guard localKeyMonitor == nil else { return }
+
+    localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+      if isOpenSettingsShortcutEvent(event) {
+        openAppSettings()
+        return nil
+      }
+      return event
+    }
+  }
+
+  private func removeLocalSettingsShortcutMonitor() {
+    guard let localKeyMonitor else { return }
+    NSEvent.removeMonitor(localKeyMonitor)
+    self.localKeyMonitor = nil
+  }
+
+  private func isOpenSettingsShortcutEvent(_ event: NSEvent) -> Bool {
+    let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+    return modifiers == [.command] && event.charactersIgnoringModifiers == ","
   }
   
   private var quitButton: some View {
