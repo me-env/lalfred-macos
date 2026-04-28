@@ -12,12 +12,6 @@ struct StatusMenu: View {
       versionLabel
       quitButton
     }
-    .onAppear {
-      installLocalSettingsShortcutMonitorIfNeeded()
-    }
-    .onDisappear {
-      removeLocalSettingsShortcutMonitor()
-    }
   }
   
   private var settingsButton: some View {
@@ -31,33 +25,10 @@ struct StatusMenu: View {
 
   @MainActor
   private func openAppSettings() {
+    NSApp.activate(ignoringOtherApps: true)
     openSettings()
-    NSApp.activate()
   }
 
-  private func installLocalSettingsShortcutMonitorIfNeeded() {
-    guard localKeyMonitor == nil else { return }
-
-    localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-      if isOpenSettingsShortcutEvent(event) {
-        openAppSettings()
-        return nil
-      }
-      return event
-    }
-  }
-
-  private func removeLocalSettingsShortcutMonitor() {
-    guard let localKeyMonitor else { return }
-    NSEvent.removeMonitor(localKeyMonitor)
-    self.localKeyMonitor = nil
-  }
-
-  private func isOpenSettingsShortcutEvent(_ event: NSEvent) -> Bool {
-    let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-    return modifiers == [.command] && event.charactersIgnoringModifiers == ","
-  }
-  
   private var quitButton: some View {
     Button {
       NSApplication.shared.terminate(nil)
