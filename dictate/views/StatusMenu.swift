@@ -4,7 +4,6 @@ import AppKit
 struct StatusMenu: View {
   @Environment(\.openSettings) private var openSettings
   @State private var localKeyMonitor: Any?
-  @State private var lastOpenSettingsDate: Date = .distantPast
   
   var body: some View {
     Group {
@@ -32,20 +31,8 @@ struct StatusMenu: View {
 
   @MainActor
   private func openAppSettings() {
-    let now = Date()
-    guard now.timeIntervalSince(lastOpenSettingsDate) > 0.25 else {
-      return
-    }
-    lastOpenSettingsDate = now
-
     openSettings()
-
-    // In a MenuBarExtra key-equivalent path, the menu can still own focus
-    // during this runloop. Defer activation to reliably foreground settings.
-    DispatchQueue.main.async {
-      NSApp.activate()
-      NSRunningApplication.current.activate(options: [.activateAllWindows])
-    }
+    NSApp.activate()
   }
 
   private func installLocalSettingsShortcutMonitorIfNeeded() {
