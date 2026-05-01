@@ -102,8 +102,9 @@ final class AppRuntimeCoordinator {
     state = .processing
     escapeHotKeyMonitor?.deactivate()
     indicator.showStatus(message: "Processing")
-    
+
     do {
+      try await Task.sleep(for: .milliseconds(500))
       let audioFileURL = try await recordingService.stopRecording()
       defer { removeTemporaryFileIfNeeded(at: audioFileURL) }
       

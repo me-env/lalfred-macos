@@ -9,7 +9,6 @@ import SwiftUI
 
 struct PreferencesInput: View {
   @AppStorage("launchAtLogin") private var launchAtLogin = false
-  @AppStorage("autoCheckForUpdates") private var autoCheckForUpdates = false
   @State private var launchAtLoginErrorMessage: String?
   private let launchAtLoginService = LaunchAtLoginService()
   
@@ -21,7 +20,6 @@ struct PreferencesInput: View {
           updateLaunchAtLogin(newValue)
         }
       ))
-      Toggle("Automatically check for updates", isOn: $autoCheckForUpdates)
     }
     .onAppear {
       launchAtLogin = launchAtLoginService.isEnabledInSystem()
