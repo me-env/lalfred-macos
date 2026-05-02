@@ -9,11 +9,30 @@ import Testing
 @testable import dictate
 
 struct dictateTests {
-
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
-        // Swift Testing Documentation
-        // https://developer.apple.com/documentation/testing
+    @Test func stateMachineTransitionsFromIdleToListening() {
+        var machine = DictationSessionStateMachine()
+        #expect(machine.transitionToListening())
+        #expect(machine.state == .listening)
     }
 
+    @Test func stateMachineTransitionsFromListeningToProcessing() {
+        var machine = DictationSessionStateMachine()
+        _ = machine.transitionToListening()
+        #expect(machine.transitionToProcessing())
+        #expect(machine.state == .processing)
+    }
+
+    @Test func stateMachineRejectsInvalidTransitionToProcessingFromIdle() {
+        var machine = DictationSessionStateMachine()
+        #expect(machine.transitionToProcessing() == false)
+        #expect(machine.state == .idle)
+    }
+
+    @Test func stateMachineCanShowModeSwitcherOnlyWhileListening() {
+        var machine = DictationSessionStateMachine()
+        #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: false) == false)
+        _ = machine.transitionToListening()
+        #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: false))
+        #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: true) == false)
+    }
 }

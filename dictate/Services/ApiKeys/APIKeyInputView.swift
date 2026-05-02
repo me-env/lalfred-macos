@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct APIKeyInput: View {
-  private static let apiKeyStore = APIKeyDefaultsStore(key: "apiKey.11l")
+struct APIKeyInputView: View {
+  private static let apiKeyStore = APIKeyDefaultsStore(key: AppDefaultsKey.apiKeyElevenLabs)
 
   @State private var apiKey: String
 
@@ -41,6 +41,6 @@ struct APIKeyInput: View {
 }
 
 #Preview {
-  APIKeyInput()
+  APIKeyInputView()
     .padding()
 }

@@ -26,7 +26,7 @@ struct LaunchAtLoginService {
   
   func synchronizeStoredPreference(
     defaults: UserDefaults = .standard,
-    key: String = "launchAtLogin"
+    key: String = AppDefaultsKey.launchAtLogin
   ) {
     defaults.set(isEnabledInSystem(), forKey: key)
   }

@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		3D82CA2E2F9EC65D00E7E00E /* APIKeyInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D82CA2D2F9EC65D00E7E00E /* APIKeyInput.swift */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		3D82C9E92F9EA82500E7E00E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -31,7 +27,6 @@
 		3D82C9DB2F9EA82400E7E00E /* ELDictate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ELDictate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D82C9E82F9EA82500E7E00E /* dictateTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = dictateTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D82C9F22F9EA82500E7E00E /* dictateUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = dictateUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		3D82CA2D2F9EC65D00E7E00E /* APIKeyInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyInput.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -97,7 +92,6 @@
 				3D82C9EB2F9EA82500E7E00E /* dictateTests */,
 				3D82C9F52F9EA82500E7E00E /* dictateUITests */,
 				3D82C9DC2F9EA82400E7E00E /* Products */,
-				3D82CA2D2F9EC65D00E7E00E /* APIKeyInput.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -255,7 +249,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3D82CA2E2F9EC65D00E7E00E /* APIKeyInput.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -416,7 +409,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = SB5YL724FZ;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -434,15 +427,18 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = dictate/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "L'Alfred";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Dictate needs microphone access to capture your speech.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app requires microphone access to convert your speech to text";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = fr.safiapp.dictate;
+				MARKETING_VERSION = 1.11;
+				PRODUCT_BUNDLE_IDENTIFIER = fr.lalfred.app;
 				PRODUCT_NAME = ELDictate;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -461,7 +457,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = SB5YL724FZ;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -479,15 +475,18 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = dictate/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "L'Alfred";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Dictate needs microphone access to capture your speech.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app requires microphone access to convert your speech to text";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = fr.safiapp.dictate;
+				MARKETING_VERSION = 1.11;
+				PRODUCT_BUNDLE_IDENTIFIER = fr.lalfred.app;
 				PRODUCT_NAME = ELDictate;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

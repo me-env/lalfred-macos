@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PreferencesInput: View {
-  @AppStorage("launchAtLogin") private var launchAtLogin = false
+  @AppStorage(AppDefaultsKey.launchAtLogin) private var launchAtLogin = false
   @State private var launchAtLoginErrorMessage: String?
   private let launchAtLoginService = LaunchAtLoginService()
   

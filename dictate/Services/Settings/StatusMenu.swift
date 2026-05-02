@@ -3,7 +3,6 @@ import AppKit
 
 struct StatusMenu: View {
   @Environment(\.openSettings) private var openSettings
-  @State private var localKeyMonitor: Any?
   
   var body: some View {
     Group {

@@ -32,33 +32,43 @@ private final class LocalKeyDownMonitor {
 }
 
 struct ShortcutInput: View {
-  private static let fallbackShortcut = Shortcut(
-    keyCode: KeyCode.from(character: " ") ?? UInt16(49),
-    modifiers: [.control, .option]
-  )
-  private static let shortcutStore = ShortcutDefaultsStore(key: "shortcut.toggleRecording")
-  
-  @State private var capturedShortcut: Shortcut
+  let label: String
+  let storeKey: String
+  @Binding var activeShortcutEditorID: String?
+  private let shortcutStore: ShortcutDefaultsStore
+
+  @State private var capturedShortcut: Shortcut?
   @State private var hovered: Bool = false
   @State private var isCapturingKeys: Bool = false
   @State private var recordingPulse: Bool = false
   @State private var keyDownMonitor = LocalKeyDownMonitor()
-  
-  init() {
+
+  init(
+    label: String,
+    storeKey: String,
+    fallbackShortcut: Shortcut,
+    activeShortcutEditorID: Binding<String?>
+  ) {
+    self.label = label
+    self.storeKey = storeKey
+    _activeShortcutEditorID = activeShortcutEditorID
+    let store = ShortcutDefaultsStore(key: storeKey)
+    self.shortcutStore = store
+    store.ensureDefault(fallbackShortcut)
     _capturedShortcut = State(
-      initialValue: Self.shortcutStore.load() ?? Self.fallbackShortcut
+      initialValue: store.load()
     )
   }
   
   func recordShortcut() {
-    isCapturingKeys = true
+    activeShortcutEditorID = storeKey
   }
   
   func handleKeyDown(_ event: NSEvent) -> Bool {
     guard isCapturingKeys else { return false }
 
     if event.keyCode == UInt16(kVK_Escape) {
-      isCapturingKeys = false
+      activeShortcutEditorID = nil
       return true
     }
 
@@ -71,10 +81,25 @@ struct ShortcutInput: View {
       modifiers: ShortcutModifiers(eventModifierFlags: event.modifierFlags)
     )
     capturedShortcut = shortcut
-    Self.shortcutStore.save(shortcut)
+    shortcutStore.save(shortcut)
     NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
-    isCapturingKeys = false
+    activeShortcutEditorID = nil
     return true
+  }
+
+  func clearShortcut() {
+    activeShortcutEditorID = nil
+    capturedShortcut = nil
+    shortcutStore.remove()
+    NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
+  }
+
+  func publishShortcutCaptureState(_ isCapturing: Bool) {
+    NotificationCenter.default.post(
+      name: .shortcutCaptureStateDidChange,
+      object: nil,
+      userInfo: [ShortcutNotificationUserInfoKey.isCapturing: isCapturing]
+    )
   }
   
   let innerRecCorderRadier: CGFloat = 4
@@ -140,10 +165,34 @@ struct ShortcutInput: View {
   
   var shortcutTokens: some View {
     HStack(spacing: 3) {
-      ForEach(capturedShortcut.toLabels(), id: \.self) { token in
-        shortcutToken(token)
+      if let capturedShortcut {
+        ForEach(capturedShortcut.toLabels(), id: \.self) { token in
+          shortcutToken(token)
+        }
+      } else {
+        Text("Not set")
+          .font(.system(size: 11, weight: .medium, design: .rounded))
+          .foregroundStyle(.secondary)
       }
     }
+  }
+
+  var clearButton: some View {
+    Button {
+      clearShortcut()
+    } label: {
+      Image(systemName: "xmark")
+        .font(.system(size: 10, weight: .semibold))
+        .foregroundStyle(.secondary)
+        .frame(width: 18, height: 18)
+        .background(
+          RoundedRectangle(cornerRadius: 4)
+            .fill(Color.secondary.opacity(0.14))
+        )
+    }
+    .buttonStyle(.plain)
+    .disabled(capturedShortcut == nil)
+    .opacity(capturedShortcut == nil ? 0.45 : 1.0)
   }
   
   
@@ -159,14 +208,14 @@ struct ShortcutInput: View {
   }
   
   var body: some View {
-    SectionBox("Keyboard Shortcut", caption: "Starts and stops recording") {
-      HStack {
-        Text("Toggle Recording")
-        Spacer()
-        shortcutSection
-      }
+    HStack {
+      Text(label)
+      Spacer()
+      shortcutSection
+      clearButton
     }
     .onChange(of: isCapturingKeys) { _, isCapturing in
+      publishShortcutCaptureState(isCapturing)
       if isCapturing {
         keyDownMonitor.start { event in
           handleKeyDown(event)
@@ -175,7 +224,22 @@ struct ShortcutInput: View {
         keyDownMonitor.stop()
       }
     }
+    .onChange(of: activeShortcutEditorID) { _, activeEditorID in
+      let shouldCapture = activeEditorID == storeKey
+      if isCapturingKeys != shouldCapture {
+        isCapturingKeys = shouldCapture
+      }
+    }
+    .onAppear {
+      isCapturingKeys = activeShortcutEditorID == storeKey
+      if isCapturingKeys {
+        publishShortcutCaptureState(true)
+      }
+    }
     .onDisappear {
+      if isCapturingKeys {
+        publishShortcutCaptureState(false)
+      }
       keyDownMonitor.stop()
     }
   }
@@ -197,6 +261,14 @@ private extension ShortcutInput {
 }
 
 #Preview {
-  ShortcutInput()
-    .padding()
+  ShortcutInput(
+    label: "Toggle Recording",
+    storeKey: AppDefaultsKey.shortcutToggleRecording,
+    fallbackShortcut: Shortcut(
+      keyCode: KeyCode.from(character: " ") ?? 49,
+      modifiers: [.control, .option]
+    ),
+    activeShortcutEditorID: .constant(nil)
+  )
+  .padding()
 }

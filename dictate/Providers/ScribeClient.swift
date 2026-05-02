@@ -34,7 +34,7 @@ struct ScribeClient {
   private let userDefaults: UserDefaults
   
   init(
-    apiKeyStore: APIKeyDefaultsStore = APIKeyDefaultsStore(key: "apiKey.11l"),
+    apiKeyStore: APIKeyDefaultsStore = APIKeyDefaultsStore(key: AppDefaultsKey.apiKeyElevenLabs),
     session: URLSession = .shared,
     endpoint: URL = URL(string: "https://api.elevenlabs.io/v1/speech-to-text")!,
     userDefaults: UserDefaults = .standard
@@ -158,7 +158,7 @@ struct ScribeClient {
   }
   
   private func loadKeyterms() -> [String] {
-    guard let data = userDefaults.data(forKey: "savedWords"),
+    guard let data = userDefaults.data(forKey: AppDefaultsKey.savedWords),
           let rawWords = try? JSONDecoder().decode([String].self, from: data) else {
       return []
     }
