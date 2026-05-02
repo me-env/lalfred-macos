@@ -2,6 +2,7 @@ import Foundation
 
 enum AppDefaultsKey {
     static let apiKeyElevenLabs = "apiKey.11l"
+    static let apiKeyOpenAI = "apiKey.openai"
     static let authToken = "auth.token"
     static let launchAtLogin = "launchAtLogin"
     static let modeState = "savedModeState"

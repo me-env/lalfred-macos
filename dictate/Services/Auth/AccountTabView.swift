@@ -7,11 +7,15 @@ struct AccountTabView: View {
   @AppStorage(AppDefaultsKey.accountFirstName) private var accountFirstName = ""
   @AppStorage(AppDefaultsKey.accountLastName) private var accountLastName = ""
   @AppStorage(AppDefaultsKey.accountCredits) private var accountCredits = -1
-  
+
   @State private var isLoadingAuthURL = false
   @State private var isLoadingAccountDetails = false
   @State private var authErrorMessage = ""
   @State private var accountDetailsErrorMessage = ""
+
+  @State private var configuredKeySuffixes: [APIKeyProvider: String] = [:]
+  @State private var editingProvider: APIKeyProvider?
+  @State private var pendingAPIKey = ""
 
   init(
     initialIsLoadingAuthURL: Bool = false,
@@ -20,7 +24,7 @@ struct AccountTabView: View {
     _isLoadingAuthURL = State(initialValue: initialIsLoadingAuthURL)
     _authErrorMessage = State(initialValue: initialAuthErrorMessage)
   }
-  
+
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       if isSignedIn {
@@ -28,33 +32,51 @@ struct AccountTabView: View {
       } else {
         loggedOutCard
       }
+
+      bringYourOwnKeySection
     }
     .padding()
     .task(id: isSignedIn) {
       await handleAuthStateChange()
+      refreshAPIKeyStatuses()
+    }
+    .onAppear {
+      refreshAPIKeyStatuses()
+    }
+    .sheet(item: $editingProvider) { provider in
+      APIKeyEditorSheet(
+        providerName: provider.displayName,
+        apiKey: $pendingAPIKey,
+        onCancel: {
+          editingProvider = nil
+          pendingAPIKey = ""
+        },
+        onSave: {
+          saveAPIKey(for: provider)
+        }
+      )
     }
   }
-  
+
   private var tabBackground: some View {
     RoundedRectangle(cornerRadius: 12, style: .continuous)
       .fill(Color(nsColor: .controlBackgroundColor))
       .stroke(Color.primary.opacity(0.08), lineWidth: 1)
   }
 
-  
   private var loggedOutCard: some View {
     HStack {
       VStack(alignment: .leading, spacing: 14) {
         Text("Sign in to your account")
           .font(.title3.weight(.semibold))
-        
+
         Text("Logging in lets you purchase credits that this app uses for speech-to-text transcription and LLM processing.")
           .font(.subheadline)
           .foregroundStyle(.secondary)
-        
+
         Link("More details: lalfred.ai/#pricing", destination: URL(string: "https://lalfred.ai/#pricing")!)
           .font(.subheadline)
-        
+
         Button(isLoadingAuthURL ? "Opening Google..." : "Continue with Google") {
           Task {
             await startGoogleOAuth()
@@ -62,7 +84,7 @@ struct AccountTabView: View {
         }
         .buttonStyle(.borderedProminent)
         .disabled(isLoadingAuthURL)
-        
+
         if !authErrorMessage.isEmpty {
           Divider()
           Text(authErrorMessage)
@@ -137,11 +159,62 @@ struct AccountTabView: View {
     .padding()
     .background(tabBackground)
   }
-  
+
+  private var bringYourOwnKeySection: some View {
+    SectionBox("Bring your own key", caption: "Stored securely in your macOS Keychain.") {
+      VStack(spacing: 0) {
+        ForEach(Array(APIKeyProvider.allCases.enumerated()), id: \.element.id) { index, provider in
+          keyProviderRow(provider)
+
+          if index < APIKeyProvider.allCases.count - 1 {
+            Divider()
+              .padding(.vertical, 8)
+          }
+        }
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func keyProviderRow(_ provider: APIKeyProvider) -> some View {
+    let keySuffix = configuredKeySuffixes[provider]
+    let hasKey = keySuffix != nil
+
+    HStack(spacing: 12) {
+      Image(systemName: hasKey ? "checkmark.circle.fill" : "xmark.circle.fill")
+        .foregroundStyle(hasKey ? .green : .secondary)
+        .frame(width: 18)
+
+      VStack(alignment: .leading, spacing: 2) {
+        Text(provider.displayName)
+          .font(.subheadline.weight(.semibold))
+
+        Text(hasKey ? "Key set (•••• \(keySuffix!))" : "No key configured")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+
+      Spacer()
+
+      Button(hasKey ? "Update key" : "Set key") {
+        beginEditing(provider)
+      }
+      .buttonStyle(.borderedProminent)
+
+      if hasKey {
+        Button("Delete", role: .destructive) {
+          deleteKey(for: provider)
+        }
+        .buttonStyle(.bordered)
+      }
+    }
+  }
+
   private var accountDisplayName: String {
     let first = trimmedAccountFirstName
     let last = trimmedAccountLastName
-    return [first, last].filter { !$0.isEmpty }.joined(separator: " ")
+    let fullName = [first, last].filter { !$0.isEmpty }.joined(separator: " ")
+    return fullName.isEmpty ? "Account" : fullName
   }
 
   private var trimmedAccountFirstName: String {
@@ -157,7 +230,7 @@ struct AccountTabView: View {
   }
 
   private var isLoadingAccountName: Bool {
-    isLoadingAccountDetails && accountDisplayName.isEmpty
+    isLoadingAccountDetails && accountDisplayName == "Account"
   }
 
   private var isLoadingAccountEmail: Bool {
@@ -183,7 +256,7 @@ struct AccountTabView: View {
   private var formattedCredits: String {
     max(0, accountCredits).formatted(.number.grouping(.automatic))
   }
-  
+
   private func startGoogleOAuth() async {
     isLoadingAuthURL = true
     authErrorMessage = ""
@@ -238,7 +311,52 @@ struct AccountTabView: View {
       }
     }
   }
-  
+
+  private func refreshAPIKeyStatuses() {
+    var suffixes: [APIKeyProvider: String] = [:]
+
+    for provider in APIKeyProvider.allCases {
+      guard let key = apiKeyStore(for: provider).load() else {
+        continue
+      }
+
+      let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard !trimmed.isEmpty else {
+        continue
+      }
+
+      suffixes[provider] = String(trimmed.suffix(4))
+    }
+
+    configuredKeySuffixes = suffixes
+  }
+
+  private func beginEditing(_ provider: APIKeyProvider) {
+    pendingAPIKey = apiKeyStore(for: provider).load() ?? ""
+    editingProvider = provider
+  }
+
+  private func saveAPIKey(for provider: APIKeyProvider) {
+    let trimmed = pendingAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else {
+      return
+    }
+
+    apiKeyStore(for: provider).save(trimmed)
+    configuredKeySuffixes[provider] = String(trimmed.suffix(4))
+    editingProvider = nil
+    pendingAPIKey = ""
+  }
+
+  private func deleteKey(for provider: APIKeyProvider) {
+    apiKeyStore(for: provider).remove()
+    configuredKeySuffixes[provider] = nil
+  }
+
+  private func apiKeyStore(for provider: APIKeyProvider) -> APIKeyDefaultsStore {
+    APIKeyDefaultsStore(key: provider.defaultsKey)
+  }
+
   private var isRunningInPreview: Bool {
     ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
   }
@@ -248,6 +366,72 @@ struct AccountTabView: View {
     authErrorMessage = ""
     accountDetailsErrorMessage = ""
     isLoadingAccountDetails = false
+  }
+}
+
+private enum APIKeyProvider: String, CaseIterable, Identifiable {
+  case elevenLabs
+  case openAI
+
+  var id: String { rawValue }
+
+  var displayName: String {
+    switch self {
+    case .elevenLabs:
+      return "ElevenLabs"
+    case .openAI:
+      return "OpenAI"
+    }
+  }
+
+  var defaultsKey: String {
+    switch self {
+    case .elevenLabs:
+      return AppDefaultsKey.apiKeyElevenLabs
+    case .openAI:
+      return AppDefaultsKey.apiKeyOpenAI
+    }
+  }
+}
+
+private struct APIKeyEditorSheet: View {
+  let providerName: String
+  @Binding var apiKey: String
+  let onCancel: () -> Void
+  let onSave: () -> Void
+
+  private var trimmedKey: String {
+    apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 14) {
+      Text("Set \(providerName) API key")
+        .font(.headline)
+
+      Text("Paste your key below, then confirm.")
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+
+      SecureField("Enter API key", text: $apiKey)
+        .textFieldStyle(.roundedBorder)
+
+      HStack {
+        Spacer()
+
+        Button("Cancel", role: .cancel) {
+          onCancel()
+        }
+
+        Button("OK") {
+          onSave()
+        }
+        .keyboardShortcut(.defaultAction)
+        .disabled(trimmedKey.isEmpty)
+      }
+    }
+    .padding(20)
+    .frame(width: 420)
   }
 }
 

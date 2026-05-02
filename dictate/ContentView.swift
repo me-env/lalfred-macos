@@ -48,7 +48,6 @@ struct GeneralTabView: View {
         )
       }
       PermissionsInput()
-      APIKeyInputView()
     }
     .padding()
     .textFieldStyle(.roundedBorder)
