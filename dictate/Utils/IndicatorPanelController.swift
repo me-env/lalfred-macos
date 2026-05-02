@@ -2,11 +2,6 @@ import SwiftUI
 import AppKit
 import Observation
 
-struct ModeSuggestion: Identifiable, Hashable, Codable {
-    let id: String
-    let title: String
-    let detail: String
-}
 
 @MainActor
 final class IndicatorPanelController {
@@ -259,7 +254,7 @@ final class IndicatorPanelController {
 
     private func statusSize(for message: String) -> CGSize {
         let normalized = message.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if normalized == "processing" || normalized == "cancel" || normalized == "pasted" {
+        if normalized == "processing" || normalized == "cancel" || normalized == "pasted" || normalized == "nospeech" {
             return CGSize(width: Layout.compactBubbleWidth, height: Layout.compactBubbleHeight)
         }
         let textSize = measuredTextSize(for: message)
@@ -295,3 +290,4 @@ final class IndicatorPanelController {
         previouslyFrontmostApplication = nil
     }
 }
+

@@ -8,11 +8,14 @@
 import SwiftUI
 
 struct DictionaryTabView: View {
-  @AppStorage(AppDefaultsKey.savedWords) private var savedWordsData: Data = Data()
+  @State private var words: [String]
   @State private var newWord: String = ""
-  
-  private var words: [String] {
-    (try? JSONDecoder().decode([String].self, from: savedWordsData)) ?? []
+
+  private let keyTermsStore: KeyTermsStore
+
+  init(keyTermsStore: KeyTermsStore = KeyTermsStore()) {
+    self.keyTermsStore = keyTermsStore
+    _words = State(initialValue: keyTermsStore.load())
   }
   
   private var sanitizedInput: String {
@@ -72,29 +75,18 @@ struct DictionaryTabView: View {
     .frame(minHeight: 220)
   }
   
-  private func saveWords(_ words: [String]) {
-    savedWordsData = (try? JSONEncoder().encode(words)) ?? Data()
-  }
-  
   private func addWord() {
     let trimmed = sanitizedInput
-    guard !trimmed.isEmpty else { return }
-    
-    var current = words
-    guard !current.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) else {
-      newWord = ""
+    guard !trimmed.isEmpty else {
       return
     }
-    
-    current.append(trimmed)
-    saveWords(current)
+
+    words = keyTermsStore.add(trimmed)
     newWord = ""
   }
-  
+
   private func removeWord(_ word: String) {
-    var current = words
-    current.removeAll(where: { $0 == word })
-    saveWords(current)
+    words = keyTermsStore.remove(word)
   }
 }
 

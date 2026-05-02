@@ -11,6 +11,8 @@ struct ModeCatalog {
         let applicationStoreKey: String
         let shortcutStoreKey: String
         let fallbackShortcut: Shortcut
+        let additionalVocabulary: [String]
+        let llmInstruction: String?
     }
 
     static let definitions: [ModeDefinition] = [
@@ -25,7 +27,9 @@ struct ModeCatalog {
             fallbackShortcut: Shortcut(
                 keyCode: KeyCode.from(character: "1") ?? 18,
                 modifiers: [.control, .option]
-            )
+            ),
+            additionalVocabulary: [],
+            llmInstruction: nil
         ),
         ModeDefinition(
             id: "email",
@@ -38,7 +42,15 @@ struct ModeCatalog {
             fallbackShortcut: Shortcut(
                 keyCode: KeyCode.from(character: "2") ?? 19,
                 modifiers: [.control, .option]
-            )
+            ),
+            additionalVocabulary: [
+                "regards",
+                "follow-up",
+                "ASAP",
+                "FYI",
+                "best regards"
+            ],
+            llmInstruction: nil
         ),
         ModeDefinition(
             id: "terminal",
@@ -51,7 +63,29 @@ struct ModeCatalog {
             fallbackShortcut: Shortcut(
                 keyCode: KeyCode.from(character: "3") ?? 20,
                 modifiers: [.control, .option]
-            )
+            ),
+            additionalVocabulary: [
+                "bash",
+                "zsh",
+                "grep",
+                "awk",
+                "sed",
+                "chmod",
+                "chown",
+                "sudo",
+                "stdout",
+                "stderr",
+                "pipe",
+                "mkdir",
+                "rm -rf",
+                "curl",
+                "ssh"
+            ],
+            llmInstruction: "The user is dictating for a Unix shell terminal. Convert the text into a concise bash/zsh command or command sequence. Return only the command text with no explanations, no markdown, and no surrounding quotes."
         )
     ]
+
+    static func definition(for modeID: String) -> ModeDefinition? {
+        definitions.first(where: { $0.id == modeID })
+    }
 }

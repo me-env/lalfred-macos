@@ -14,7 +14,7 @@ final class AppRuntimeCoordinator {
   private let indicator: IndicatorPresenting
   private let pasteService: PastingAtCursor
   private let recordingService: AudioRecordingServicing
-  private let scribeClient: Transcribing
+  private let transcriptionService: TranscribingPipeline
 
   private let modeSwitcherShortcutStore = ShortcutDefaultsStore(key: AppDefaultsKey.shortcutModeSwitcher)
   private let modeSwitcherFallbackShortcut = Shortcut(
@@ -49,9 +49,9 @@ final class AppRuntimeCoordinator {
       self?.deactivateListeningHotKeys()
     }
   )
-  private lazy var processingFlow = ProcessingFlowHandler(
+  private lazy var processingFlowHandler = ProcessingFlowHandler(
     recordingService: recordingService,
-    scribeClient: scribeClient,
+    transcriptionPipeline: transcriptionService,
     pasteService: pasteService,
     indicator: indicator,
     deactivateListeningHotKeys: { [weak self] in
@@ -64,14 +64,14 @@ final class AppRuntimeCoordinator {
     indicator: IndicatorPresenting? = nil,
     pasteService: PastingAtCursor? = nil,
     recordingService: AudioRecordingServicing? = nil,
-    scribeClient: Transcribing? = nil
+    transcriptionService: TranscribingPipeline? = nil
   ) {
     let resolvedModeStateStore = modeStateStore ?? ModeStateStore()
     self.modeStateStore = resolvedModeStateStore
     self.indicator = indicator ?? IndicatorPanelController(modeStateStore: resolvedModeStateStore)
     self.pasteService = pasteService ?? PasteAtCursorService()
     self.recordingService = recordingService ?? AudioRecordingService()
-    self.scribeClient = scribeClient ?? ScribeClient()
+    self.transcriptionService = transcriptionService ?? TranscriptionPipeline()
   }
 
   deinit {
@@ -262,7 +262,12 @@ final class AppRuntimeCoordinator {
     isHoldToSpeakActive = false
     guard sessionState.transitionToProcessing() else { return }
     defer { sessionState.transitionToIdle() }
-    await processingFlow.finishListeningAndProcess(errorMessage: Self.errorMessage(for:))
+    let modeContext = makeModeTranscriptionContext()
+    
+    await processingFlowHandler.performProcessing(
+      context: modeContext,
+      errorMessage: Self.errorMessage(for:)
+    )
   }
 
   private static func errorMessage(for error: Error) -> String {
@@ -279,6 +284,18 @@ final class AppRuntimeCoordinator {
     listeningFlow.beginListening(
       sessionState: &sessionState,
       errorMessage: Self.errorMessage(for:)
+    )
+  }
+
+  private func makeModeTranscriptionContext() -> ModeTranscriptionContext {
+    let currentMode = modeStateStore.currentMode
+    let modeDefinition = ModeCatalog.definition(for: currentMode.id)
+    
+    return ModeTranscriptionContext(
+      modeID: currentMode.id,
+      modeTitle: currentMode.title,
+      additionalVocabulary: modeDefinition?.additionalVocabulary ?? [],
+      llmInstruction: modeDefinition?.llmInstruction
     )
   }
 

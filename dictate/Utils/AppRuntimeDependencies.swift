@@ -8,8 +8,8 @@ protocol AudioRecordingServicing: AnyObject {
     func cancelRecording()
 }
 
-protocol Transcribing {
-    func transcribeAudio(at fileURL: URL) async throws -> String
+protocol TranscribingPipeline {
+    func runTransformationPipeline(at fileURL: URL, context: ModeTranscriptionContext) async throws -> String
 }
 
 protocol PastingAtCursor {
@@ -30,6 +30,6 @@ protocol IndicatorPresenting: AnyObject {
 }
 
 extension AudioRecordingService: AudioRecordingServicing {}
-extension ScribeClient: Transcribing {}
+extension ScribeClient: STTProvider {}
 extension PasteAtCursorService: PastingAtCursor {}
 extension IndicatorPanelController: IndicatorPresenting {}

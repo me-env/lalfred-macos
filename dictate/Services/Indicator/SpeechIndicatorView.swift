@@ -93,6 +93,8 @@ struct SpeechIndicatorView: View {
       return Image(systemName: "xmark")
     case "pasted":
       return Image(systemName: "clipboard.fill")
+    case "nospeech":
+      return Image(systemName: "mic.slash")
     default:
       return nil
     }
@@ -267,4 +269,3 @@ private struct ProcessingActivityView: View {
   )
   .padding()
 }
-
