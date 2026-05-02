@@ -16,4 +16,12 @@ enum AppDefaultsKey {
     static let accountFirstName = "auth.account.firstName"
     static let accountLastName = "auth.account.lastName"
     static let accountCredits = "auth.account.credits"
+
+    static let modeDefaultApplicationPath = "mode.default.applicationPath"
+    static let modeEmailApplicationPath = "mode.email.applicationPath"
+    static let modeTerminalApplicationPath = "mode.terminal.applicationPath"
+
+    static let shortcutModeDefaultTrigger = "shortcut.mode.defaultTrigger"
+    static let shortcutModeEmailTrigger = "shortcut.mode.emailTrigger"
+    static let shortcutModeTerminalTrigger = "shortcut.mode.terminalTrigger"
 }

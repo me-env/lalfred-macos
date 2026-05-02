@@ -42,9 +42,8 @@ struct dictateApp: App {
       ContentView()
     }
 
-    MenuBarExtra("ELDictate", image: "MenuBarIcon", isInserted: $showMenuBarExtra) {
+    MenuBarExtra("L'Alfred", image: "MenuBarIcon", isInserted: $showMenuBarExtra) {
       StatusMenu()
     }
   }
-  
 }

@@ -35,45 +35,48 @@ struct AccountTabView: View {
     }
   }
   
+  private var tabBackground: some View {
+    RoundedRectangle(cornerRadius: 12, style: .continuous)
+      .fill(Color(nsColor: .controlBackgroundColor))
+      .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+  }
+
+  
   private var loggedOutCard: some View {
-    VStack(alignment: .leading, spacing: 14) {
-      Text("Sign in to your account")
-        .font(.title3.weight(.semibold))
-
-      Text("Logging in lets you purchase credits that this app uses for speech-to-text transcription and LLM processing.")
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
-
-      Link("More details: lalfred.ai/#pricing", destination: URL(string: "https://lalfred.ai/#pricing")!)
-        .font(.subheadline)
-
-      Button(isLoadingAuthURL ? "Opening Google..." : "Continue with Google") {
-        Task {
-          await startGoogleOAuth()
+    HStack {
+      VStack(alignment: .leading, spacing: 14) {
+        Text("Sign in to your account")
+          .font(.title3.weight(.semibold))
+        
+        Text("Logging in lets you purchase credits that this app uses for speech-to-text transcription and LLM processing.")
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+        
+        Link("More details: lalfred.ai/#pricing", destination: URL(string: "https://lalfred.ai/#pricing")!)
+          .font(.subheadline)
+        
+        Button(isLoadingAuthURL ? "Opening Google..." : "Continue with Google") {
+          Task {
+            await startGoogleOAuth()
+          }
+        }
+        .buttonStyle(.borderedProminent)
+        .disabled(isLoadingAuthURL)
+        
+        if !authErrorMessage.isEmpty {
+          Divider()
+          Text(authErrorMessage)
+            .foregroundStyle(.red)
         }
       }
-      .buttonStyle(.borderedProminent)
-      .disabled(isLoadingAuthURL)
-
-      if !authErrorMessage.isEmpty {
-        Divider()
-        Text(authErrorMessage)
-          .foregroundStyle(.red)
-      }
+      Spacer()
     }
     .padding()
-    .background(
-      RoundedRectangle(cornerRadius: 12, style: .continuous)
-        .fill(Color(nsColor: .controlBackgroundColor))
-    )
-    .overlay(
-      RoundedRectangle(cornerRadius: 12, style: .continuous)
-        .stroke(Color.primary.opacity(0.08), lineWidth: 1)
-    )
+    .background(tabBackground)
   }
 
   private var connectedAccountCard: some View {
-    VStack(alignment: .leading, spacing: 14) {
+    VStack(alignment: .leading) {
       if isLoadingAccountName {
         HStack(spacing: 8) {
           ProgressView()
@@ -100,6 +103,7 @@ struct AccountTabView: View {
       }
 
       Divider()
+        .padding(.vertical, 4)
 
       HStack(alignment: .center) {
         if isLoadingCredits {
@@ -131,14 +135,7 @@ struct AccountTabView: View {
       }
     }
     .padding()
-    .background(
-      RoundedRectangle(cornerRadius: 12, style: .continuous)
-        .fill(Color(nsColor: .controlBackgroundColor))
-    )
-    .overlay(
-      RoundedRectangle(cornerRadius: 12, style: .continuous)
-        .stroke(Color.primary.opacity(0.08), lineWidth: 1)
-    )
+    .background(tabBackground)
   }
   
   private var accountDisplayName: String {

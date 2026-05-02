@@ -4,7 +4,7 @@ struct Snippet: Hashable, Decodable, Encodable, Equatable {
   var key: String
   var value: String
   var matchEntireSentenceOnly: Bool
-
+  
   init(
     key: String,
     value: String,
@@ -14,7 +14,7 @@ struct Snippet: Hashable, Decodable, Encodable, Equatable {
     self.value = value
     self.matchEntireSentenceOnly = matchEntireSentenceOnly
   }
-
+  
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     key = try container.decode(String.self, forKey: .key)
@@ -22,6 +22,7 @@ struct Snippet: Hashable, Decodable, Encodable, Equatable {
     matchEntireSentenceOnly = try container.decodeIfPresent(Bool.self, forKey: .matchEntireSentenceOnly) ?? false
   }
 }
+
 
 struct SnippetsTabView: View {
   @AppStorage(AppDefaultsKey.savedSnippets) private var savedSnippetsData: Data = Data()
@@ -47,54 +48,31 @@ struct SnippetsTabView: View {
   }
   
   var body: some View {
-    VStack {
-      SectionBox("Snippets", caption: "Add a trigger text and its replacement value.") {
-        inputRow
-        snippetContent
-      }
+    SectionBox("Snippets", caption: "Add a trigger text and its replacement value.") {
+      inputRow
+      snippetContent
     }
-    .padding()
-    .onAppear {
-      DispatchQueue.main.async {
-        NSApp.keyWindow?.makeFirstResponder(nil)
-      }
-    }
+  .padding()
   }
   
   private var inputRow: some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack(alignment: .bottom, spacing: 10) {
-        TextField("Trigger", text: $newKey)
-          .textFieldStyle(.plain)
-          .padding(.horizontal, 12)
-          .padding(.vertical, 10)
-          .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-              .fill(.background)
-          )
-          .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-              .stroke(.separator.opacity(0.35), lineWidth: 1)
-          )
-          .onSubmit { addSnippet() }
-          .frame(width: 130)
-          .frame(height: inputControlHeight)
+        InlineInputField(
+          title: "Trigger",
+          text: $newKey,
+          controlHeight: inputControlHeight,
+          width: 130,
+          onSubmit: addSnippet
+        )
 
-        TextField("Replacement", text: $newValue)
-          .textFieldStyle(.plain)
-          .padding(.horizontal, 12)
-          .padding(.vertical, 10)
-          .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-              .fill(.background)
-          )
-          .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-              .stroke(.separator.opacity(0.35), lineWidth: 1)
-          )
-          .onSubmit { addSnippet() }
-          .frame(maxWidth: .infinity)
-          .frame(height: inputControlHeight)
+        InlineInputField(
+          title: "Replacement",
+          text: $newValue,
+          controlHeight: inputControlHeight,
+          expandToFill: true,
+          onSubmit: addSnippet
+        )
 
         Button {
           addSnippet()
@@ -136,7 +114,7 @@ struct SnippetsTabView: View {
         systemImage: "text.bubble",
         description: Text("Create quick replacements for common phrases or repeated text.")
       )
-      .frame(maxWidth: .infinity)
+      .frame(maxWidth: .infinity, minHeight: 200)
       .padding(.vertical, 8)
       Spacer()
     }

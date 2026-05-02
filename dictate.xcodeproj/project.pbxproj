@@ -24,18 +24,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		3D82C9DB2F9EA82400E7E00E /* ELDictate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ELDictate.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D82C9DB2F9EA82400E7E00E /* L'Alfred.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "L'Alfred.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D82C9E82F9EA82500E7E00E /* dictateTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = dictateTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D82C9F22F9EA82500E7E00E /* dictateUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = dictateUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		3D82CA652F9ED82400E7E00E /* Exceptions for "dictate" folder in "dictate" target */ = {
+		3D82CA652F9ED82400E7E00E /* Exceptions for "dictate" folder in "lalfred" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 3D82C9DA2F9EA82400E7E00E /* dictate */;
+			target = 3D82C9DA2F9EA82400E7E00E /* lalfred */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -43,7 +43,7 @@
 		3D82C9DD2F9EA82400E7E00E /* dictate */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				3D82CA652F9ED82400E7E00E /* Exceptions for "dictate" folder in "dictate" target */,
+				3D82CA652F9ED82400E7E00E /* Exceptions for "dictate" folder in "lalfred" target */,
 			);
 			path = dictate;
 			sourceTree = "<group>";
@@ -98,7 +98,7 @@
 		3D82C9DC2F9EA82400E7E00E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3D82C9DB2F9EA82400E7E00E /* ELDictate.app */,
+				3D82C9DB2F9EA82400E7E00E /* L'Alfred.app */,
 				3D82C9E82F9EA82500E7E00E /* dictateTests.xctest */,
 				3D82C9F22F9EA82500E7E00E /* dictateUITests.xctest */,
 			);
@@ -108,9 +108,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3D82C9DA2F9EA82400E7E00E /* dictate */ = {
+		3D82C9DA2F9EA82400E7E00E /* lalfred */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3D82C9FC2F9EA82500E7E00E /* Build configuration list for PBXNativeTarget "dictate" */;
+			buildConfigurationList = 3D82C9FC2F9EA82500E7E00E /* Build configuration list for PBXNativeTarget "lalfred" */;
 			buildPhases = (
 				3D82C9D72F9EA82400E7E00E /* Sources */,
 				3D82C9D82F9EA82400E7E00E /* Frameworks */,
@@ -123,11 +123,11 @@
 			fileSystemSynchronizedGroups = (
 				3D82C9DD2F9EA82400E7E00E /* dictate */,
 			);
-			name = dictate;
+			name = lalfred;
 			packageProductDependencies = (
 			);
 			productName = dictate;
-			productReference = 3D82C9DB2F9EA82400E7E00E /* ELDictate.app */;
+			productReference = 3D82C9DB2F9EA82400E7E00E /* L'Alfred.app */;
 			productType = "com.apple.product-type.application";
 		};
 		3D82C9E72F9EA82500E7E00E /* dictateTests */ = {
@@ -213,7 +213,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3D82C9DA2F9EA82400E7E00E /* dictate */,
+				3D82C9DA2F9EA82400E7E00E /* lalfred */,
 				3D82C9E72F9EA82500E7E00E /* dictateTests */,
 				3D82C9F12F9EA82500E7E00E /* dictateUITests */,
 			);
@@ -271,12 +271,12 @@
 /* Begin PBXTargetDependency section */
 		3D82C9EA2F9EA82500E7E00E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 3D82C9DA2F9EA82400E7E00E /* dictate */;
+			target = 3D82C9DA2F9EA82400E7E00E /* lalfred */;
 			targetProxy = 3D82C9E92F9EA82500E7E00E /* PBXContainerItemProxy */;
 		};
 		3D82C9F42F9EA82500E7E00E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 3D82C9DA2F9EA82400E7E00E /* dictate */;
+			target = 3D82C9DA2F9EA82400E7E00E /* lalfred */;
 			targetProxy = 3D82C9F32F9EA82500E7E00E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -439,7 +439,7 @@
 				);
 				MARKETING_VERSION = 1.11;
 				PRODUCT_BUNDLE_IDENTIFIER = fr.lalfred.app;
-				PRODUCT_NAME = ELDictate;
+				PRODUCT_NAME = "L'Alfred";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -487,7 +487,7 @@
 				);
 				MARKETING_VERSION = 1.11;
 				PRODUCT_BUNDLE_IDENTIFIER = fr.lalfred.app;
-				PRODUCT_NAME = ELDictate;
+				PRODUCT_NAME = "L'Alfred";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -590,7 +590,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3D82C9FC2F9EA82500E7E00E /* Build configuration list for PBXNativeTarget "dictate" */ = {
+		3D82C9FC2F9EA82500E7E00E /* Build configuration list for PBXNativeTarget "lalfred" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3D82C9FD2F9EA82500E7E00E /* Debug */,

@@ -31,9 +31,32 @@ private final class LocalKeyDownMonitor {
   }
 }
 
+private final class LocalFlagsChangedMonitor {
+  private var monitorToken: Any?
+
+  func start(handler: @escaping (NSEvent) -> Bool) {
+    guard monitorToken == nil else { return }
+
+    monitorToken = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
+      handler(event) ? nil : event
+    }
+  }
+
+  func stop() {
+    guard let monitorToken else { return }
+    NSEvent.removeMonitor(monitorToken)
+    self.monitorToken = nil
+  }
+
+  deinit {
+    stop()
+  }
+}
+
 struct ShortcutInput: View {
   let label: String
   let storeKey: String
+  let allowModifierOnlyShortcut: Bool
   @Binding var activeShortcutEditorID: String?
   private let shortcutStore: ShortcutDefaultsStore
 
@@ -42,15 +65,18 @@ struct ShortcutInput: View {
   @State private var isCapturingKeys: Bool = false
   @State private var recordingPulse: Bool = false
   @State private var keyDownMonitor = LocalKeyDownMonitor()
+  @State private var flagsChangedMonitor = LocalFlagsChangedMonitor()
 
   init(
     label: String,
     storeKey: String,
     fallbackShortcut: Shortcut,
+    allowModifierOnlyShortcut: Bool = false,
     activeShortcutEditorID: Binding<String?>
   ) {
     self.label = label
     self.storeKey = storeKey
+    self.allowModifierOnlyShortcut = allowModifierOnlyShortcut
     _activeShortcutEditorID = activeShortcutEditorID
     let store = ShortcutDefaultsStore(key: storeKey)
     self.shortcutStore = store
@@ -79,6 +105,23 @@ struct ShortcutInput: View {
     let shortcut = Shortcut(
       keyCode: event.keyCode,
       modifiers: ShortcutModifiers(eventModifierFlags: event.modifierFlags)
+    )
+    capturedShortcut = shortcut
+    shortcutStore.save(shortcut)
+    NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
+    activeShortcutEditorID = nil
+    return true
+  }
+
+  func handleFlagsChanged(_ event: NSEvent) -> Bool {
+    guard isCapturingKeys, allowModifierOnlyShortcut else { return false }
+
+    let modifiers = ShortcutModifiers(eventModifierFlags: event.modifierFlags)
+    guard modifiers.count >= 2 else { return true }
+
+    let shortcut = Shortcut(
+      keyCode: Shortcut.modifierOnlyKeyCode,
+      modifiers: modifiers
     )
     capturedShortcut = shortcut
     shortcutStore.save(shortcut)
@@ -220,8 +263,12 @@ struct ShortcutInput: View {
         keyDownMonitor.start { event in
           handleKeyDown(event)
         }
+        flagsChangedMonitor.start { event in
+          handleFlagsChanged(event)
+        }
       } else {
         keyDownMonitor.stop()
+        flagsChangedMonitor.stop()
       }
     }
     .onChange(of: activeShortcutEditorID) { _, activeEditorID in
@@ -241,6 +288,7 @@ struct ShortcutInput: View {
         publishShortcutCaptureState(false)
       }
       keyDownMonitor.stop()
+      flagsChangedMonitor.stop()
     }
   }
 }

@@ -23,19 +23,13 @@ final class ModeStateStore: ObservableObject {
         let loadedState = self.store.load()
         let defaultSuggestions = Self.defaultSuggestions
         let defaultModeID = defaultSuggestions.first?.id ?? "default"
-
-        if let loadedState, !loadedState.suggestions.isEmpty {
-            self.suggestions = loadedState.suggestions
-            let selectedID = loadedState.selectedModeID
-            self.selectedModeID = loadedState.suggestions.contains(where: { $0.id == selectedID })
-                ? selectedID
-                : defaultModeID
-            persistState()
+        self.suggestions = defaultSuggestions
+        if let loadedState, defaultSuggestions.contains(where: { $0.id == loadedState.selectedModeID }) {
+            self.selectedModeID = loadedState.selectedModeID
         } else {
-            self.suggestions = defaultSuggestions
             self.selectedModeID = defaultModeID
-            persistState()
         }
+        persistState()
     }
 
     var currentMode: ModeSuggestion {
@@ -72,12 +66,7 @@ final class ModeStateStore: ObservableObject {
         store.save(PersistedState(suggestions: suggestions, selectedModeID: selectedModeID))
     }
 
-    static let defaultSuggestions: [ModeSuggestion] = [
-        ModeSuggestion(id: "default", title: "Default", detail: "Standard dictation"),
-        ModeSuggestion(id: "rewrite", title: "Rewrite", detail: "Improve grammar and clarity"),
-        ModeSuggestion(id: "summarize", title: "Summarize", detail: "Condense into concise points"),
-        ModeSuggestion(id: "email", title: "Email Draft", detail: "Format as a professional email"),
-        ModeSuggestion(id: "translate-fr", title: "Translate French", detail: "Output in French"),
-        ModeSuggestion(id: "translate-es", title: "Translate Spanish", detail: "Output in Spanish")
-    ]
+    static let defaultSuggestions: [ModeSuggestion] = ModeCatalog.definitions.map {
+        ModeSuggestion(id: $0.id, title: $0.title, detail: $0.detail)
+    }
 }

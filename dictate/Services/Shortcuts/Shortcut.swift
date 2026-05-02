@@ -8,8 +8,14 @@
 import Foundation
 
 struct Shortcut: Codable, Hashable {
+  static let modifierOnlyKeyCode = UInt16.max
+
   var keyCode: UInt16
   var modifiers: ShortcutModifiers
+
+  var isModifierOnly: Bool {
+    keyCode == Self.modifierOnlyKeyCode && !modifiers.isEmpty
+  }
   
   func toLabels() -> [String] {
     var tokens: [String] = []
@@ -27,7 +33,9 @@ struct Shortcut: Codable, Hashable {
       tokens.append("⌘")
     }
     
-    tokens.append(KeyCode.displayLabel(for: self.keyCode))
+    if !isModifierOnly {
+      tokens.append(KeyCode.displayLabel(for: self.keyCode))
+    }
     return tokens
   }
 }
@@ -39,4 +47,8 @@ struct ShortcutModifiers: OptionSet, Codable, Hashable {
   static let option = Self(rawValue: 1 << 1)
   static let control = Self(rawValue: 1 << 2)
   static let shift = Self(rawValue: 1 << 3)
+
+  var count: Int {
+    rawValue.nonzeroBitCount
+  }
 }

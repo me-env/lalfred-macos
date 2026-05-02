@@ -20,34 +20,19 @@ struct DictionaryTabView: View {
   }
   
   var body: some View {
-    VStack {
-      SectionBox("Dictionary", caption: "Press Return to add. Use the trash icon to remove.") {
-        inputField
-        wordContent
-      }
+    SectionBox("Dictionary", caption: "Press Return to add. Use the trash icon to remove.") {
+      inputField
+      wordContent
     }
     .padding()
-    .onAppear {
-      DispatchQueue.main.async {
-        NSApp.keyWindow?.makeFirstResponder(nil)
-      }
-    }
   }
   
   private var inputField: some View {
-    TextField("Add a word", text: $newWord)
-      .textFieldStyle(.plain)
-      .padding(.horizontal, 12)
-      .padding(.vertical, 10)
-      .background(
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
-          .fill(.background)
-      )
-      .overlay(
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
-          .stroke(.separator.opacity(0.35), lineWidth: 1)
-      )
-      .onSubmit { addWord() }
+    InlineInputField(
+      title: "Add a word",
+      text: $newWord,
+      onSubmit: addWord
+    )
   }
   
   @ViewBuilder
@@ -67,7 +52,7 @@ struct DictionaryTabView: View {
         systemImage: "text.book.closed",
         description: Text("Add names, tools, or jargon you want to transcribe accurately.")
       )
-      .frame(maxWidth: .infinity)
+      .frame(maxWidth: .infinity, minHeight: 200)
       .padding(.vertical, 8)
       Spacer()
     }
