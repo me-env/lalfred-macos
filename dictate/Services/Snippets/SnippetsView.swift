@@ -3,12 +3,31 @@ import SwiftUI
 struct Snippet: Hashable, Decodable, Encodable, Equatable {
   var key: String
   var value: String
+  var matchEntireSentenceOnly: Bool
+
+  init(
+    key: String,
+    value: String,
+    matchEntireSentenceOnly: Bool = false
+  ) {
+    self.key = key
+    self.value = value
+    self.matchEntireSentenceOnly = matchEntireSentenceOnly
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    key = try container.decode(String.self, forKey: .key)
+    value = try container.decode(String.self, forKey: .value)
+    matchEntireSentenceOnly = try container.decodeIfPresent(Bool.self, forKey: .matchEntireSentenceOnly) ?? false
+  }
 }
 
 struct SnippetsTabView: View {
   @AppStorage(AppDefaultsKey.savedSnippets) private var savedSnippetsData: Data = Data()
   @State private var newKey: String = ""
   @State private var newValue: String = ""
+  @State private var newMatchEntireSentenceOnly = false
   private let inputControlHeight: CGFloat = 32
   
   private var snippets: [Snippet] {
@@ -43,54 +62,60 @@ struct SnippetsTabView: View {
   }
   
   private var inputRow: some View {
-    HStack(alignment: .bottom, spacing: 10) {
-      TextField("Trigger", text: $newKey)
-        .textFieldStyle(.plain)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(
-          RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .fill(.background)
-        )
-        .overlay(
-          RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .stroke(.separator.opacity(0.35), lineWidth: 1)
-        )
-        .onSubmit { addSnippet() }
-        .frame(width: 130)
-        .frame(height: inputControlHeight)
-      
-      TextField("Replacement", text: $newValue)
-        .textFieldStyle(.plain)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(
-          RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .fill(.background)
-        )
-        .overlay(
-          RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .stroke(.separator.opacity(0.35), lineWidth: 1)
-        )
-        .onSubmit { addSnippet() }
-        .frame(maxWidth: .infinity)
-        .frame(height: inputControlHeight)
-
-      Button {
-        addSnippet()
-      } label: {
-        Text("Add")
-          .font(.system(size: 11, weight: .medium))
-          .foregroundStyle(.white)
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(alignment: .bottom, spacing: 10) {
+        TextField("Trigger", text: $newKey)
+          .textFieldStyle(.plain)
           .padding(.horizontal, 12)
-          .frame(height: inputControlHeight)
+          .padding(.vertical, 10)
           .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-              .fill(canAddSnippet ? Color.accentColor : Color.secondary.opacity(0.35))
+              .fill(.background)
           )
+          .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+              .stroke(.separator.opacity(0.35), lineWidth: 1)
+          )
+          .onSubmit { addSnippet() }
+          .frame(width: 130)
+          .frame(height: inputControlHeight)
+
+        TextField("Replacement", text: $newValue)
+          .textFieldStyle(.plain)
+          .padding(.horizontal, 12)
+          .padding(.vertical, 10)
+          .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+              .fill(.background)
+          )
+          .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+              .stroke(.separator.opacity(0.35), lineWidth: 1)
+          )
+          .onSubmit { addSnippet() }
+          .frame(maxWidth: .infinity)
+          .frame(height: inputControlHeight)
+
+        Button {
+          addSnippet()
+        } label: {
+          Text("Add")
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .frame(height: inputControlHeight)
+            .background(
+              RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(canAddSnippet ? Color.accentColor : Color.secondary.opacity(0.35))
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(!canAddSnippet)
       }
-      .buttonStyle(.plain)
-      .disabled(!canAddSnippet)
+
+      Toggle("Only match when full sentence equals trigger", isOn: $newMatchEntireSentenceOnly)
+        .toggleStyle(.checkbox)
+        .font(.caption)
     }
   }
   
@@ -121,9 +146,15 @@ struct SnippetsTabView: View {
     ScrollView {
       LazyVStack(spacing: 8) {
         ForEach(snippets, id: \.self) { snippet in
-          SnippetRow(snippet: snippet) {
-            removeSnippet(snippet)
-          }
+          SnippetRow(
+            snippet: snippet,
+            onToggleMatchEntireSentenceOnly: { isEnabled in
+              updateSnippetMatchMode(snippet, matchEntireSentenceOnly: isEnabled)
+            },
+            onRemove: {
+              removeSnippet(snippet)
+            }
+          )
         }
       }
       .padding(.vertical, 2)
@@ -138,30 +169,72 @@ struct SnippetsTabView: View {
   private func addSnippet() {
     let key = sanitizedKey
     let value = sanitizedValue
-    
+    let matchEntireSentenceOnly = newMatchEntireSentenceOnly
+
     guard !key.isEmpty, !value.isEmpty else { return }
-    
+
     var current = snippets
     let exists = current.contains {
       $0.key.caseInsensitiveCompare(key) == .orderedSame &&
-      $0.value.caseInsensitiveCompare(value) == .orderedSame
+      $0.value.caseInsensitiveCompare(value) == .orderedSame &&
+      $0.matchEntireSentenceOnly == matchEntireSentenceOnly
     }
     guard !exists else {
       newKey = ""
       newValue = ""
+      newMatchEntireSentenceOnly = false
       return
     }
-    
-    current.append(Snippet(key: key, value: value))
+
+    current.append(
+      Snippet(
+        key: key,
+        value: value,
+        matchEntireSentenceOnly: matchEntireSentenceOnly
+      )
+    )
     saveSnippets(current)
     newKey = ""
     newValue = ""
+    newMatchEntireSentenceOnly = false
   }
   
   private func removeSnippet(_ snippet: Snippet) {
     var current = snippets
     current.removeAll(where: { $0 == snippet })
     saveSnippets(current)
+  }
+
+  private func updateSnippetMatchMode(
+    _ snippet: Snippet,
+    matchEntireSentenceOnly: Bool
+  ) {
+    var current = snippets
+    guard let index = current.firstIndex(of: snippet) else {
+      return
+    }
+
+    current[index].matchEntireSentenceOnly = matchEntireSentenceOnly
+    saveSnippets(deduplicatedSnippets(from: current))
+  }
+
+  private func deduplicatedSnippets(from snippets: [Snippet]) -> [Snippet] {
+    var seen = Set<String>()
+    var deduplicated: [Snippet] = []
+
+    for snippet in snippets {
+      let identifier = [
+        snippet.key.lowercased(),
+        snippet.value.lowercased(),
+        snippet.matchEntireSentenceOnly ? "1" : "0"
+      ].joined(separator: "|")
+
+      if seen.insert(identifier).inserted {
+        deduplicated.append(snippet)
+      }
+    }
+
+    return deduplicated
   }
   
   private func normalizeWhitespace(_ value: String) -> String {
@@ -174,23 +247,35 @@ struct SnippetsTabView: View {
 
 private struct SnippetRow: View {
   let snippet: Snippet
+  let onToggleMatchEntireSentenceOnly: (Bool) -> Void
   let onRemove: () -> Void
-  
-  var body: some View {
-    HStack(spacing: 10) {
-      Text("\(snippet.key) -> \(snippet.value)")
-        .font(.system(.body, design: .monospaced))
-        .lineLimit(1)
-        .truncationMode(.tail)
-      
-      
-      Spacer()
 
-      Button(role: .destructive, action: onRemove) {
-        Image(systemName: "trash")
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(spacing: 10) {
+        Text("\(snippet.key) -> \(snippet.value)")
+          .font(.system(.body, design: .monospaced))
+          .lineLimit(1)
+          .truncationMode(.tail)
+
+        Spacer()
+
+        Button(role: .destructive, action: onRemove) {
+          Image(systemName: "trash")
+        }
+        .buttonStyle(.borderless)
+        .help("Remove snippet")
       }
-      .buttonStyle(.borderless)
-      .help("Remove snippet")
+
+      Toggle(
+        "Only match when full sentence equals trigger",
+        isOn: Binding(
+          get: { snippet.matchEntireSentenceOnly },
+          set: { onToggleMatchEntireSentenceOnly($0) }
+        )
+      )
+      .toggleStyle(.checkbox)
+      .font(.caption)
     }
     .padding(.horizontal, 10)
     .padding(.vertical, 8)
