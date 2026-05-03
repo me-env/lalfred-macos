@@ -48,7 +48,7 @@ struct SnippetsTabView: View {
   }
   
   var body: some View {
-    SectionBox("Snippets", caption: "Add a trigger text and its replacement value.") {
+    SectionBoxWithTitle("Snippets", caption: "Add a trigger text and its replacement value.") {
       inputRow
       snippetContent
     }

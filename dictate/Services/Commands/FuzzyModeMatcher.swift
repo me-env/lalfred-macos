@@ -3,18 +3,18 @@ import Foundation
 enum FuzzyModeMatcher {
   static func topMatches(
     for query: String,
-    in suggestions: [ModeSuggestion],
+    in suggestions: [ModeDefinition],
     limit: Int = 5
-  ) -> [ModeSuggestion] {
+  ) -> [ModeDefinition] {
     let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmedQuery.isEmpty else {
       return Array(suggestions.prefix(limit))
     }
 
-    let ranked = suggestions.compactMap { suggestion -> (ModeSuggestion, Int)? in
+    let ranked = suggestions.compactMap { suggestion -> (ModeDefinition, Int)? in
       guard let score = score(
         query: trimmedQuery,
-        candidate: "\(suggestion.title) \(suggestion.detail)"
+        candidate: "\(suggestion.title) \(suggestion.id)"
       ) else {
         return nil
       }

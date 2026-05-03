@@ -1,10 +1,3 @@
-//
-//  PermissionsInput.swift
-//  dictate
-//
-//  Created by Codex on 4/26/26.
-//
-
 import SwiftUI
 import AVFoundation
 import AppKit
@@ -18,7 +11,7 @@ struct PermissionsInput: View {
   @State private var accessibilityGranted: Bool = false
   
   var body: some View {
-    SectionBox("Permissions", caption: "Accessibility is required to paste text from transcription into other apps.") {
+    SectionBoxWithTitle("Permissions", caption: "Accessibility is required to paste text from transcription into other apps.") {
       permissionRow(
         title: "Microphone",
         granted: microphoneGranted,

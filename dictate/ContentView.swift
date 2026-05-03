@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  dictate
-//
-//  Created by Cyprien Ricque on 4/26/26.
-//
-
 import SwiftUI
 import AppKit
 
@@ -15,11 +8,11 @@ struct GeneralTabView: View {
   var body: some View {
     VStack {
       PreferencesInput()
-      SectionBox("Keyboard Shortcuts") {
+      SectionBoxWithTitle("Keyboard Shortcuts") {
         ShortcutInput(
           label: "Toggle Recording",
           storeKey: AppDefaultsKey.shortcutToggleRecording,
-          fallbackShortcut: Shortcut(
+          defaultShortcut: Shortcut(
             keyCode: KeyCode.from(character: " ") ?? 49,
             modifiers: [.command, .shift]
           ),
@@ -29,7 +22,7 @@ struct GeneralTabView: View {
         ShortcutInput(
           label: "Hold to Speak",
           storeKey: AppDefaultsKey.shortcutHoldToSpeak,
-          fallbackShortcut: Shortcut(
+          defaultShortcut: Shortcut(
             keyCode: Shortcut.modifierOnlyKeyCode,
             modifiers: [.option, .control]
           ),
@@ -40,7 +33,7 @@ struct GeneralTabView: View {
         ShortcutInput(
           label: "Mode Switcher",
           storeKey: AppDefaultsKey.shortcutModeSwitcher,
-          fallbackShortcut: Shortcut(
+          defaultShortcut: Shortcut(
             keyCode: KeyCode.from(character: "/") ?? 44,
             modifiers: [.command]
           ),
@@ -60,6 +53,7 @@ enum Tabs {
   case modes
   case dictionary
   case snippets
+  case sounds
   case account
 }
 
@@ -106,7 +100,14 @@ struct TabsView: View {
             Image(systemName: currentTab == .snippets ? "text.bubble.fill" : "text.bubble")
           }
           .tag(Tabs.snippets)
-        
+
+        SoundsTabView()
+          .tabItem {
+            Text("Sounds")
+            Image(systemName: currentTab == .sounds ? "speaker.wave.2.fill" : "speaker.wave.2")
+          }
+          .tag(Tabs.sounds)
+
         AccountTabView()
           .tabItem {
             Text("Account")
@@ -149,8 +150,11 @@ struct ContentView: View {
   ContentView(initialTab: .snippets)
 }
 
+#Preview("Sounds") {
+  ContentView(initialTab: .sounds)
+}
+
 #Preview("Account") {
   ContentView(initialTab: .account)
 }
-
 

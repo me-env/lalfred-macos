@@ -1,10 +1,3 @@
-//
-//  Shortcut.swift
-//  dictate
-//
-//  Created by Cyprien Ricque on 4/26/26.
-//
-
 import Foundation
 
 struct Shortcut: Codable, Hashable {

@@ -1,10 +1,3 @@
-//
-//  GlobalHotKeyMonitor.swift
-//  dictate
-//
-//  Created by Codex on 4/26/26.
-//
-
 import Foundation
 import Carbon.HIToolbox
 
@@ -17,14 +10,14 @@ final class GlobalHotKeyMonitor {
     init(
         id: UInt32 = 1,
         storeKey: String = AppDefaultsKey.shortcutToggleRecording,
-        fallbackShortcut: Shortcut = Shortcut(
+        defaultShortcut: Shortcut = Shortcut(
             keyCode: KeyCode.from(character: " ") ?? UInt16(kVK_Space),
             modifiers: [.command, .shift]
         ),
         onTrigger: @escaping @MainActor () -> Void
     ) {
         self.shortcutStore = ShortcutDefaultsStore(key: storeKey)
-        shortcutStore.ensureDefault(fallbackShortcut)
+        shortcutStore.ensureDefault(defaultShortcut)
 
         monitor = CarbonHotKeyMonitor(
             id: id,
@@ -34,7 +27,7 @@ final class GlobalHotKeyMonitor {
             reloadOnShortcutChange: true,
             onKeyDown: onTrigger
         )
-        migrateIncompatibleShortcutIfNeeded(defaultShortcut: fallbackShortcut)
+        migrateIncompatibleShortcutIfNeeded(defaultShortcut: defaultShortcut)
         monitor.activate()
     }
 

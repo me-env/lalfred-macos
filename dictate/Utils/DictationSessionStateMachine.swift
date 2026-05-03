@@ -30,6 +30,6 @@ struct DictationSessionStateMachine {
     }
 
     func canShowModeSwitcher(isModeSwitcherVisible: Bool) -> Bool {
-        isListening && !isModeSwitcherVisible
+        state != .processing && !isModeSwitcherVisible
     }
 }

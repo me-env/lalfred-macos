@@ -1,10 +1,3 @@
-//
-//  ShortcutDefaultsStore.swift
-//  dictate
-//
-//  Created by Cyprien Ricque on 4/26/26.
-//
-
 import Foundation
 
 struct ShortcutDefaultsStore {
@@ -33,9 +26,9 @@ struct ShortcutDefaultsStore {
         store.remove()
     }
 
-    func ensureDefault(_ fallbackShortcut: Shortcut) {
+    func ensureDefault(_ defaultShortcut: Shortcut) {
         guard !isDisabled, store.load() == nil else { return }
-        store.save(fallbackShortcut)
+        store.save(defaultShortcut)
     }
 
     private var isDisabled: Bool {

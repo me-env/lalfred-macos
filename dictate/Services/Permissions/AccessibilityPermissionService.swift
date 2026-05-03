@@ -1,10 +1,3 @@
-//
-//  AccessibilityPermissionService.swift
-//  dictate
-//
-//  Created by Codex on 4/26/26.
-//
-
 import Foundation
 import ApplicationServices
 import AppKit

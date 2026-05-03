@@ -1,10 +1,3 @@
-//
-//  DictionaryTabView.swift
-//  dictate
-//
-//  Created by Cyprien Ricque on 4/27/26.
-//
-
 import SwiftUI
 
 struct DictionaryTabView: View {
@@ -23,7 +16,7 @@ struct DictionaryTabView: View {
   }
   
   var body: some View {
-    SectionBox("Dictionary", caption: "Press Return to add. Use the trash icon to remove.") {
+    SectionBoxWithTitle("Dictionary", caption: "Press Return to add. Use the trash icon to remove.") {
       inputField
       wordContent
     }

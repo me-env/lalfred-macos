@@ -1,10 +1,3 @@
-//
-//  LaunchAtLoginService.swift
-//  dictate
-//
-//  Created by Codex on 4/27/26.
-//
-
 import Foundation
 import ServiceManagement
 

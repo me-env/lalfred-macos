@@ -1,61 +1,91 @@
 import Foundation
 
 
-struct OpenAITranscriptPostProcessor: LLMProvider {
-  enum OpenAITranscriptPostProcessorError: LocalizedError {
-    case missingAPIKey
-    case invalidResponse
-    case invalidLLMResponse
-    case requestFailed(statusCode: Int, message: String)
+enum OpenAITranscriptPostProcessorError: LocalizedError {
+  case missingAPIKey
+  case missingAuthToken
+  case invalidProxyEndpoint
+  case invalidResponse
+  case invalidLLMResponse
+  case requestFailed(statusCode: Int, message: String)
 
-    var errorDescription: String? {
-      switch self {
-      case .missingAPIKey:
-        return "Missing OpenAI API key"
-      case .invalidResponse:
-        return "Unexpected API response"
-      case .invalidLLMResponse:
-        return "Unexpected LLM response"
-      case let .requestFailed(statusCode, message):
-        return "LLM request failed (\(statusCode)): \(message)"
-      }
+  var errorDescription: String? {
+    switch self {
+    case .missingAPIKey:
+      return "Missing OpenAI API key"
+    case .missingAuthToken:
+      return "Missing auth token"
+    case .invalidProxyEndpoint:
+      return "LLM proxy endpoint is not configured"
+    case .invalidResponse:
+      return "Unexpected API response"
+    case .invalidLLMResponse:
+      return "Unexpected LLM response"
+    case let .requestFailed(statusCode, message):
+      return "LLM request failed (\(statusCode)): \(message)"
     }
   }
+}
 
+
+struct OpenAITranscriptPostProcessor: LLMProvider {
   private let apiKeyStore: APIKeyDefaultsStore
+  private let authTokenStore: APIKeyDefaultsStore
   private let session: URLSession
-  private let endpoint: URL
+  private let directEndpoint: URL
+  private let proxyEndpoint: URL?
+  private let mode: TransportMode
 
   init(
     apiKeyStore: APIKeyDefaultsStore = APIKeyDefaultsStore(key: AppDefaultsKey.apiKeyOpenAI),
+    authTokenStore: APIKeyDefaultsStore = APIKeyDefaultsStore(key: AppDefaultsKey.authToken),
     session: URLSession = .shared,
-    endpoint: URL = URL(string: "https://api.openai.com/v1/chat/completions")!
+    directEndpoint: URL = URL(string: "https://api.openai.com/v1/chat/completions")!,
+    proxyEndpoint: URL? = OpenAITranscriptPostProcessor.defaultProxyEndpoint,
+    mode: TransportMode = .direct
   ) {
     self.apiKeyStore = apiKeyStore
+    self.authTokenStore = authTokenStore
     self.session = session
-    self.endpoint = endpoint
+    self.directEndpoint = directEndpoint
+    self.proxyEndpoint = proxyEndpoint
+    self.mode = mode
   }
 
-  func process(transcript: String, context: ModeTranscriptionContext) async throws -> String {
-    let instruction = context.llmInstruction?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-    let apiKey = try loadAPIKey()
-    var request = URLRequest(url: endpoint)
+  func process(userPrompt: String, instruction: String) async throws -> String {
+    let requestURL: URL
+    var request: URLRequest
+
+    switch mode {
+    case .direct:
+      requestURL = directEndpoint
+      request = URLRequest(url: requestURL)
+      let apiKey = try loadAPIKey()
+      request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+    case .proxy:
+      requestURL = try requireProxyEndpoint()
+      request = URLRequest(url: requestURL)
+      let authToken = try loadAuthToken()
+      print("authToken \(authToken)")
+      request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+    }
+    
+
     request.httpMethod = "POST"
-    request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-    let userPrompt = """
-    Mode: \(context.modeTitle)
-    Input transcript:
-    \(transcript)
-    """
+    let messages = [
+      OpenAIChatCompletionRequest.Message(role: "system", content: instruction.trimmingCharacters(in: .whitespacesAndNewlines)),
+      OpenAIChatCompletionRequest.Message(role: "user", content: userPrompt.trimmingCharacters(in: .whitespacesAndNewlines))
+    ].filter { !$0.content.isEmpty }
+    guard !messages.isEmpty else {
+      return trimTrailingWhitespaceAndNewlines(userPrompt)
+    }
+
     let payload = OpenAIChatCompletionRequest(
-      model: "gpt-4.1",
+      model: "gpt-4.1-mini",
       temperature: 0,
-      messages: [
-        .init(role: "system", content: instruction),
-        .init(role: "user", content: userPrompt)
-      ]
+      messages: messages
     )
     request.httpBody = try JSONEncoder().encode(payload)
 
@@ -71,12 +101,19 @@ struct OpenAITranscriptPostProcessor: LLMProvider {
     }
 
     let llmResponse = try JSONDecoder().decode(OpenAIChatCompletionResponse.self, from: data)
-    guard let content = llmResponse.choices.first?.message.content?.trimmingCharacters(in: .whitespacesAndNewlines),
+    guard let content = llmResponse.choices.first?.message.content.map(trimTrailingWhitespaceAndNewlines),
           !content.isEmpty else {
       throw OpenAITranscriptPostProcessorError.invalidLLMResponse
     }
 
     return content
+  }
+
+  private func requireProxyEndpoint() throws -> URL {
+    guard let proxyEndpoint else {
+      throw OpenAITranscriptPostProcessorError.invalidProxyEndpoint
+    }
+    return proxyEndpoint
   }
 
   private func loadAPIKey() throws -> String {
@@ -90,6 +127,17 @@ struct OpenAITranscriptPostProcessor: LLMProvider {
     }
 
     return key
+  }
+
+  private func loadAuthToken() throws -> String {
+    guard let rawToken = authTokenStore.load() else {
+      throw OpenAITranscriptPostProcessorError.missingAuthToken
+    }
+    let token = rawToken.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !token.isEmpty else {
+      throw OpenAITranscriptPostProcessorError.missingAuthToken
+    }
+    return token
   }
 
   private func unwrapHTTPResponse(_ response: URLResponse) throws -> HTTPURLResponse {
@@ -106,6 +154,23 @@ struct OpenAITranscriptPostProcessor: LLMProvider {
     }
 
     return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  private func trimTrailingWhitespaceAndNewlines(_ text: String) -> String {
+    var result = text
+    while let lastScalar = result.unicodeScalars.last,
+          CharacterSet.whitespacesAndNewlines.contains(lastScalar) {
+      result.unicodeScalars.removeLast()
+    }
+    return result
+  }
+
+  static var defaultProxyEndpoint: URL? {
+    if let baseURLString = Bundle.main.object(forInfoDictionaryKey: "LalfredAPIBaseURL") as? String,
+       let baseURL = URL(string: baseURLString) {
+      return baseURL.appending(path: "llm/chat")
+    }
+    return nil
   }
 }
 

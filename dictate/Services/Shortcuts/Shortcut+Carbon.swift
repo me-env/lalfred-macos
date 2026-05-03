@@ -1,10 +1,3 @@
-//
-//  Shortcut+Carbon.swift
-//  dictate
-//
-//  Created by Codex on 4/26/26.
-//
-
 import Carbon.HIToolbox
 
 extension Shortcut {

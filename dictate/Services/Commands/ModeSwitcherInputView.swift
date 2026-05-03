@@ -3,7 +3,7 @@ import SwiftUI
 
 struct ModeSwitcherInputView: View {
   @Binding var query: String
-  let suggestions: [ModeSuggestion]
+  let suggestions: [ModeDefinition]
   let onSubmit: (String) -> Void
   let onDismiss: () -> Void
   
@@ -73,21 +73,15 @@ struct ModeSwitcherInputView: View {
 }
 
 private struct FuzzySuggestionList: View {
-  let suggestions: [ModeSuggestion]
+  let suggestions: [ModeDefinition]
   let selectedIndex: Int
   
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
       ForEach(Array(suggestions.enumerated()), id: \.element.id) { index, suggestion in
-        HStack(spacing: 6) {
-          Text(suggestion.title)
-            .font(.system(size: 12, weight: .semibold, design: .rounded))
-            .foregroundStyle(.white)
-          Text(suggestion.detail)
-            .font(.system(size: 11, weight: .regular, design: .rounded))
-            .foregroundStyle(.white.opacity(0.65))
-            .lineLimit(1)
-        }
+        Text(suggestion.title)
+          .font(.system(size: 12, weight: .semibold, design: .rounded))
+          .foregroundStyle(.white)
         .padding(.horizontal, 8)
         .padding(.top, 5)
         .overlay {
@@ -101,13 +95,10 @@ private struct FuzzySuggestionList: View {
 
 
 #Preview("Mode Switcher Input") {
+  let sampleModes = Array(ModeCatalog.defaultModes.prefix(3))
   ModeSwitcherInputView(
     query: .constant("sum"),
-    suggestions: [
-      .init(id: "summary", title: "Summarize", detail: "Condense into concise points"),
-      .init(id: "summary-bullets", title: "Summary Bullet Points", detail: "Return bullets only"),
-      .init(id: "email", title: "Email Draft", detail: "Format as a professional email")
-    ],
+    suggestions: sampleModes,
     onSubmit: { _ in },
     onDismiss: {}
   )

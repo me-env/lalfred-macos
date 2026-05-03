@@ -9,7 +9,7 @@ protocol AudioRecordingServicing: AnyObject {
 }
 
 protocol TranscribingPipeline {
-    func runTransformationPipeline(at fileURL: URL, context: ModeTranscriptionContext) async throws -> String
+    func runTransformationPipeline(at fileURL: URL, mode: ModeDefinition) async throws -> String
 }
 
 protocol PastingAtCursor {
@@ -25,6 +25,7 @@ protocol IndicatorPresenting: AnyObject {
     func showListening()
     func updateListeningLevel(_ level: CGFloat)
     func showStatus(message: String, autoHideAfter delay: TimeInterval?)
+    func hideIndicator()
     func showModeSwitcher()
     func dismissModeSwitcher()
 }

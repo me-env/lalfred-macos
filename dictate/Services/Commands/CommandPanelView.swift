@@ -2,7 +2,7 @@ import SwiftUI
 
 
 struct CommandPanelView: View {
-    var viewModel: IndicatorPanelController.CommandViewModel
+    var viewModel: CommandViewModel
 
     private let cornerRadius: CGFloat = 18
 
@@ -30,7 +30,7 @@ struct CommandPanelView: View {
 
 #Preview("Command Panel") {
     CommandPanelView(viewModel: {
-        let vm = IndicatorPanelController.CommandViewModel(modeStateStore: ModeStateStore())
+        let vm = CommandViewModel(modeCatalog: ModeCatalog())
         vm.reset()
         return vm
     }())

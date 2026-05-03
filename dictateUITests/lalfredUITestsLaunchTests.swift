@@ -1,13 +1,6 @@
-//
-//  dictateUITestsLaunchTests.swift
-//  dictateUITests
-//
-//  Created by Cyprien Ricque on 4/26/26.
-//
-
 import XCTest
 
-final class dictateUITestsLaunchTests: XCTestCase {
+final class lalfredUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

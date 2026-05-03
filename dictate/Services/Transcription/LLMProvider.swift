@@ -1,4 +1,4 @@
 
 protocol LLMProvider {
-  func process(transcript: String, context: ModeTranscriptionContext) async throws -> String
+  func process(userPrompt: String, instruction: String) async throws -> String
 }

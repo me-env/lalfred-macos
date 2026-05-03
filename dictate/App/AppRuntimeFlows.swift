@@ -13,12 +13,15 @@ struct ListeningFlowHandler {
     errorMessage: (Error) -> String
   ) {
     guard sessionState.state == .idle else { return }
-    
+
     do {
       try recordingService.startRecording()
       _ = sessionState.transitionToListening()
       activateListeningHotKeys()
       indicator.showListening()
+      // Audible cue that we're now listening — fires only after the recorder
+      // is actually live, so the start sound never plays on a failed start.
+      SoundEffectPlayer.shared.playStart()
     } catch {
       indicator.showStatus(message: errorMessage(error), autoHideAfter: 1.8)
     }
@@ -29,7 +32,7 @@ struct ListeningFlowHandler {
     recordingService.cancelRecording()
     sessionState.transitionToIdle()
     deactivateListeningHotKeys()
-    indicator.showStatus(message: "Cancel", autoHideAfter: 1.2)
+    indicator.hideIndicator()
   }
   
   func showModeSwitcherIfPossible(sessionState: DictationSessionStateMachine) {
@@ -49,29 +52,32 @@ struct ListeningFlowHandler {
 @MainActor
 struct ProcessingFlowHandler {
   let recordingService: AudioRecordingServicing
-  let transcriptionPipeline: TranscribingPipeline
   let pasteService: PastingAtCursor
   let indicator: IndicatorPresenting
   let deactivateListeningHotKeys: () -> Void
   
   func performProcessing(
-    context: ModeTranscriptionContext,
+    mode: ModeDefinition,
     errorMessage: (Error) -> String
   ) async {
     deactivateListeningHotKeys()
-    
+
+    // Stop cue at the user-perceived moment of release, before the
+    // 500 ms tail and the network round-trip.
+    SoundEffectPlayer.shared.playStop()
+
     if indicator.isModeSwitcherVisible {
       indicator.dismissModeSwitcher()
     }
-    
+
     indicator.showStatus(message: "Processing", autoHideAfter: nil)
-    
+
     do {
       try await Task.sleep(for: .milliseconds(500))
       let audioFileURL = try await recordingService.stopRecording()
       defer { try? FileManager.default.removeItem(at: audioFileURL) }
       
-      let transcript = try await transcriptionPipeline.runTransformationPipeline(at: audioFileURL, context: context)
+      let transcript = try await runTransformationPipeline(at: audioFileURL, mode: mode)
       handleTranscriptSuccess(transcript)
     } catch {
       indicator.showStatus(message: errorMessage(error), autoHideAfter: 1.8)

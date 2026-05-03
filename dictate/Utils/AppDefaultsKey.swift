@@ -5,6 +5,7 @@ enum AppDefaultsKey {
     static let apiKeyOpenAI = "apiKey.openai"
     static let authToken = "auth.token"
     static let launchAtLogin = "launchAtLogin"
+    static let modeCatalog = "savedModeCatalog"
     static let modeState = "savedModeState"
     static let savedSnippets = "savedSnippets"
     static let savedWords = "savedWords"
@@ -17,12 +18,11 @@ enum AppDefaultsKey {
     static let accountFirstName = "auth.account.firstName"
     static let accountLastName = "auth.account.lastName"
     static let accountCredits = "auth.account.credits"
-
-    static let modeDefaultApplicationPath = "mode.default.applicationPath"
-    static let modeEmailApplicationPath = "mode.email.applicationPath"
-    static let modeTerminalApplicationPath = "mode.terminal.applicationPath"
+    static let accountIsSubscribed = "auth.account.isSubscribed"
 
     static let shortcutModeDefaultTrigger = "shortcut.mode.defaultTrigger"
     static let shortcutModeEmailTrigger = "shortcut.mode.emailTrigger"
     static let shortcutModeTerminalTrigger = "shortcut.mode.terminalTrigger"
+
+    static let soundEffectKind = "sound.effectKind"
 }

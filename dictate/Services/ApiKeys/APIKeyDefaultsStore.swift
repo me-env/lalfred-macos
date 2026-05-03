@@ -1,86 +1,45 @@
-//
-//  APIKeyDefaultsStore.swift
-//  dictate
-//
-//  Created by Cyprien Ricque on 4/26/26.
-//
-
 import Foundation
-import Security
+import OSLog
 
 struct APIKeyDefaultsStore {
-  private let service: String
+  private static let logger = Logger(subsystem: "fr.lalfred.app", category: "APIKey")
+
   private let account: String
-  private let legacyStore: UserDefaultsCodableStore<String>
-  
+  private let userDefaults: UserDefaults
+
   init(
     key: String,
-    userDefaults: UserDefaults = .standard,
-    service: String = Bundle.main.bundleIdentifier ?? "dictate"
+    userDefaults: UserDefaults = .standard
   ) {
-    self.service = service
     self.account = key
-    self.legacyStore = UserDefaultsCodableStore<String>(key: key, userDefaults: userDefaults)
+    self.userDefaults = userDefaults
+    print("[APIKey] init account=\(key)")
   }
-  
+
   func load() -> String? {
-    let query = baseQuery(returnData: true)
-    var result: CFTypeRef?
-    
-    let status = SecItemCopyMatching(query as CFDictionary, &result)
-    if status == errSecSuccess,
-       let data = result as? Data,
-       let value = String(data: data, encoding: .utf8) {
+    print("[APIKey] load() account=\(account)")
+    if let value = userDefaults.string(forKey: account) {
+      print("[APIKey] load() HIT account=\(account) length=\(value.count) suffix=\(value.suffix(4))")
       return value
     }
-    
-    // One-time migration from the old UserDefaults-based storage.
-    if let legacyValue = legacyStore.load() {
-      save(legacyValue)
-      legacyStore.remove()
-      return legacyValue
-    }
-    
+
+    print("[APIKey] load() returning nil account=\(account)")
     return nil
   }
-  
+
   func save(_ apiKey: String) {
-    guard let data = apiKey.data(using: .utf8) else {
-      return
-    }
-
-    let query = baseQuery()
-    let attributes: [String: Any] = [kSecValueData as String: data]
-
-    let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-
-    if updateStatus == errSecItemNotFound {
-      var item = query
-      item[kSecValueData as String] = data
-      item[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
-      SecItemAdd(item as CFDictionary, nil)
-    }
-
-    legacyStore.remove()
+    print("[APIKey] save() account=\(account) length=\(apiKey.count) suffix=\(apiKey.suffix(4))")
+    userDefaults.set(apiKey, forKey: account)
   }
-  
-  func remove() {
-    SecItemDelete(baseQuery() as CFDictionary)
-    legacyStore.remove()
-  }
-  
-  private func baseQuery(returnData: Bool = false) -> [String: Any] {
-    var query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: service,
-      kSecAttrAccount as String: account
-    ]
-    
-    if returnData {
-      query[kSecReturnData as String] = true
-      query[kSecMatchLimit as String] = kSecMatchLimitOne
+
+  @discardableResult
+  func remove() -> Bool {
+    print("[APIKey] remove() called account=\(account)")
+    userDefaults.removeObject(forKey: account)
+    if userDefaults.object(forKey: account) != nil {
+      Self.logger.error("UserDefaults remove failed for \(account, privacy: .public)")
+      return false
     }
-    
-    return query
+    return true
   }
 }

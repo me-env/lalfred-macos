@@ -1,10 +1,3 @@
-//
-//  PasteAtCursorService.swift
-//  dictate
-//
-//  Created by Codex on 4/26/26.
-//
-
 import AppKit
 import CoreGraphics
 

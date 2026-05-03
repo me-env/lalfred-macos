@@ -1,10 +1,3 @@
-//
-//  APIKeyInput.swift
-//  dictate
-//
-//  Created by Cyprien Ricque on 4/26/26.
-//
-
 import SwiftUI
 
 struct APIKeyInputView: View {
@@ -19,7 +12,7 @@ struct APIKeyInputView: View {
     _apiKey = State(initialValue: Self.apiKeyStore.load() ?? "")
   }
 
-  private func saveToKeychain() {
+  private func saveToDefaults() {
     let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
     if trimmed.isEmpty {
       Self.apiKeyStore.remove()
@@ -30,11 +23,11 @@ struct APIKeyInputView: View {
   }
 
   var body: some View {
-    SectionBox("11L API Key", caption: "Stored securely in your macOS Keychain.") {
+    SectionBoxWithTitle("11L API Key", caption: "Stored in app defaults on this Mac.") {
       SecureField("Enter your API key", text: $apiKey)
         .textFieldStyle(.roundedBorder)
         .onChange(of: apiKey) {
-          saveToKeychain()
+          saveToDefaults()
         }
     }
   }

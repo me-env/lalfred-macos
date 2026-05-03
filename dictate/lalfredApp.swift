@@ -1,10 +1,3 @@
-//
-//  dictateApp.swift
-//  dictate
-//
-//  Created by Cyprien Ricque on 4/26/26.
-//
-
 import SwiftUI
 import OSLog
 import AppKit
@@ -27,7 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 @main
-struct dictateApp: App {
+struct lalfredApp: App {
   @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
   @State private var runtimeCoordinator = AppRuntimeCoordinator()
   @AppStorage(AppDefaultsKey.showMenuBarExtra) private var showMenuBarExtra = true

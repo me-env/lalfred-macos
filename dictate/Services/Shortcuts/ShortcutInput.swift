@@ -1,10 +1,3 @@
-//
-//  ShortcutInput.swift
-//  dictate
-//
-//  Created by Cyprien Ricque on 4/26/26.
-//
-
 import SwiftUI
 import AppKit
 import Carbon.HIToolbox
@@ -59,6 +52,7 @@ struct ShortcutInput: View {
   let allowModifierOnlyShortcut: Bool
   @Binding var activeShortcutEditorID: String?
   private let shortcutStore: ShortcutDefaultsStore
+  private let defaultShortcut: Shortcut
 
   @State private var capturedShortcut: Shortcut?
   @State private var hovered: Bool = false
@@ -70,7 +64,7 @@ struct ShortcutInput: View {
   init(
     label: String,
     storeKey: String,
-    fallbackShortcut: Shortcut,
+    defaultShortcut: Shortcut,
     allowModifierOnlyShortcut: Bool = false,
     activeShortcutEditorID: Binding<String?>
   ) {
@@ -78,9 +72,10 @@ struct ShortcutInput: View {
     self.storeKey = storeKey
     self.allowModifierOnlyShortcut = allowModifierOnlyShortcut
     _activeShortcutEditorID = activeShortcutEditorID
+    self.defaultShortcut = defaultShortcut
     let store = ShortcutDefaultsStore(key: storeKey)
     self.shortcutStore = store
-    store.ensureDefault(fallbackShortcut)
+    store.ensureDefault(defaultShortcut)
     _capturedShortcut = State(
       initialValue: store.load()
     )
@@ -134,6 +129,13 @@ struct ShortcutInput: View {
     activeShortcutEditorID = nil
     capturedShortcut = nil
     shortcutStore.remove()
+    NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
+  }
+
+  func restoreDefaultShortcut() {
+    activeShortcutEditorID = nil
+    capturedShortcut = defaultShortcut
+    shortcutStore.save(defaultShortcut)
     NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
   }
 
@@ -237,6 +239,18 @@ struct ShortcutInput: View {
     .disabled(capturedShortcut == nil)
     .opacity(capturedShortcut == nil ? 0.45 : 1.0)
   }
+
+  var restoreDefaultButton: some View {
+    Button {
+      restoreDefaultShortcut()
+    } label: {
+      Image(systemName: "arrow.counterclockwise")
+        .font(.system(size: 10, weight: .semibold))
+        .foregroundStyle(.secondary)
+        .frame(width: 18, height: 18)
+    }
+    .buttonStyle(.plain)
+  }
   
   
   func shortcutToken(_ token: String) -> some View {
@@ -254,6 +268,7 @@ struct ShortcutInput: View {
     HStack {
       Text(label)
       Spacer()
+      restoreDefaultButton
       shortcutSection
       clearButton
     }
@@ -312,7 +327,7 @@ private extension ShortcutInput {
   ShortcutInput(
     label: "Toggle Recording",
     storeKey: AppDefaultsKey.shortcutToggleRecording,
-    fallbackShortcut: Shortcut(
+    defaultShortcut: Shortcut(
       keyCode: KeyCode.from(character: " ") ?? 49,
       modifiers: [.control, .option]
     ),

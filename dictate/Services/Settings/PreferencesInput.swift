@@ -1,10 +1,3 @@
-//
-//  PreferencesInput.swift
-//  dictate
-//
-//  Created by Cyprien Ricque on 4/27/26.
-//
-
 import SwiftUI
 
 struct PreferencesInput: View {
@@ -13,7 +6,7 @@ struct PreferencesInput: View {
   private let launchAtLoginService = LaunchAtLoginService()
   
   var body: some View {
-    SectionBox("Preferences") {
+    SectionBoxWithTitle("Preferences") {
       Toggle("Launch at login", isOn: Binding(
         get: { launchAtLogin },
         set: { newValue in

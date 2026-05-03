@@ -1,20 +1,12 @@
-//
-//  AppRuntimeCoordinator.swift
-//  dictate
-//
-//  Created by Codex on 4/26/26.
-//
-
 import SwiftUI
 import Carbon.HIToolbox
 
 @MainActor
 final class AppRuntimeCoordinator {
-  private let modeStateStore: ModeStateStore
+  private let modeCatalog: ModeCatalog
   private let indicator: IndicatorPresenting
   private let pasteService: PastingAtCursor
   private let recordingService: AudioRecordingServicing
-  private let transcriptionService: TranscribingPipeline
 
   private let modeSwitcherShortcutStore = ShortcutDefaultsStore(key: AppDefaultsKey.shortcutModeSwitcher)
   private let modeSwitcherFallbackShortcut = Shortcut(
@@ -51,7 +43,6 @@ final class AppRuntimeCoordinator {
   )
   private lazy var processingFlowHandler = ProcessingFlowHandler(
     recordingService: recordingService,
-    transcriptionPipeline: transcriptionService,
     pasteService: pasteService,
     indicator: indicator,
     deactivateListeningHotKeys: { [weak self] in
@@ -60,18 +51,16 @@ final class AppRuntimeCoordinator {
   )
 
   init(
-    modeStateStore: ModeStateStore? = nil,
+    modeCatalog: ModeCatalog? = nil,
     indicator: IndicatorPresenting? = nil,
     pasteService: PastingAtCursor? = nil,
     recordingService: AudioRecordingServicing? = nil,
-    transcriptionService: TranscribingPipeline? = nil
   ) {
-    let resolvedModeStateStore = modeStateStore ?? ModeStateStore()
-    self.modeStateStore = resolvedModeStateStore
-    self.indicator = indicator ?? IndicatorPanelController(modeStateStore: resolvedModeStateStore)
+    let resolvedModeCatalog = modeCatalog ?? ModeCatalog()
+    self.modeCatalog = resolvedModeCatalog
+    self.indicator = indicator ?? IndicatorPanelController(modeCatalog: resolvedModeCatalog)
     self.pasteService = pasteService ?? PasteAtCursorService()
     self.recordingService = recordingService ?? AudioRecordingService()
-    self.transcriptionService = transcriptionService ?? TranscriptionPipeline()
   }
 
   deinit {
@@ -121,9 +110,10 @@ final class AppRuntimeCoordinator {
         self?.handleModeSwitcherPress()
       }
     )
+    modeSwitcherMonitor?.activate()
 
     indicator.onModeSwitcherSubmit = { [weak self] selection in
-      let activeMode = self?.modeStateStore.currentMode.title ?? selection
+      let activeMode = self?.modeCatalog.currentMode.title ?? selection
       print("[ModeSwitcher] Selected: \(activeMode)")
       self?.restoreHotKeysAfterModeSwitcher()
     }
@@ -191,6 +181,13 @@ final class AppRuntimeCoordinator {
   }
 
   private func handleModeSwitcherPress() {
+    let canShowModeSwitcher = sessionState.canShowModeSwitcher(
+      isModeSwitcherVisible: indicator.isModeSwitcherVisible
+    )
+    print(
+      "[ModeSwitcher] Shortcut detected (state: \(sessionState.state), " +
+      "visible: \(indicator.isModeSwitcherVisible), allowed: \(canShowModeSwitcher))"
+    )
     listeningFlow.showModeSwitcherIfPossible(sessionState: sessionState)
   }
 
@@ -212,19 +209,17 @@ final class AppRuntimeCoordinator {
     toggleRecordingMonitor?.deactivate()
     deactivateHoldToSpeakMonitor()
     escapeHotKeyMonitor?.deactivate()
-    modeSwitcherMonitor?.deactivate()
   }
 
   private func restoreHotKeysAfterShortcutCapture() {
     toggleRecordingMonitor?.activate()
     activateHoldToSpeakMonitor()
+    modeSwitcherMonitor?.activate()
 
     if sessionState.isListening && !indicator.isModeSwitcherVisible {
       escapeHotKeyMonitor?.activate()
-      modeSwitcherMonitor?.activate()
     } else {
       escapeHotKeyMonitor?.deactivate()
-      modeSwitcherMonitor?.deactivate()
     }
   }
 
@@ -245,6 +240,9 @@ final class AppRuntimeCoordinator {
 
   private func restoreHotKeysAfterModeSwitcher() {
     listeningFlow.restoreHotKeysAfterModeSwitcher(sessionState: sessionState)
+    if !isShortcutCaptureActive {
+      modeSwitcherMonitor?.activate()
+    }
   }
 
   private func activateListeningHotKeys() {
@@ -255,17 +253,16 @@ final class AppRuntimeCoordinator {
 
   private func deactivateListeningHotKeys() {
     escapeHotKeyMonitor?.deactivate()
-    modeSwitcherMonitor?.deactivate()
   }
 
   private func finishListeningAndProcess() async {
     isHoldToSpeakActive = false
     guard sessionState.transitionToProcessing() else { return }
     defer { sessionState.transitionToIdle() }
-    let modeContext = makeModeTranscriptionContext()
+    let modeDefinition = modeCatalog.currentMode
     
     await processingFlowHandler.performProcessing(
-      context: modeContext,
+      mode: modeDefinition,
       errorMessage: Self.errorMessage(for:)
     )
   }
@@ -284,18 +281,6 @@ final class AppRuntimeCoordinator {
     listeningFlow.beginListening(
       sessionState: &sessionState,
       errorMessage: Self.errorMessage(for:)
-    )
-  }
-
-  private func makeModeTranscriptionContext() -> ModeTranscriptionContext {
-    let currentMode = modeStateStore.currentMode
-    let modeDefinition = ModeCatalog.definition(for: currentMode.id)
-    
-    return ModeTranscriptionContext(
-      modeID: currentMode.id,
-      modeTitle: currentMode.title,
-      additionalVocabulary: modeDefinition?.additionalVocabulary ?? [],
-      llmInstruction: modeDefinition?.llmInstruction
     )
   }
 

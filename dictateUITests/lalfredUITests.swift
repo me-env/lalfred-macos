@@ -1,13 +1,6 @@
-//
-//  dictateUITests.swift
-//  dictateUITests
-//
-//  Created by Cyprien Ricque on 4/26/26.
-//
-
 import XCTest
 
-final class dictateUITests: XCTestCase {
+final class lalfredUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

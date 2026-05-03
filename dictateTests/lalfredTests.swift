@@ -1,14 +1,7 @@
-//
-//  dictateTests.swift
-//  dictateTests
-//
-//  Created by Cyprien Ricque on 4/26/26.
-//
-
 import Testing
-@testable import dictate
+@testable import L_Alfred
 
-struct dictateTests {
+struct lalfredTests {
     @Test func stateMachineTransitionsFromIdleToListening() {
         var machine = DictationSessionStateMachine()
         #expect(machine.transitionToListening())
@@ -28,11 +21,13 @@ struct dictateTests {
         #expect(machine.state == .idle)
     }
 
-    @Test func stateMachineCanShowModeSwitcherOnlyWhileListening() {
+    @Test func stateMachineCanShowModeSwitcherWhileIdleOrListening() {
         var machine = DictationSessionStateMachine()
-        #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: false) == false)
+        #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: false))
         _ = machine.transitionToListening()
         #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: false))
         #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: true) == false)
+        _ = machine.transitionToProcessing()
+        #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: false) == false)
     }
 }

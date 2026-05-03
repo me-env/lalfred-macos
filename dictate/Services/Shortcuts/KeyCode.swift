@@ -1,10 +1,3 @@
-//
-//  KeyCode.swift
-//  dictate
-//
-//  Created by Cyprien Ricque on 4/26/26.
-//
-
 import Foundation
 import Carbon.HIToolbox
 
