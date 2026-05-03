@@ -11,12 +11,15 @@
 import AppKit
 import OSLog
 
+ 
+private let logger = Logger(subsystem: "fr.lalfred.app", category: "SoundEffect")
+
+
 @MainActor
 final class SoundEffectPlayer {
   static let shared = SoundEffectPlayer()
 
   private let store = SoundEffectDefaultsStore()
-  private let logger = Logger(subsystem: "fr.lalfred.app", category: "SoundEffect")
   private var cache: [String: NSSound] = [:]
   private var changeObserver: NSObjectProtocol?
 

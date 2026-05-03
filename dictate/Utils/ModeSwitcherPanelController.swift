@@ -5,8 +5,17 @@ import AppKit
 final class ModeSwitcherPanelController {
   private let panel: OverlayPanel
   private let viewModel: CommandViewModel
+  private var isPresented = false
+  private var isDismissing = false
 
-  init(viewModel: CommandViewModel, size: CGSize) {
+  convenience init(viewModel: CommandViewModel) {
+    self.init(viewModel: viewModel, size: IndicatorPanelMetrics.commandPanelSize)
+  }
+
+  init(
+    viewModel: CommandViewModel,
+    size: CGSize
+  ) {
     self.viewModel = viewModel
     self.panel = OverlayPanel(
       contentRect: NSRect(origin: .zero, size: size),
@@ -16,6 +25,11 @@ final class ModeSwitcherPanelController {
     )
     configureOverlayPanel(panel)
     panel.ignoresMouseEvents = false
+    panel.onResignKey = { [weak self] in
+      guard let self else { return }
+      guard self.isPresented, !self.isDismissing else { return }
+      self.onDismiss?()
+    }
     panel.contentViewController = NSHostingController(
       rootView: CommandPanelView(viewModel: viewModel)
     )
@@ -37,6 +51,8 @@ final class ModeSwitcherPanelController {
 
   func present(below indicatorFrame: NSRect) {
     let frame = IndicatorPanelLayout.commandFrame(below: indicatorFrame)
+    isDismissing = false
+    isPresented = true
     panel.setFrame(frame, display: false)
     panel.alphaValue = 0
     panel.allowsKey = true
@@ -52,6 +68,9 @@ final class ModeSwitcherPanelController {
   }
 
   func dismiss() {
+    guard isPresented else { return }
+    isDismissing = true
+
     let activePanel = panel
     NSAnimationContext.runAnimationGroup { context in
       context.duration = 0.12
@@ -61,6 +80,8 @@ final class ModeSwitcherPanelController {
       Task { @MainActor in
         activePanel.orderOut(nil)
         activePanel.allowsKey = false
+        self.isPresented = false
+        self.isDismissing = false
       }
     }
   }

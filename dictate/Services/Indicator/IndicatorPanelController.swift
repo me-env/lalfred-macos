@@ -7,25 +7,20 @@ final class IndicatorPanelController {
   private let indicatorController: IndicatorBubblePanelController
   private let modeSwitcherController: ModeSwitcherPanelController
   private let modeCatalog: ModeCatalog
-  private var hideTask: Task<Void, Never>?
+  private var delayedHideTask: Task<Void, Never>?
   private var previouslyFrontmostApplication: NSRunningApplication?
-  private var isCommandVisible = false
+  private(set) var isCommandVisible = false
   
   var onModeSwitcherSubmit: ((String) -> Void)?
   var onModeSwitcherDismiss: (() -> Void)?
-  var isModeSwitcherVisible: Bool { isCommandVisible }
-  
+
   init(modeCatalog: ModeCatalog) {
     self.modeCatalog = modeCatalog
     
-    self.indicatorController = IndicatorBubblePanelController(
-      viewModel: IndicatorViewModel(),
-      size: IndicatorPanelLayout.compactBubbleSize
-    )
+    self.indicatorController = IndicatorBubblePanelController()
     
     self.modeSwitcherController = ModeSwitcherPanelController(
       viewModel: CommandViewModel(modeCatalog: modeCatalog),
-      size: IndicatorPanelLayout.commandPanelSize
     )
     
     modeSwitcherController.onSubmit = { [weak self] value in
@@ -56,12 +51,12 @@ final class IndicatorPanelController {
   }
   
   func hideIndicator() {
-    hideTask?.cancel()
+    delayedHideTask?.cancel()
     indicatorController.hide()
   }
   
   func showModeSwitcher() {
-    hideTask?.cancel()
+    delayedHideTask?.cancel()
     capturePreviouslyFrontmostApplicationIfNeeded()
     isCommandVisible = true
     
@@ -82,7 +77,7 @@ final class IndicatorPanelController {
   // MARK: - Private
   
   private func showIndicator(autoHideAfter delay: TimeInterval?) {
-    hideTask?.cancel()
+    delayedHideTask?.cancel()
     let wasVisible = indicatorController.isVisible
     indicatorController.setShouldAnimateAppearance(!wasVisible)
     
@@ -96,7 +91,7 @@ final class IndicatorPanelController {
     indicatorController.present()
     
     guard let delay else { return }
-    hideTask = Task {
+    delayedHideTask = Task {
       try? await Task.sleep(for: .seconds(delay))
       guard !Task.isCancelled else { return }
       indicatorController.hide()

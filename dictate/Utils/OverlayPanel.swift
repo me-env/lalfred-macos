@@ -3,9 +3,15 @@ import AppKit
 @MainActor
 final class OverlayPanel: NSPanel {
   var allowsKey = false
+  var onResignKey: (() -> Void)?
 
   override var canBecomeKey: Bool { allowsKey }
   override var canBecomeMain: Bool { false }
+
+  override func resignKey() {
+    super.resignKey()
+    onResignKey?()
+  }
 }
 
 @MainActor

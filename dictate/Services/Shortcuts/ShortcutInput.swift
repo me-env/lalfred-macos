@@ -327,10 +327,7 @@ private extension ShortcutInput {
   ShortcutInput(
     label: "Toggle Recording",
     storeKey: AppDefaultsKey.shortcutToggleRecording,
-    defaultShortcut: Shortcut(
-      keyCode: KeyCode.from(character: " ") ?? 49,
-      modifiers: [.control, .option]
-    ),
+    defaultShortcut: AppDefaultShortcuts.toggleRecording,
     activeShortcutEditorID: .constant(nil)
   )
   .padding()

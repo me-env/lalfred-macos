@@ -12,20 +12,14 @@ struct GeneralTabView: View {
         ShortcutInput(
           label: "Toggle Recording",
           storeKey: AppDefaultsKey.shortcutToggleRecording,
-          defaultShortcut: Shortcut(
-            keyCode: KeyCode.from(character: " ") ?? 49,
-            modifiers: [.command, .shift]
-          ),
+          defaultShortcut: AppDefaultShortcuts.toggleRecording,
           activeShortcutEditorID: $activeShortcutEditorID
         )
         Divider()
         ShortcutInput(
           label: "Hold to Speak",
           storeKey: AppDefaultsKey.shortcutHoldToSpeak,
-          defaultShortcut: Shortcut(
-            keyCode: Shortcut.modifierOnlyKeyCode,
-            modifiers: [.option, .control]
-          ),
+          defaultShortcut: AppDefaultShortcuts.holdToSpeak,
           allowModifierOnlyShortcut: true,
           activeShortcutEditorID: $activeShortcutEditorID
         )
@@ -33,10 +27,7 @@ struct GeneralTabView: View {
         ShortcutInput(
           label: "Mode Switcher",
           storeKey: AppDefaultsKey.shortcutModeSwitcher,
-          defaultShortcut: Shortcut(
-            keyCode: KeyCode.from(character: "/") ?? 44,
-            modifiers: [.command]
-          ),
+          defaultShortcut: AppDefaultShortcuts.modeSwitcher,
           activeShortcutEditorID: $activeShortcutEditorID
         )
       }

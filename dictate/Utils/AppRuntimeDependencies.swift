@@ -20,7 +20,7 @@ protocol PastingAtCursor {
 protocol IndicatorPresenting: AnyObject {
     var onModeSwitcherSubmit: ((String) -> Void)? { get set }
     var onModeSwitcherDismiss: (() -> Void)? { get set }
-    var isModeSwitcherVisible: Bool { get }
+    var isCommandVisible: Bool { get }
 
     func showListening()
     func updateListeningLevel(_ level: CGFloat)

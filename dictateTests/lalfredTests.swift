@@ -23,11 +23,11 @@ struct lalfredTests {
 
     @Test func stateMachineCanShowModeSwitcherWhileIdleOrListening() {
         var machine = DictationSessionStateMachine()
-        #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: false))
+        #expect(machine.canShowModeSwitcher(isCommandVisible: false))
         _ = machine.transitionToListening()
-        #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: false))
-        #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: true) == false)
+        #expect(machine.canShowModeSwitcher(isCommandVisible: false))
+        #expect(machine.canShowModeSwitcher(isCommandVisible: true) == false)
         _ = machine.transitionToProcessing()
-        #expect(machine.canShowModeSwitcher(isModeSwitcherVisible: false) == false)
+        #expect(machine.canShowModeSwitcher(isCommandVisible: false) == false)
     }
 }

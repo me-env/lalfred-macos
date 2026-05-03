@@ -11,7 +11,10 @@ final class IndicatorBubblePanelController {
   private let panel: OverlayPanel
   private let viewModel: IndicatorViewModel
 
-  init(viewModel: IndicatorViewModel, size: CGSize) {
+  init(
+    viewModel: IndicatorViewModel = .init(),
+    size: CGSize = IndicatorPanelMetrics.compactBubbleSize
+  ) {
     self.viewModel = viewModel
     self.panel = OverlayPanel(
       contentRect: NSRect(origin: .zero, size: size),
@@ -72,8 +75,8 @@ final class IndicatorBubblePanelController {
       return IndicatorPanelLayout.indicatorSize(for: viewModel.bubbleContent)
     case .big:
       return CGSize(
-        width: IndicatorPanelLayout.compactBubbleSize.width * IndicatorPanelLayout.modeSwitcherIndicatorScale,
-        height: IndicatorPanelLayout.compactBubbleSize.height * IndicatorPanelLayout.modeSwitcherIndicatorScale
+        width: IndicatorPanelMetrics.compactBubbleSize.width * IndicatorPanelMetrics.modeSwitcherIndicatorScale,
+        height: IndicatorPanelMetrics.compactBubbleSize.height * IndicatorPanelMetrics.modeSwitcherIndicatorScale
       )
     }
   }
@@ -85,7 +88,7 @@ final class IndicatorBubblePanelController {
     }
 
     let current = panel.frame
-    let overshootFactor = IndicatorPanelLayout.modeSwitcherOvershootFactor
+    let overshootFactor = IndicatorPanelMetrics.modeSwitcherOvershootFactor
     let overshootFrame = NSRect(
       x: targetFrame.origin.x + ((targetFrame.origin.x - current.origin.x) * overshootFactor),
       y: targetFrame.origin.y + ((targetFrame.origin.y - current.origin.y) * overshootFactor),
@@ -93,8 +96,8 @@ final class IndicatorBubblePanelController {
       height: targetFrame.size.height + ((targetFrame.size.height - current.size.height) * overshootFactor)
     )
 
-    let firstDuration = IndicatorPanelLayout.modeSwitcherResizeDuration * 0.62
-    let secondDuration = IndicatorPanelLayout.modeSwitcherResizeDuration * 0.38
+    let firstDuration = IndicatorPanelMetrics.modeSwitcherResizeDuration * 0.62
+    let secondDuration = IndicatorPanelMetrics.modeSwitcherResizeDuration * 0.38
 
     setOverlayPanelFrame(
       panel,

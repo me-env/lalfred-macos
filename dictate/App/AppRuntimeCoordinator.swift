@@ -1,5 +1,10 @@
 import SwiftUI
 import Carbon.HIToolbox
+import OSLog
+
+
+private let logger = Logger(subsystem: "fr.lalfred.app", category: "AppRuntimeCoordinator")
+
 
 @MainActor
 final class AppRuntimeCoordinator {
@@ -8,29 +13,23 @@ final class AppRuntimeCoordinator {
   private let pasteService: PastingAtCursor
   private let recordingService: AudioRecordingServicing
 
-  private let modeSwitcherShortcutStore = ShortcutDefaultsStore(key: AppDefaultsKey.shortcutModeSwitcher)
-  private let modeSwitcherFallbackShortcut = Shortcut(
-    keyCode: KeyCode.from(character: "/") ?? UInt16(kVK_ANSI_Slash),
-    modifiers: [.command]
-  )
   private let holdToSpeakShortcutStore = ShortcutDefaultsStore(key: AppDefaultsKey.shortcutHoldToSpeak)
-  private let holdToSpeakFallbackShortcut = Shortcut(
-    keyCode: Shortcut.modifierOnlyKeyCode,
-    modifiers: [.option, .control]
-  )
 
   private var sessionState = DictationSessionStateMachine()
+  
   private var toggleRecordingMonitor: GlobalHotKeyMonitor?
+  private var modeSwitcherMonitor: GlobalHotKeyMonitor?
   private var holdToSpeakMonitor: CarbonHotKeyMonitor?
   private var holdToSpeakModifierMonitor: ModifierFlagsMonitor?
   private var escapeHotKeyMonitor: CarbonHotKeyMonitor?
-  private var modeSwitcherMonitor: CarbonHotKeyMonitor?
+  
   private var shortcutCaptureObserver: NSObjectProtocol?
   private var shortcutDidChangeObserver: NSObjectProtocol?
   private var isShortcutCaptureActive = false
   private var isHoldToSpeakActive = false
   private var lastPressDate: Date = .distantPast
   private let minimumPressInterval: TimeInterval = 0.30
+  
   private lazy var listeningFlow = ListeningFlowHandler(
     recordingService: recordingService,
     indicator: indicator,
@@ -41,6 +40,7 @@ final class AppRuntimeCoordinator {
       self?.deactivateListeningHotKeys()
     }
   )
+  
   private lazy var processingFlowHandler = ProcessingFlowHandler(
     recordingService: recordingService,
     pasteService: pasteService,
@@ -71,55 +71,54 @@ final class AppRuntimeCoordinator {
       NotificationCenter.default.removeObserver(shortcutDidChangeObserver)
     }
   }
+  
+  private func registerAudioLevelUpdateCallback() {
+    recordingService.onAudioLevelUpdate = { [weak self] level in
+      guard let self, self.sessionState.isListening else { return }
+      self.indicator.updateListeningLevel(CGFloat(level))
+    }
+  }
+  
+  private func setDefaultShortcut() {
+    holdToSpeakShortcutStore.ensureDefault(AppDefaultShortcuts.holdToSpeak)
+  }
 
   func start() {
     guard toggleRecordingMonitor == nil else {
       return
     }
+    
+    registerAudioLevelUpdateCallback()
+    setDefaultShortcut()
 
-    recordingService.onAudioLevelUpdate = { [weak self] level in
-      guard let self, self.sessionState.isListening else { return }
-      self.indicator.updateListeningLevel(CGFloat(level))
-    }
-
-    holdToSpeakShortcutStore.ensureDefault(holdToSpeakFallbackShortcut)
-    modeSwitcherShortcutStore.ensureDefault(modeSwitcherFallbackShortcut)
-
-    toggleRecordingMonitor = GlobalHotKeyMonitor { [weak self] in
+    toggleRecordingMonitor = GlobalHotKeyMonitor(
+      storeKey: AppDefaultsKey.shortcutToggleRecording,
+      defaultShortcut: AppDefaultShortcuts.toggleRecording
+    ) { [weak self] in
       self?.handleShortcutPress()
     }
     rebuildHoldToSpeakMonitor()
 
     escapeHotKeyMonitor = CarbonHotKeyMonitor(
-      id: 2,
-      shortcutProvider: {
-        Shortcut(keyCode: UInt16(kVK_Escape), modifiers: [])
-      },
-      onKeyDown: { [weak self] in
-        self?.handleEscapePress()
-      }
+      shortcutProvider: { AppDefaultShortcuts.escape },
+      onKeyDown: { [weak self] in self?.handleEscapePress() }
     )
 
-    modeSwitcherMonitor = CarbonHotKeyMonitor(
-      id: 3,
-      shortcutProvider: { [modeSwitcherShortcutStore] in
-        modeSwitcherShortcutStore.load()
-      },
-      reloadOnShortcutChange: true,
-      onKeyDown: { [weak self] in
-        self?.handleModeSwitcherPress()
-      }
-    )
-    modeSwitcherMonitor?.activate()
+    modeSwitcherMonitor = GlobalHotKeyMonitor(
+      storeKey: AppDefaultsKey.shortcutModeSwitcher,
+      defaultShortcut: AppDefaultShortcuts.modeSwitcher
+    ) { [weak self] in
+      self?.handleModeSwitcherPress()
+    }
 
     indicator.onModeSwitcherSubmit = { [weak self] selection in
       let activeMode = self?.modeCatalog.currentMode.title ?? selection
-      print("[ModeSwitcher] Selected: \(activeMode)")
+      logger.info("[ModeSwitcher] Selected: \(activeMode)")
       self?.restoreHotKeysAfterModeSwitcher()
     }
 
     indicator.onModeSwitcherDismiss = { [weak self] in
-      print("[ModeSwitcher] Dismissed")
+      logger.info("[ModeSwitcher] Dismissed")
       self?.restoreHotKeysAfterModeSwitcher()
     }
 
@@ -149,9 +148,7 @@ final class AppRuntimeCoordinator {
   }
 
   private func handleShortcutPress() {
-    guard !isDebouncedPress() else {
-      return
-    }
+    guard !isDebouncedPress() else { return }
 
     switch sessionState.state {
     case .idle:
@@ -182,12 +179,9 @@ final class AppRuntimeCoordinator {
 
   private func handleModeSwitcherPress() {
     let canShowModeSwitcher = sessionState.canShowModeSwitcher(
-      isModeSwitcherVisible: indicator.isModeSwitcherVisible
+      isCommandVisible: indicator.isCommandVisible
     )
-    print(
-      "[ModeSwitcher] Shortcut detected (state: \(sessionState.state), " +
-      "visible: \(indicator.isModeSwitcherVisible), allowed: \(canShowModeSwitcher))"
-    )
+    logger.info("[ModeSwitcher] Shortcut detected (state: \(String(describing: self.sessionState.state), privacy: .public), visible: \(self.indicator.isCommandVisible), allowed: \(canShowModeSwitcher))")
     listeningFlow.showModeSwitcherIfPossible(sessionState: sessionState)
   }
 
@@ -216,7 +210,7 @@ final class AppRuntimeCoordinator {
     activateHoldToSpeakMonitor()
     modeSwitcherMonitor?.activate()
 
-    if sessionState.isListening && !indicator.isModeSwitcherVisible {
+    if sessionState.isListening && !indicator.isCommandVisible {
       escapeHotKeyMonitor?.activate()
     } else {
       escapeHotKeyMonitor?.deactivate()
@@ -307,7 +301,6 @@ final class AppRuntimeCoordinator {
       )
     } else {
       holdToSpeakMonitor = CarbonHotKeyMonitor(
-        id: 4,
         shortcutProvider: { shortcut },
         onKeyDown: { [weak self] in
           self?.handleHoldToSpeakPress()

@@ -19,11 +19,9 @@ struct ListeningFlowHandler {
       _ = sessionState.transitionToListening()
       activateListeningHotKeys()
       indicator.showListening()
-      // Audible cue that we're now listening — fires only after the recorder
-      // is actually live, so the start sound never plays on a failed start.
       SoundEffectPlayer.shared.playStart()
     } catch {
-      indicator.showStatus(message: errorMessage(error), autoHideAfter: 1.8)
+      indicator.showStatus(message: errorMessage(error), autoHideAfter: 2.2)
     }
   }
   
@@ -36,7 +34,7 @@ struct ListeningFlowHandler {
   }
   
   func showModeSwitcherIfPossible(sessionState: DictationSessionStateMachine) {
-    guard sessionState.canShowModeSwitcher(isModeSwitcherVisible: indicator.isModeSwitcherVisible) else {
+    guard sessionState.canShowModeSwitcher(isCommandVisible: indicator.isCommandVisible) else {
       return
     }
     deactivateListeningHotKeys()
@@ -62,29 +60,27 @@ struct ProcessingFlowHandler {
   ) async {
     deactivateListeningHotKeys()
 
-    // Stop cue at the user-perceived moment of release, before the
-    // 500 ms tail and the network round-trip.
     SoundEffectPlayer.shared.playStop()
 
-    if indicator.isModeSwitcherVisible {
+    if indicator.isCommandVisible {
       indicator.dismissModeSwitcher()
     }
 
     indicator.showStatus(message: "Processing", autoHideAfter: nil)
 
     do {
-      try await Task.sleep(for: .milliseconds(500))
+      try await Task.sleep(for: .milliseconds(250))
       let audioFileURL = try await recordingService.stopRecording()
       defer { try? FileManager.default.removeItem(at: audioFileURL) }
       
       let transcript = try await runTransformationPipeline(at: audioFileURL, mode: mode)
-      handleTranscriptSuccess(transcript)
+      onTranscriptionPipelineResult(transcript)
     } catch {
       indicator.showStatus(message: errorMessage(error), autoHideAfter: 1.8)
     }
   }
   
-  private func handleTranscriptSuccess(_ transcript: String) {
+  private func onTranscriptionPipelineResult(_ transcript: String) {
     let cleanedTranscript = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !cleanedTranscript.isEmpty else {
       indicator.showStatus(message: "NoSpeech", autoHideAfter: 1.4)
