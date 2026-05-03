@@ -1,10 +1,13 @@
 import SwiftUI
 import AppKit
+import Observation
 
 @MainActor
 final class ModeSwitcherPanelController {
   private let panel: OverlayPanel
   private let viewModel: CommandViewModel
+  private let hostingController: NSHostingController<AnyView>
+  private let panelWidth: CGFloat
   private var isPresented = false
   private var isDismissing = false
 
@@ -17,6 +20,13 @@ final class ModeSwitcherPanelController {
     size: CGSize
   ) {
     self.viewModel = viewModel
+    self.panelWidth = size.width
+    self.hostingController = NSHostingController(
+      rootView: AnyView(
+        CommandPanelView(viewModel: viewModel)
+          .frame(width: size.width, alignment: .topLeading)
+      )
+    )
     self.panel = OverlayPanel(
       contentRect: NSRect(origin: .zero, size: size),
       styleMask: [.borderless, .nonactivatingPanel],
@@ -30,9 +40,8 @@ final class ModeSwitcherPanelController {
       guard self.isPresented, !self.isDismissing else { return }
       self.onDismiss?()
     }
-    panel.contentViewController = NSHostingController(
-      rootView: CommandPanelView(viewModel: viewModel)
-    )
+    panel.contentViewController = hostingController
+    observeContentChanges()
   }
 
   var onSubmit: ((String) -> Void)? {
@@ -65,6 +74,7 @@ final class ModeSwitcherPanelController {
     }
 
     panel.makeKey()
+    resizeToFittingContentIfNeeded(animated: false)
   }
 
   func dismiss() {
@@ -84,5 +94,50 @@ final class ModeSwitcherPanelController {
         self.isDismissing = false
       }
     }
+  }
+
+  private func observeContentChanges() {
+    withObservationTracking {
+      _ = viewModel.query
+      _ = viewModel.suggestions.count
+      _ = viewModel.activeModeTitle
+    } onChange: { [weak self] in
+      guard let self else { return }
+      Task { @MainActor [weak self] in
+        self?.resizeToFittingContentIfNeeded(animated: true)
+        self?.observeContentChanges()
+      }
+    }
+  }
+
+  private func resizeToFittingContentIfNeeded(animated: Bool) {
+    guard isPresented, !isDismissing else { return }
+
+    hostingController.view.layoutSubtreeIfNeeded()
+    let fittingHeight = ceil(hostingController.view.fittingSize.height)
+    let targetHeight = max(
+      IndicatorPanelMetrics.commandPanelMinHeight,
+      min(IndicatorPanelMetrics.commandPanelMaxHeight, fittingHeight)
+    )
+
+    let currentFrame = panel.frame
+    guard abs(currentFrame.height - targetHeight) > 0.5 || abs(currentFrame.width - panelWidth) > 0.5 else {
+      return
+    }
+
+    let targetFrame = NSRect(
+      x: currentFrame.minX,
+      y: currentFrame.maxY - targetHeight,
+      width: panelWidth,
+      height: targetHeight
+    )
+
+    setOverlayPanelFrame(
+      panel,
+      to: targetFrame,
+      animated: animated,
+      duration: 0.12,
+      timingFunction: CAMediaTimingFunction(name: .easeInEaseOut)
+    )
   }
 }

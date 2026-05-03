@@ -12,7 +12,11 @@ enum IndicatorPanelMetrics {
   static let expandedTextBubbleMaxHeight: CGFloat = 112
   static let expandedTextBubbleMinHeight: CGFloat = 58
 
-  static let commandPanelSize = CGSize(width: 320, height: 700)
+  static let commandPanelWidth: CGFloat = 230
+  static let commandPanelInitialHeight: CGFloat = 200
+  static let commandPanelMinHeight: CGFloat = 88
+  static let commandPanelMaxHeight: CGFloat = 700
+  static let commandPanelSize = CGSize(width: commandPanelWidth, height: commandPanelInitialHeight)
   static let panelGap: CGFloat = 6
   static let topInset: CGFloat = 20
 }

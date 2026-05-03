@@ -4,41 +4,67 @@ import SwiftUI
 struct ModeSwitcherInputView: View {
   @Binding var query: String
   let suggestions: [ModeDefinition]
+  let activeModeTitle: String
   let onSubmit: (String) -> Void
   let onDismiss: () -> Void
   
   @FocusState private var isFocused: Bool
   @State private var selectedIndex = 0
   
+  var textInput: some View {
+    TextField("Mode…", text: $query)
+      .textFieldStyle(.plain)
+      .font(.system(size: 13, weight: .medium, design: .rounded))
+      .foregroundStyle(.white)
+      .tint(.white)
+      .focused($isFocused)
+      .onSubmit {
+        submitSelectedValue()
+      }
+      .onExitCommand {
+        onDismiss()
+      }
+      .onMoveCommand(perform: handleMoveCommand)
+      .padding(.all, 8)
+      .background {
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
+          .fill(.white.opacity(0.1))
+      }
+  }
     
+  var activeModeIndicator: some View {
+    HStack() {
+      Spacer()
+      HStack(spacing: 0) {
+        Circle()
+          .fill(.mint)
+          .frame(width: 5, height: 5)
+          .padding(.horizontal, 8)
+        
+        Text(activeModeTitle)
+          .font(.system(size: 12, weight: .semibold, design: .rounded))
+          .foregroundStyle(.white)
+          .padding(.trailing, 8)
+          .padding(.vertical, 4)
+      }
+      .background {
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
+          .fill(.white.opacity(0.1))
+      }
+    }
+    .padding(.horizontal, 2)
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      TextField("Mode…", text: $query)
-        .textFieldStyle(.plain)
-        .font(.system(size: 13, weight: .medium, design: .rounded))
-        .foregroundStyle(.white)
-        .tint(.white)
-        .focused($isFocused)
-        .onSubmit {
-          submitSelectedValue()
-        }
-        .onExitCommand {
-          onDismiss()
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity)
-        .background {
-          RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(.white.opacity(0.1))
-        }
-      
+      activeModeIndicator
+      textInput
+
       FuzzySuggestionList(
         suggestions: suggestions,
         selectedIndex: selectedIndex
       )
     }
-    //    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     .onAppear {
       selectedIndex = 0
       isFocused = true
@@ -46,7 +72,6 @@ struct ModeSwitcherInputView: View {
     .onChange(of: query) { _, _ in
       selectedIndex = 0
     }
-//    .onMoveCommand(perform: handleMoveCommand)
   }
   
   private func submitSelectedValue() {
@@ -79,11 +104,14 @@ private struct FuzzySuggestionList: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
       ForEach(Array(suggestions.enumerated()), id: \.element.id) { index, suggestion in
-        Text(suggestion.title)
-          .font(.system(size: 12, weight: .semibold, design: .rounded))
-          .foregroundStyle(.white)
-        .padding(.horizontal, 8)
-        .padding(.top, 5)
+        HStack {
+          Text(suggestion.title)
+            .font(.system(size: 12, weight: .semibold, design: .rounded))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+          Spacer()
+        }
         .overlay {
           RoundedRectangle(cornerRadius: 8, style: .continuous)
             .fill(index == selectedIndex ? .white.opacity(0.16) : .clear)
@@ -99,9 +127,10 @@ private struct FuzzySuggestionList: View {
   ModeSwitcherInputView(
     query: .constant("sum"),
     suggestions: sampleModes,
+    activeModeTitle: "Default",
     onSubmit: { _ in },
     onDismiss: {}
   )
-  .frame(width: 300, height: 140)
+  .frame(width: 300)
   .padding()
 }
