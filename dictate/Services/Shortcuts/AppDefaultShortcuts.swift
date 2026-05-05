@@ -11,11 +11,6 @@ enum AppDefaultShortcuts {
     modifiers: [.option, .control]
   )
 
-  static let modeSwitcher = Shortcut(
-    keyCode: KeyCode.from(character: "/") ?? UInt16(kVK_ANSI_Slash),
-    modifiers: [.command]
-  )
-  
   static let escape = Shortcut(
     keyCode: UInt16(kVK_Escape),
     modifiers: []

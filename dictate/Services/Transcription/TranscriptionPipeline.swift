@@ -1,30 +1,39 @@
 import Foundation
 
+private let defaultLLMInstruction = """
+Reformat the user's message. Fix grammar, spelling, and punctuation. Remove filler words like "um" and "uh". Break long content into paragraphs. Keep the original tone and meaning. Only output the cleaned text, nothing else.
+"""
 
-func runTransformationPipeline(at fileURL: URL, mode: ModeDefinition) async throws -> String {
-  let audioTranscriber: STTProvider = makeDefaultAudioTranscriber()
+func runLLMTransform(transcript: String, llmInstruction: String) async throws -> String {
+  if llmInstruction.isEmpty || transcript.isEmpty {
+    return transcript
+  }
+
   let llmPostProcessor: LLMProvider = makeDefaultLLMPostProcessor()
+
+  return try await llmPostProcessor.process(
+    userPrompt: transcript,
+    instruction: llmInstruction
+  )
+}
+
+func runTransformationPipeline(at fileURL: URL) async throws -> String {
+  let audioTranscriber: STTProvider = makeDefaultAudioTranscriber()
   let snippetProcessor: SnippetTranscriptProcessor = SnippetTranscriptProcessor()
-  
+  let keyTermsStore = KeyTermsStore()
+
   let transcript = try await audioTranscriber.transcribeAudio(
     at: fileURL,
-    additionalVocabulary: mode.additionalVocabulary
+    additionalVocabulary: keyTermsStore.load()
   )
-  
-  let llmInstruction = mode.llmInstruction?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-  print("LLM Instructions \(llmInstruction)")
+
+  print("LLM Instructions \(defaultLLMInstruction)")
   print("User prompt \(transcript)")
-  
-  let llmAdjustedTranscript: String
-  if llmInstruction.isEmpty {
-    llmAdjustedTranscript = transcript
-  } else {
-    llmAdjustedTranscript = try await llmPostProcessor.process(
-      userPrompt: transcript,
-      instruction: llmInstruction
-    )
-  }
-  
+
+  let llmAdjustedTranscript: String = try await runLLMTransform(
+    transcript: transcript,
+    llmInstruction: defaultLLMInstruction
+  )
   return snippetProcessor.process(transcript: llmAdjustedTranscript)
 }
 

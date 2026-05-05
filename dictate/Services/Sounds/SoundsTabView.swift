@@ -1,6 +1,6 @@
 //
 //  Settings tab that lets the user pick which (if any) sound effect plays
-//  when recording starts and stops. Mirrors the ModesTabView / SectionBox
+//  when recording starts and stops. Mirrors the SectionBox
 //  patterns used elsewhere.
 //
 

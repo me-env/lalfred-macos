@@ -33,18 +33,6 @@ struct ListeningFlowHandler {
     indicator.hideIndicator()
   }
   
-  func showModeSwitcherIfPossible(sessionState: DictationSessionStateMachine) {
-    guard sessionState.canShowModeSwitcher(isCommandVisible: indicator.isCommandVisible) else {
-      return
-    }
-    deactivateListeningHotKeys()
-    indicator.showModeSwitcher()
-  }
-  
-  func restoreHotKeysAfterModeSwitcher(sessionState: DictationSessionStateMachine) {
-    guard sessionState.isListening else { return }
-    activateListeningHotKeys()
-  }
 }
 
 @MainActor
@@ -55,16 +43,11 @@ struct ProcessingFlowHandler {
   let deactivateListeningHotKeys: () -> Void
   
   func performProcessing(
-    mode: ModeDefinition,
     errorMessage: (Error) -> String
   ) async {
     deactivateListeningHotKeys()
 
     SoundEffectPlayer.shared.playStop()
-
-    if indicator.isCommandVisible {
-      indicator.dismissModeSwitcher()
-    }
 
     indicator.showStatus(message: "Processing", autoHideAfter: nil)
 
@@ -73,7 +56,7 @@ struct ProcessingFlowHandler {
       let audioFileURL = try await recordingService.stopRecording()
       defer { try? FileManager.default.removeItem(at: audioFileURL) }
       
-      let transcript = try await runTransformationPipeline(at: audioFileURL, mode: mode)
+      let transcript = try await runTransformationPipeline(at: audioFileURL)
       onTranscriptionPipelineResult(transcript)
     } catch {
       indicator.showStatus(message: errorMessage(error), autoHideAfter: 1.8)

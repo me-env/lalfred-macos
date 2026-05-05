@@ -23,13 +23,6 @@ struct GeneralTabView: View {
           allowModifierOnlyShortcut: true,
           activeShortcutEditorID: $activeShortcutEditorID
         )
-        Divider()
-        ShortcutInput(
-          label: "Mode Switcher",
-          storeKey: AppDefaultsKey.shortcutModeSwitcher,
-          defaultShortcut: AppDefaultShortcuts.modeSwitcher,
-          activeShortcutEditorID: $activeShortcutEditorID
-        )
       }
       PermissionsInput()
     }
@@ -41,7 +34,6 @@ struct GeneralTabView: View {
 
 enum Tabs {
   case home
-  case modes
   case dictionary
   case snippets
   case sounds
@@ -70,13 +62,6 @@ struct TabsView: View {
             Image(systemName: currentTab == .home ? "gearshape.fill" : "gearshape")
           }
           .tag(Tabs.home)
-        
-        ModesTabView()
-          .tabItem {
-            Text("Modes")
-            Image(systemName: currentTab == .modes ? "slider.horizontal.3" : "slider.horizontal.3")
-          }
-          .tag(Tabs.modes)
         
         DictionaryTabView()
           .tabItem {
@@ -127,10 +112,6 @@ struct ContentView: View {
 
 #Preview("General") {
   ContentView(initialTab: .home)
-}
-
-#Preview("Modes") {
-  ContentView(initialTab: .modes)
 }
 
 #Preview("Dictionary") {

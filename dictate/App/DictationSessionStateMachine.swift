@@ -29,7 +29,4 @@ struct DictationSessionStateMachine {
     state = .idle
   }
   
-  func canShowModeSwitcher(isCommandVisible: Bool) -> Bool {
-    state != .processing && !isCommandVisible
-  }
 }

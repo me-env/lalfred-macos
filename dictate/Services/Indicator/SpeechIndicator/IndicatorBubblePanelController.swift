@@ -75,8 +75,8 @@ final class IndicatorBubblePanelController {
       return IndicatorPanelLayout.indicatorSize(for: viewModel.bubbleContent)
     case .big:
       return CGSize(
-        width: IndicatorPanelMetrics.compactBubbleSize.width * IndicatorPanelMetrics.modeSwitcherIndicatorScale,
-        height: IndicatorPanelMetrics.compactBubbleSize.height * IndicatorPanelMetrics.modeSwitcherIndicatorScale
+        width: IndicatorPanelMetrics.compactBubbleSize.width * IndicatorPanelMetrics.expandedIndicatorScale,
+        height: IndicatorPanelMetrics.compactBubbleSize.height * IndicatorPanelMetrics.expandedIndicatorScale
       )
     }
   }
@@ -88,7 +88,7 @@ final class IndicatorBubblePanelController {
     }
 
     let current = panel.frame
-    let overshootFactor = IndicatorPanelMetrics.modeSwitcherOvershootFactor
+    let overshootFactor = IndicatorPanelMetrics.indicatorResizeOvershootFactor
     let overshootFrame = NSRect(
       x: targetFrame.origin.x + ((targetFrame.origin.x - current.origin.x) * overshootFactor),
       y: targetFrame.origin.y + ((targetFrame.origin.y - current.origin.y) * overshootFactor),
@@ -96,8 +96,8 @@ final class IndicatorBubblePanelController {
       height: targetFrame.size.height + ((targetFrame.size.height - current.size.height) * overshootFactor)
     )
 
-    let firstDuration = IndicatorPanelMetrics.modeSwitcherResizeDuration * 0.62
-    let secondDuration = IndicatorPanelMetrics.modeSwitcherResizeDuration * 0.38
+    let firstDuration = IndicatorPanelMetrics.indicatorResizeDuration * 0.62
+    let secondDuration = IndicatorPanelMetrics.indicatorResizeDuration * 0.38
 
     setOverlayPanelFrame(
       panel,
