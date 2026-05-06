@@ -3,7 +3,8 @@ import AppKit
 
 struct StatusMenu: View {
   @Environment(\.openSettings) private var openSettings
-  
+  @Environment(\.openWindow) private var openWindow
+
   var body: some View {
     Group {
       settingsButton
@@ -25,7 +26,7 @@ struct StatusMenu: View {
   @MainActor
   private func openAppSettings() {
     NSApp.activate(ignoringOtherApps: true)
-    openSettings()
+    openWindow(id: "main")
   }
 
   private var quitButton: some View {

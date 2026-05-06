@@ -1,9 +1,42 @@
 import SwiftUI
 import OSLog
 import AppKit
+import Sparkle
+import Combine
+
+
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "lalfredApp")
+
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-  private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "URL")
+  /// Keep the menu-bar runtime alive when the user closes the main window.
+  func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+    false
+  }
+
+  func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+    logger.info("applicationShouldHandleReopen hasVisibleWindows=\(flag)")
+    showMainWindow()
+    return false
+  }
+
+  /// Brings the main window to the front, instantiating it via the
+  /// `lalfred://main` external-event bootstrap when it has not yet been
+  /// materialized (e.g. first reopen after a suppressed launch).
+  @MainActor
+  func showMainWindow() {
+    NSApp.activate(ignoringOtherApps: true)
+
+    if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "main" }) {
+      if window.isMiniaturized { window.deminiaturize(nil) }
+      window.makeKeyAndOrderFront(nil)
+      return
+    }
+
+    if let url = URL(string: "lalfred://main") {
+      NSWorkspace.shared.open(url)
+    }
+  }
 
   func application(_ application: NSApplication, open urls: [URL]) {
     guard !urls.isEmpty else {
@@ -35,6 +68,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       logger.info("auth callback handled=\(handled, privacy: .public)")
     case "redeem":
       handleRedeemURL(url)
+    case "main":
+      // Handled by the Window scene via `.handlesExternalEvents(matching:)`.
+      break
     default:
       logger.error("unknown lalfred host: \(host, privacy: .public)")
     }
@@ -51,27 +87,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     RedeemDeepLinkCoordinator.shared.setPending(key)
-    logger.info("redeem key stored, opening Settings")
+    logger.info("redeem key stored, opening main window")
 
-    NSApp.activate(ignoringOtherApps: true)
-    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+    showMainWindow()
   }
 }
+
 
 @main
 struct lalfredApp: App {
   @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
   @State private var runtimeCoordinator = AppRuntimeCoordinator()
   @AppStorage(AppDefaultsKey.showMenuBarExtra) private var showMenuBarExtra = true
+  private let updaterController: SPUStandardUpdaterController
 
   init() {
+    updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     LaunchAtLoginService().synchronizeStoredPreference()
     runtimeCoordinator.start()
   }
 
   var body: some Scene {
-    Settings {
+    Window("Settings", id: "main") {
       ContentView()
+    }
+    .defaultLaunchBehavior(.suppressed) // no window on first launch
+    .handlesExternalEvents(matching: ["main"])
+    .commands {
+      CommandGroup(after: .appInfo) {
+        CheckForUpdatesView(updater: updaterController.updater)
+      }
     }
 
     MenuBarExtra("L'Alfred", image: "MenuBarIcon", isInserted: $showMenuBarExtra) {
