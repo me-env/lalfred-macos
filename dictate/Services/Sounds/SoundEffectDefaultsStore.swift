@@ -1,7 +1,7 @@
 import Foundation
 
 extension Notification.Name {
-  static let soundEffectKindDidChange = Notification.Name("fr.lalfred.app.soundEffectKindDidChange")
+  static let soundEffectKindDidChange = Notification.Name("fr.lalfred.dictate.soundEffectKindDidChange")
 }
 
 struct SoundEffectDefaultsStore {

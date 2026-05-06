@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 
 
-private let logger = Logger(subsystem: "fr.lalfred.app", category: "APIKeyDefaultsStore")
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "APIKeyDefaultsStore")
 
 
 struct APIKeyDefaultsStore {

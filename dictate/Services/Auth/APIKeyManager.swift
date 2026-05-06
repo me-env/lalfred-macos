@@ -13,7 +13,7 @@ enum APIKeyProvider: String, CaseIterable, Identifiable {
     case .elevenLabs:
       return "ElevenLabs"
     case .openAI:
-      return "OpenAI"
+      return "OpenAI (Unused in beta)"
     }
   }
 

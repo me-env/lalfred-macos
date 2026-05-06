@@ -438,7 +438,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.12;
-				PRODUCT_BUNDLE_IDENTIFIER = fr.lalfred.app;
+				PRODUCT_BUNDLE_IDENTIFIER = fr.lalfred.dictate;
 				PRODUCT_NAME = "L'Alfred";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -486,7 +486,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.12;
-				PRODUCT_BUNDLE_IDENTIFIER = fr.lalfred.app;
+				PRODUCT_BUNDLE_IDENTIFIER = fr.lalfred.dictate;
 				PRODUCT_NAME = "L'Alfred";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

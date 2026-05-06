@@ -6,13 +6,13 @@ final class AppRuntimeCoordinator {
   private let pasteService: PastingAtCursor
   private let recordingService: AudioRecordingServicing
 
+  private let toggleRecordingShortcutStore = ShortcutDefaultsStore(key: AppDefaultsKey.shortcutToggleRecording)
   private let holdToSpeakShortcutStore = ShortcutDefaultsStore(key: AppDefaultsKey.shortcutHoldToSpeak)
 
   private var sessionState = DictationSessionStateMachine()
   
-  private var toggleRecordingMonitor: GlobalHotKeyMonitor?
-  private var holdToSpeakMonitor: CarbonHotKeyMonitor?
-  private var holdToSpeakModifierMonitor: ModifierFlagsMonitor?
+  private var toggleRecordingMonitor: UnifiedShortcutMonitor?
+  private var holdToSpeakMonitor: UnifiedShortcutMonitor?
   private var escapeHotKeyMonitor: CarbonHotKeyMonitor?
   
   private var shortcutCaptureObserver: NSObjectProtocol?
@@ -68,7 +68,8 @@ final class AppRuntimeCoordinator {
     }
   }
   
-  private func setDefaultShortcut() {
+  private func setDefaultShortcuts() {
+    toggleRecordingShortcutStore.ensureDefault(AppDefaultShortcuts.toggleRecording)
     holdToSpeakShortcutStore.ensureDefault(AppDefaultShortcuts.holdToSpeak)
   }
 
@@ -78,14 +79,9 @@ final class AppRuntimeCoordinator {
     }
     
     registerAudioLevelUpdateCallback()
-    setDefaultShortcut()
+    setDefaultShortcuts()
 
-    toggleRecordingMonitor = GlobalHotKeyMonitor(
-      storeKey: AppDefaultsKey.shortcutToggleRecording,
-      defaultShortcut: AppDefaultShortcuts.toggleRecording
-    ) { [weak self] in
-      self?.handleShortcutPress()
-    }
+    rebuildToggleRecordingMonitor()
     rebuildHoldToSpeakMonitor()
 
     escapeHotKeyMonitor = CarbonHotKeyMonitor(
@@ -164,13 +160,13 @@ final class AppRuntimeCoordinator {
 
   private func deactivateAllHotKeysForShortcutCapture() {
     toggleRecordingMonitor?.deactivate()
-    deactivateHoldToSpeakMonitor()
+    holdToSpeakMonitor?.deactivate()
     escapeHotKeyMonitor?.deactivate()
   }
 
   private func restoreHotKeysAfterShortcutCapture() {
     toggleRecordingMonitor?.activate()
-    activateHoldToSpeakMonitor()
+    holdToSpeakMonitor?.activate()
     if sessionState.isListening {
       escapeHotKeyMonitor?.activate()
     } else {
@@ -229,49 +225,46 @@ final class AppRuntimeCoordinator {
   }
 
   private func handleShortcutDidChange() {
+    rebuildToggleRecordingMonitor()
     rebuildHoldToSpeakMonitor()
   }
 
-  private func rebuildHoldToSpeakMonitor() {
-    deactivateHoldToSpeakMonitor()
-    holdToSpeakMonitor = nil
-    holdToSpeakModifierMonitor = nil
+  private func rebuildToggleRecordingMonitor() {
+    toggleRecordingMonitor?.deactivate()
+    toggleRecordingMonitor = nil
 
-    guard let shortcut = holdToSpeakShortcutStore.load() else { return }
-
-    if shortcut.isModifierOnly {
-      holdToSpeakModifierMonitor = ModifierFlagsMonitor(
-        targetModifiers: shortcut.modifiers,
-        onKeyDown: { [weak self] in
-          self?.handleHoldToSpeakPress()
-        },
-        onKeyUp: { [weak self] in
-          self?.handleHoldToSpeakRelease()
-        }
-      )
-    } else {
-      holdToSpeakMonitor = CarbonHotKeyMonitor(
-        shortcutProvider: { shortcut },
-        onKeyDown: { [weak self] in
-          self?.handleHoldToSpeakPress()
-        },
-        onKeyUp: { [weak self] in
-          self?.handleHoldToSpeakRelease()
-        }
-      )
-    }
+    toggleRecordingMonitor = UnifiedShortcutMonitor(
+      shortcutProvider: { [toggleRecordingShortcutStore] in
+        toggleRecordingShortcutStore.load()
+      },
+      onKeyDown: { [weak self] in
+        self?.handleShortcutPress()
+      }
+    )
 
     guard !isShortcutCaptureActive else { return }
-    activateHoldToSpeakMonitor()
+    toggleRecordingMonitor?.activate()
   }
 
-  private func activateHoldToSpeakMonitor() {
-    holdToSpeakMonitor?.activate()
-    holdToSpeakModifierMonitor?.activate()
-  }
-
-  private func deactivateHoldToSpeakMonitor() {
+  private func rebuildHoldToSpeakMonitor() {
     holdToSpeakMonitor?.deactivate()
-    holdToSpeakModifierMonitor?.deactivate()
+    holdToSpeakMonitor = nil
+
+    guard holdToSpeakShortcutStore.load() != nil else { return }
+
+    holdToSpeakMonitor = UnifiedShortcutMonitor(
+      shortcutProvider: { [holdToSpeakShortcutStore] in
+        holdToSpeakShortcutStore.load()
+      },
+      onKeyDown: { [weak self] in
+        self?.handleHoldToSpeakPress()
+      },
+      onKeyUp: { [weak self] in
+        self?.handleHoldToSpeakRelease()
+      }
+    )
+
+    guard !isShortcutCaptureActive else { return }
+    holdToSpeakMonitor?.activate()
   }
 }

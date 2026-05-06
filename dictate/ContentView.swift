@@ -20,7 +20,6 @@ struct GeneralTabView: View {
           label: "Hold to Speak",
           storeKey: AppDefaultsKey.shortcutHoldToSpeak,
           defaultShortcut: AppDefaultShortcuts.holdToSpeak,
-          allowModifierOnlyShortcut: true,
           activeShortcutEditorID: $activeShortcutEditorID
         )
       }
@@ -44,11 +43,13 @@ struct TabsView: View {
   @State private var currentTab: Tabs
   @State private var measuredTabHeights: [Tabs: CGFloat] = [:]
   @State private var settingsWindow: NSWindow?
-  
+
+  private let deepLinkCoordinator = RedeemDeepLinkCoordinator.shared
+
   private let minimumSettingsWidth: CGFloat = 640
   private let minimumSettingsHeight: CGFloat = 320
   private let tabBarChromeHeight: CGFloat = 80
-  
+
   init(initialTab: Tabs = .home) {
     _currentTab = State(initialValue: initialTab)
   }
@@ -94,6 +95,20 @@ struct TabsView: View {
     }
     .tabViewStyle(.tabBarOnly)
     .navigationTitle("L'Alfred")
+    .onAppear {
+      jumpToAccountIfRedeemPending()
+    }
+    .onChange(of: deepLinkCoordinator.pendingKey) { _, newValue in
+      if newValue != nil {
+        currentTab = .account
+      }
+    }
+  }
+
+  private func jumpToAccountIfRedeemPending() {
+    if deepLinkCoordinator.pendingKey != nil {
+      currentTab = .account
+    }
   }
 }
   

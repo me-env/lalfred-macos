@@ -1,12 +1,16 @@
 import SwiftUI
 
 /// Coordinator for the Account tab. Owns the per-tab view models and composes
-/// the three sections: signed-in/signed-out card, plus the BYOK section.
+/// the three sections: signed-in/signed-out card, redeem-a-code (when signed
+/// in), and the BYOK section.
 struct AccountTabView: View {
   @AppStorage(AppDefaultsKey.isSignedIn) private var isSignedIn = false
 
   @State private var model: AccountTabViewModel
   @State private var apiKeyManager: APIKeyManager
+  @State private var redeemModel: RedeemClaimViewModel
+
+  private let deepLinkCoordinator = RedeemDeepLinkCoordinator.shared
 
   init(
     initialIsLoadingAuthURL: Bool = false,
@@ -19,12 +23,14 @@ struct AccountTabView: View {
       )
     )
     _apiKeyManager = State(initialValue: APIKeyManager())
+    _redeemModel = State(initialValue: RedeemClaimViewModel())
   }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       if isSignedIn {
         ConnectedAccountCard(model: model)
+        RedeemClaimSection(model: redeemModel)
       } else {
         LoggedOutCard(model: model)
       }
@@ -35,7 +41,54 @@ struct AccountTabView: View {
     .task(id: isSignedIn) {
       await model.handleSignedInChange(isSignedIn: isSignedIn)
       apiKeyManager.refresh()
+      consumePendingDeepLinkKey()
     }
+    .onAppear {
+      consumePendingDeepLinkKey()
+    }
+    .onChange(of: deepLinkCoordinator.pendingKey) { _, _ in
+      consumePendingDeepLinkKey()
+    }
+    .sheet(item: redeemSuccessBinding) { success in
+      RedeemSuccessSheet(success: success) {
+        redeemModel.dismissSuccess()
+      }
+    }
+  }
+
+  /// If a redemption key arrived via deep link while we were elsewhere, push
+  /// it into the redeem field (only when the user is signed in — otherwise we
+  /// keep it pending until after sign-in).
+  private func consumePendingDeepLinkKey() {
+    guard isSignedIn, let key = deepLinkCoordinator.pendingKey else { return }
+    redeemModel.inputKey = key
+    deepLinkCoordinator.clearPending()
+  }
+
+  /// Bridges `lastSuccess: RedeemClaimSuccess?` into a `Binding<Item?>` for
+  /// `.sheet(item:)`. The `Item` must conform to `Identifiable`, so we wrap.
+  private var redeemSuccessBinding: Binding<IdentifiedSuccess?> {
+    Binding(
+      get: {
+        redeemModel.lastSuccess.map { IdentifiedSuccess(value: $0) }
+      },
+      set: { newValue in
+        if newValue == nil {
+          redeemModel.dismissSuccess()
+        }
+      }
+    )
+  }
+}
+
+private struct IdentifiedSuccess: Identifiable {
+  let value: RedeemClaimSuccess
+  let id = UUID()
+}
+
+private extension RedeemSuccessSheet {
+  init(success identifiable: IdentifiedSuccess, onDismiss: @escaping () -> Void) {
+    self.init(success: identifiable.value, onDismiss: onDismiss)
   }
 }
 

@@ -12,7 +12,7 @@ import AppKit
 import OSLog
 
  
-private let logger = Logger(subsystem: "fr.lalfred.app", category: "SoundEffect")
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "SoundEffect")
 
 
 @MainActor
@@ -78,6 +78,7 @@ final class SoundEffectPlayer {
     // If it's already mid-playback (rapid presses), stop and replay so the
     // user gets immediate feedback rather than a no-op.
     if sound.isPlaying { sound.stop() }
+    sound.volume = 0.35
     sound.play()
   }
 

@@ -31,7 +31,7 @@ final class AuthManager {
     }
   }
   
-  private let logger = Logger(subsystem: "fr.lalfred.app", category: "Auth")
+  private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "Auth")
   private let tokenStore: APIKeyDefaultsStore
   private let userDefaults: UserDefaults
   private let urlSession: URLSession

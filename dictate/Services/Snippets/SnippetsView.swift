@@ -1,5 +1,7 @@
 import SwiftUI
 
+private let fullSentenceMatchToggleTitle = "Only match when full sentence equals trigger"
+
 struct Snippet: Hashable, Decodable, Encodable, Equatable {
   var key: String
   var value: String
@@ -91,9 +93,11 @@ struct SnippetsTabView: View {
         .disabled(!canAddSnippet)
       }
 
-      Toggle("Only match when full sentence equals trigger", isOn: $newMatchEntireSentenceOnly)
-        .toggleStyle(.checkbox)
-        .font(.caption)
+      Toggle(isOn: $newMatchEntireSentenceOnly) {
+        FullSentenceMatchLabel()
+      }
+      .toggleStyle(.checkbox)
+      .font(.caption)
     }
   }
   
@@ -246,12 +250,13 @@ private struct SnippetRow: View {
       }
 
       Toggle(
-        "Only match when full sentence equals trigger",
         isOn: Binding(
           get: { snippet.matchEntireSentenceOnly },
           set: { onToggleMatchEntireSentenceOnly($0) }
         )
-      )
+      ) {
+        FullSentenceMatchLabel()
+      }
       .toggleStyle(.checkbox)
       .font(.caption)
     }
@@ -270,6 +275,109 @@ private struct SnippetRow: View {
         Label("Remove", systemImage: "trash")
       }
     }
+  }
+}
+
+private struct FullSentenceMatchLabel: View {
+  @State private var isTooltipPresented = false
+
+  var body: some View {
+    HStack(spacing: 4) {
+      Text(fullSentenceMatchToggleTitle)
+
+      Image(systemName: "info.circle")
+        .foregroundStyle(.secondary)
+    }
+    .contentShape(Rectangle())
+    .onHover { isHovering in
+      isTooltipPresented = isHovering
+    }
+    .simultaneousGesture(
+      TapGesture().onEnded {
+        isTooltipPresented.toggle()
+      }
+    )
+    .popover(isPresented: $isTooltipPresented, arrowEdge: .bottom) {
+      FullSentenceMatchTooltipView()
+        .frame(width: 420)
+        .padding(14)
+    }
+  }
+}
+
+private struct FullSentenceMatchTooltipView: View {
+  var body: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("When to enable full sentence match")
+        .font(.headline)
+
+      Text("Use full match for exact commands. Keep it off for phrases that should expand inside a longer sentence.")
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+
+      FullSentenceUseCaseCard(
+        title: "Use case: \"email\"",
+        badge: "Enable full match",
+        badgeColor: .green,
+        primaryLine: "Sentence: \"email\" -> replace with your actual email",
+        secondaryLine: "Sentence: \"I'll send you an email\" -> do not replace",
+        secondaryIcon: "xmark.circle"
+      )
+
+      FullSentenceUseCaseCard(
+        title: "Use case: \"pro signature\"",
+        badge: "Leave full match off",
+        badgeColor: .orange,
+        primaryLine: "Sentence: \"Please add my pro signature below\" -> replace",
+        secondaryLine: "Sentence: \"pro signature\" alone -> replace",
+        secondaryIcon: "checkmark.circle"
+      )
+    }
+  }
+}
+
+private struct FullSentenceUseCaseCard: View {
+  let title: String
+  let badge: String
+  let badgeColor: Color
+  let primaryLine: String
+  let secondaryLine: String
+  let secondaryIcon: String
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(spacing: 8) {
+        Text(title)
+          .font(.subheadline.weight(.semibold))
+
+        Text(badge)
+          .font(.caption.weight(.semibold))
+          .padding(.horizontal, 8)
+          .padding(.vertical, 2)
+          .background(
+            Capsule(style: .continuous)
+              .fill(badgeColor.opacity(0.16))
+          )
+          .overlay(
+            Capsule(style: .continuous)
+              .stroke(badgeColor.opacity(0.4), lineWidth: 1)
+          )
+      }
+
+      Label(primaryLine, systemImage: "checkmark.circle.fill")
+        .font(.caption)
+        .foregroundStyle(.primary)
+
+      Label(secondaryLine, systemImage: secondaryIcon)
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+    .padding(10)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(
+      RoundedRectangle(cornerRadius: 10, style: .continuous)
+        .fill(Color.secondary.opacity(0.08))
+    )
   }
 }
 

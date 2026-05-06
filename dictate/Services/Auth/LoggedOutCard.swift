@@ -3,6 +3,8 @@ import SwiftUI
 struct LoggedOutCard: View {
   let model: AccountTabViewModel
 
+  private let deepLinkCoordinator = RedeemDeepLinkCoordinator.shared
+
   var body: some View {
     HStack {
       VStack(alignment: .leading, spacing: 14) {
@@ -24,6 +26,10 @@ struct LoggedOutCard: View {
         .buttonStyle(.borderedProminent)
         .disabled(model.isLoadingAuthURL)
 
+        if deepLinkCoordinator.pendingKey != nil {
+          pendingRedeemHint
+        }
+
         if !model.authErrorMessage.isEmpty {
           Divider()
           Text(model.authErrorMessage)
@@ -33,5 +39,20 @@ struct LoggedOutCard: View {
       Spacer()
     }
     .accountCardBackground()
+  }
+
+  private var pendingRedeemHint: some View {
+    HStack(alignment: .top, spacing: 8) {
+      Image(systemName: "ticket.fill")
+        .foregroundStyle(.tint)
+      Text("Sign in first — your redemption code is ready and will be applied right after.")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+    .padding(8)
+    .background(
+      RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .fill(.tint.opacity(0.08))
+    )
   }
 }
