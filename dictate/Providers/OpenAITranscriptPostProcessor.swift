@@ -165,12 +165,8 @@ struct OpenAITranscriptPostProcessor: LLMProvider {
     return result
   }
 
-  static var defaultProxyEndpoint: URL? {
-    if let baseURLString = Bundle.main.object(forInfoDictionaryKey: "LalfredAPIBaseURL") as? String,
-       let baseURL = URL(string: baseURLString) {
-      return baseURL.appending(path: "llm/chat")
-    }
-    return nil
+  static var defaultProxyEndpoint: URL {
+    APIEndpoints.llmChat
   }
 }
 

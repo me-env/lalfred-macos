@@ -56,10 +56,9 @@ struct ScribeClient {
     let body = try makeMultipartBody(
       fileURL: fileURL,
       boundary: boundary,
-      keyterms: keyterms,
-      includeDirectFields: mode == .direct
+      keyterms: keyterms
     )
-    let requestURL = try makeRequestURL(mode: mode, keyterms: keyterms)
+    let requestURL = try makeRequestURL(mode: mode)
 
     var request = URLRequest(url: requestURL)
     request.httpMethod = "POST"
@@ -84,20 +83,11 @@ struct ScribeClient {
     return try parseTranscript(from: data)
   }
 
-  private func makeRequestURL(mode: TransportMode, keyterms: [String]) throws -> URL {
+  private func makeRequestURL(mode: TransportMode) throws -> URL {
     switch mode {
     case .direct:
       return directEndpoint
     case .proxy:
-      guard var components = URLComponents(url: try requireProxyEndpoint(), resolvingAgainstBaseURL: false) else {
-        throw ScribeError.invalidProxyEndpoint
-      }
-      if !keyterms.isEmpty {
-        components.queryItems = keyterms.map { URLQueryItem(name: "keyterms", value: $0) }
-      }
-      if let url = components.url {
-        return url
-      }
       return try requireProxyEndpoint()
     }
   }
@@ -161,19 +151,17 @@ struct ScribeClient {
   private func makeMultipartBody(
     fileURL: URL,
     boundary: String,
-    keyterms: [String],
-    includeDirectFields: Bool
+    keyterms: [String]
   ) throws -> Data {
     var body = Data()
     let lineBreak = "\r\n"
 
-    if includeDirectFields {
-      appendField("model_id", value: "scribe_v2", boundary: boundary, lineBreak: lineBreak, body: &body)
-      appendField("no_verbatim", value: "true", boundary: boundary, lineBreak: lineBreak, body: &body)
-      appendField("tag_audio_events", value: "false", boundary: boundary, lineBreak: lineBreak, body: &body)
-      keyterms.forEach { keyterm in
-        appendField("keyterms", value: keyterm, boundary: boundary, lineBreak: lineBreak, body: &body)
-      }
+    appendField("model_id", value: "scribe_v2", boundary: boundary, lineBreak: lineBreak, body: &body)
+    appendField("no_verbatim", value: "true", boundary: boundary, lineBreak: lineBreak, body: &body)
+    appendField("tag_audio_events", value: "false", boundary: boundary, lineBreak: lineBreak, body: &body)
+
+    keyterms.forEach { keyterm in
+      appendField("keyterms", value: keyterm, boundary: boundary, lineBreak: lineBreak, body: &body)
     }
 
     let filename = fileURL.lastPathComponent
@@ -220,18 +208,8 @@ struct ScribeClient {
     return store.sanitize(store.load() + additionalVocabulary)
   }
 
-  private static var defaultProxyEndpoint: URL? {
-    if let absoluteURLString = Bundle.main.object(forInfoDictionaryKey: "LalfredTranscribeProxyURL") as? String,
-       let absoluteURL = URL(string: absoluteURLString) {
-      return absoluteURL
-    }
-
-    if let baseURLString = Bundle.main.object(forInfoDictionaryKey: "LalfredAPIBaseURL") as? String,
-       let baseURL = URL(string: baseURLString) {
-      return baseURL.appending(path: "transcribe")
-    }
-
-    return URL(string: "http://localhost:8000/transcribe")
+  private static var defaultProxyEndpoint: URL {
+    APIEndpoints.transcribe
   }
 }
 

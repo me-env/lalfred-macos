@@ -106,9 +106,7 @@ final class RedeemClaimViewModel {
   // MARK: - Networking
 
   private func postRedeem(claimKey: String) async throws -> RedeemClaimSuccess {
-    guard let endpoint = redeemEndpoint() else {
-      throw RedeemError.invalidEndpoint
-    }
+    let endpoint = redeemEndpoint()
 
     var request = URLRequest(url: endpoint)
     request.httpMethod = "POST"
@@ -140,16 +138,8 @@ final class RedeemClaimViewModel {
     }
   }
 
-  private func redeemEndpoint() -> URL? {
-    if let absoluteURLString = Bundle.main.object(forInfoDictionaryKey: "LalfredClaimsRedeemURL") as? String,
-       let absoluteURL = URL(string: absoluteURLString) {
-      return absoluteURL
-    }
-    if let baseURLString = Bundle.main.object(forInfoDictionaryKey: "LalfredAPIBaseURL") as? String,
-       let baseURL = URL(string: baseURLString) {
-      return baseURL.appending(path: "claims").appending(path: "redeem")
-    }
-    return URL(string: "http://localhost:8000/claims/redeem")
+  private func redeemEndpoint() -> URL {
+    APIEndpoints.claimsRedeem
   }
 
   private func parseServerMessage(from data: Data) -> String {
@@ -208,7 +198,6 @@ private extension JSONDecoder {
 // MARK: - Errors
 
 enum RedeemError: LocalizedError {
-  case invalidEndpoint
   case invalidResponse
   case unauthorized
   case invalidKey
@@ -217,8 +206,6 @@ enum RedeemError: LocalizedError {
 
   var errorDescription: String? {
     switch self {
-    case .invalidEndpoint:
-      return "Redeem endpoint is not configured."
     case .invalidResponse:
       return "Unexpected server response."
     case .unauthorized:

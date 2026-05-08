@@ -16,7 +16,7 @@ final class AudioRecordingService: NSObject {
       case .alreadyRecording:
         return "A recording is already in progress"
       case .failedToCreateRecorder:
-        return "Failed to create audio recorder"
+        return "No microphone device detected"
       case .notRecording:
         return "No active recording"
       case .failedToFinalizeRecording:
@@ -103,8 +103,9 @@ final class AudioRecordingService: NSObject {
   private func makeRecorder(fileURL: URL) throws -> AVAudioRecorder {
     let settings: [String: Any] = [
       AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-      AVSampleRateKey: 44_100,
-      AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
+      AVSampleRateKey: 16_000,
+      AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue,
+      AVEncoderBitRateKey: 32_000,
       AVNumberOfChannelsKey: 1
     ]
     

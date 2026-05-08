@@ -6,25 +6,19 @@ final class AuthManager {
   static let shared = AuthManager()
   
   enum AuthError: LocalizedError {
-    case invalidLoginEndpoint
     case invalidResponse
     case missingAuthorizationURL
     case missingAuthToken
-    case invalidProfileEndpoint
     case profileRequestFailed(statusCode: Int, message: String)
     
     var errorDescription: String? {
       switch self {
-      case .invalidLoginEndpoint:
-        return "OAuth login endpoint is not configured."
       case .invalidResponse:
         return "Unexpected OAuth response from server."
       case .missingAuthorizationURL:
         return "Server did not provide a Google authorization URL."
       case .missingAuthToken:
         return "You must be signed in to load account details."
-      case .invalidProfileEndpoint:
-        return "Account profile endpoint is not configured."
       case let .profileRequestFailed(statusCode, message):
         return "Failed to load account details (\(statusCode)): \(message)"
       }
@@ -48,9 +42,7 @@ final class AuthManager {
   }
   
   func fetchGoogleAuthorizationURL() async throws -> URL {
-    guard let loginEndpoint = googleLoginEndpoint() else {
-      throw AuthError.invalidLoginEndpoint
-    }
+    let loginEndpoint = googleLoginEndpoint()
     
     let (data, response) = try await urlSession.data(from: loginEndpoint)
     guard let httpResponse = response as? HTTPURLResponse else {
@@ -160,9 +152,7 @@ final class AuthManager {
       throw AuthError.missingAuthToken
     }
     
-    guard let profileEndpoint = accountProfileEndpoint() else {
-      throw AuthError.invalidProfileEndpoint
-    }
+    let profileEndpoint = accountProfileEndpoint()
     
     var request = URLRequest(url: profileEndpoint)
     request.httpMethod = "GET"
@@ -211,32 +201,12 @@ final class AuthManager {
     return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
   }
   
-  private func googleLoginEndpoint() -> URL? {
-    if let absoluteURLString = Bundle.main.object(forInfoDictionaryKey: "LalfredGoogleLoginURL") as? String,
-       let absoluteURL = URL(string: absoluteURLString) {
-      return absoluteURL
-    }
-    
-    if let baseURLString = Bundle.main.object(forInfoDictionaryKey: "LalfredAPIBaseURL") as? String,
-       let baseURL = URL(string: baseURLString) {
-      return baseURL.appending(path: "auth").appending(path: "google").appending(path: "login")
-    }
-    
-    return URL(string: "http://localhost:8000/auth/google/login")
+  private func googleLoginEndpoint() -> URL {
+    APIEndpoints.googleLogin
   }
   
-  private func accountProfileEndpoint() -> URL? {
-    if let absoluteURLString = Bundle.main.object(forInfoDictionaryKey: "LalfredAccountProfileURL") as? String,
-       let absoluteURL = URL(string: absoluteURLString) {
-      return absoluteURL
-    }
-    
-    if let baseURLString = Bundle.main.object(forInfoDictionaryKey: "LalfredAPIBaseURL") as? String,
-       let baseURL = URL(string: baseURLString) {
-      return baseURL.appending(path: "users").appending(path: "me")
-    }
-    
-    return URL(string: "http://localhost:8000/users/me")
+  private func accountProfileEndpoint() -> URL {
+    APIEndpoints.accountProfile
   }
 }
 
