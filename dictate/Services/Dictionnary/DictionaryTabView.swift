@@ -48,10 +48,10 @@ struct DictionaryTabView: View {
         systemImage: "text.book.closed",
         description: Text("Add names, tools, or jargon you want to transcribe accurately.")
       )
-      .frame(maxWidth: .infinity, minHeight: 200)
-      .padding(.vertical, 8)
       Spacer()
     }
+    .frame(maxWidth: .infinity)
+    .padding(.vertical)
   }
   
   private var wordList: some View {
@@ -65,7 +65,6 @@ struct DictionaryTabView: View {
       }
       .padding(.vertical, 2)
     }
-    .frame(minHeight: 220)
   }
   
   private func addWord() {

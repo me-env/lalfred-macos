@@ -15,7 +15,7 @@ struct SoundsTabView: View {
   }
 
   var body: some View {
-    VStack(spacing: 12) {
+    VStack{
       SectionBoxWithTitle(
         "Sounds",
         caption: "Plays a discreet cue when recording starts and stops. All cues are short (under 200 ms) and capped at a polite volume."
@@ -50,6 +50,39 @@ private struct SoundOptionRow: View {
   let isSelected: Bool
   let onSelect: () -> Void
 
+  var playButtons: some View {
+    HStack(spacing: 6) {
+      Button {
+        SoundEffectPlayer.shared.previewStart(of: kind)
+      } label: {
+        Label("Start", systemImage: "play.fill")
+          .labelStyle(.titleAndIcon)
+      }
+      .buttonStyle(.bordered)
+      .controlSize(.small)
+
+      Button {
+        SoundEffectPlayer.shared.previewStop(of: kind)
+      } label: {
+        Label("Stop", systemImage: "stop.fill")
+          .labelStyle(.titleAndIcon)
+      }
+      .buttonStyle(.bordered)
+      .controlSize(.small)
+    }
+  }
+  
+  var defaultTag: some View {
+    Text("Default")
+      .font(.caption2.weight(.semibold))
+      .foregroundStyle(.secondary)
+      .padding(.horizontal, 6)
+      .padding(.vertical, 2)
+      .background(
+        Capsule().fill(.secondary.opacity(0.15))
+      )
+  }
+  
   var body: some View {
     HStack(alignment: .top, spacing: 12) {
       // Radio-style indicator
@@ -62,45 +95,20 @@ private struct SoundOptionRow: View {
         HStack(spacing: 6) {
           Text(kind.displayName)
             .font(.headline)
+          
           if kind == .defaultKind {
-            Text("Default")
-              .font(.caption2.weight(.semibold))
-              .foregroundStyle(.secondary)
-              .padding(.horizontal, 6)
-              .padding(.vertical, 2)
-              .background(
-                Capsule().fill(.secondary.opacity(0.15))
-              )
+            defaultTag
           }
         }
         Text(kind.detail)
           .font(.subheadline)
           .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
       }
 
       Spacer(minLength: 8)
 
       if kind != .none {
-        HStack(spacing: 6) {
-          Button {
-            SoundEffectPlayer.shared.previewStart(of: kind)
-          } label: {
-            Label("Start", systemImage: "play.fill")
-              .labelStyle(.titleAndIcon)
-          }
-          .buttonStyle(.bordered)
-          .controlSize(.small)
-
-          Button {
-            SoundEffectPlayer.shared.previewStop(of: kind)
-          } label: {
-            Label("Stop", systemImage: "stop.fill")
-              .labelStyle(.titleAndIcon)
-          }
-          .buttonStyle(.bordered)
-          .controlSize(.small)
-        }
+        playButtons
       }
     }
     .padding(.vertical, 4)
@@ -114,5 +122,5 @@ private struct SoundOptionRow: View {
 
 #Preview {
   SoundsTabView()
-    .frame(width: 760, height: 460)
+    .frame(width: 760)
 }

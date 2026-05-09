@@ -56,45 +56,63 @@ struct TabsView: View {
   
   var body: some View {
     TabView(selection: $currentTab) {
-      Group {
-        GeneralTabView()
-          .tabItem {
-            Text("General")
-            Image(systemName: currentTab == .home ? "gearshape.fill" : "gearshape")
-          }
-          .tag(Tabs.home)
+      TabSection {
+        Tab(
+          "General",
+          systemImage: currentTab == .home ? "gearshape.fill" : "gearshape",
+          value: Tabs.home,
+          role: nil
+        ) {
+          GeneralTabView()
+        }
+      }
+      
+      TabSection {
+        Tab(
+          "Dict",
+          systemImage: currentTab == .dictionary ? "book.fill" : "book",
+          value: Tabs.dictionary,
+          role: nil
+        ) {
+          DictionaryTabView()
+        }
         
-        DictionaryTabView()
-          .tabItem {
-            Text("Dictionary")
-            Image(systemName: currentTab == .dictionary ? "book.fill" : "book")
-          }
-          .tag(Tabs.dictionary)
+        Tab(
+          "Snippets",
+          systemImage: currentTab == .snippets ? "text.bubble.fill" : "text.bubble",
+          value: Tabs.snippets,
+          role: nil
+        ) {
+          SnippetsTabView()
+        }
+      }
+      
+      TabSection {
+        Tab(
+          "Sounds",
+          systemImage: currentTab == .sounds ? "speaker.wave.2.fill" : "speaker.wave.2",
+          value: Tabs.sounds,
+          role: nil
+        ) {
+          SoundsTabView()
+        }
         
-        SnippetsTabView()
-          .tabItem {
-            Text("Snippets")
-            Image(systemName: currentTab == .snippets ? "text.bubble.fill" : "text.bubble")
-          }
-          .tag(Tabs.snippets)
-
-        SoundsTabView()
-          .tabItem {
-            Text("Sounds")
-            Image(systemName: currentTab == .sounds ? "speaker.wave.2.fill" : "speaker.wave.2")
-          }
-          .tag(Tabs.sounds)
-
-        AccountTabView()
-          .tabItem {
-            Text("Account")
-            Image(systemName: currentTab == .account ? "person.crop.circle.fill" : "person.crop.circle")
-          }
-          .tag(Tabs.account)
-      }.frame(width: 800)
+        Tab(
+          "Account",
+          systemImage: currentTab == .account ? "person.crop.circle.fill" : "person.crop.circle",
+          value: Tabs.account,
+          role: nil
+        ) {
+          AccountTabView()
+        }
+      }
     }
-    .tabViewStyle(.tabBarOnly)
-    .navigationTitle("L'Alfred")
+    .tabViewStyle(.sidebarAdaptable)
+    .tabViewSidebarBottomBar {
+      Text("L'Alfred")
+        .padding(6)
+    }
+    .background(Color(red:0.12549, green:0.12549, blue:0.11765 ))
     .onAppear {
       jumpToAccountIfRedeemPending()
     }

@@ -50,16 +50,29 @@ struct SnippetsTabView: View {
   }
   
   var body: some View {
-    SectionBoxWithTitle("Snippets", caption: "Add a trigger text and its replacement value.") {
-      inputRow
-      snippetContent
+    VStack(alignment: .leading, spacing: 6) {
+      Text("TEXT REPLACEMENT")
+        .foregroundStyle(Color(red: 0.76471, green: 0.5451, blue: 0.51765))
+      
+      Text("Snippets")
+        .font(.system(size: 24))
+        .italic()
+        .fontWeight(.ultraLight)
+
+      Text("Add a trigger text and its replacement value.")
+        .font(.subheadline)
+      
+      SectionBox {
+        inputRow
+        snippetContent
+      }
     }
-  .padding()
+    .padding()
   }
   
   private var inputRow: some View {
     VStack(alignment: .leading, spacing: 8) {
-      HStack(alignment: .bottom, spacing: 10) {
+      HStack(alignment: .bottom, spacing: 6) {
         InlineInputField(
           title: "Trigger",
           text: $newKey,
@@ -118,10 +131,10 @@ struct SnippetsTabView: View {
         systemImage: "text.bubble",
         description: Text("Create quick replacements for common phrases or repeated text.")
       )
-      .frame(maxWidth: .infinity, minHeight: 200)
-      .padding(.vertical, 8)
       Spacer()
     }
+    .frame(maxWidth: .infinity)
+    .padding(.vertical)
   }
   
   private var snippetsList: some View {

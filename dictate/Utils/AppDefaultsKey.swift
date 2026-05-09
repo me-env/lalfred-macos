@@ -16,6 +16,7 @@ enum AppDefaultsKey {
     static let accountLastName = "auth.account.lastName"
     static let accountCredits = "auth.account.credits"
     static let accountIsSubscribed = "auth.account.isSubscribed"
+    static let signupBonusCredits = "auth.signup.bonus.credits"
 
     static let soundEffectKind = "sound.effectKind"
 }

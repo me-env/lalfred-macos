@@ -55,7 +55,8 @@ struct ShortcutInput: View {
 
   @State private var capturedShortcut: Shortcut?
   @State private var pendingModifiers: ShortcutModifiers = []
-  @State private var hovered: Bool = false
+  @State private var shortcutHovered: Bool = false
+  @State private var clearHovered: Bool = false
   @State private var isCapturingKeys: Bool = false
   @State private var recordingPulse: Bool = false
   @State private var keyDownMonitor = LocalKeyDownMonitor()
@@ -162,28 +163,31 @@ struct ShortcutInput: View {
     innerRecCorderRadier + padding
   }
   
-  func onHover(isHovered: Bool) {
-    print("hover \(isHovered)")
-    self.hovered = isHovered
+  func onShortcutHover(isHovered: Bool) {
+    self.shortcutHovered = isHovered
   }
   
+  func onClearHover(isHovered: Bool) {
+    self.clearHovered = isHovered
+  }
+
   var shortcutSection: some View {
     currentShortcut
       .padding(.all, padding)
-      .onHover(perform: onHover)
+      .onHover(perform: onShortcutHover)
       .background {
         RoundedRectangle(cornerRadius: outerCornerRadius)
           .fill(
             isCapturingKeys
               ? Color.black.opacity(0.14)
-              : hovered ? Color.primary.opacity(0.14) : .clear
+              : shortcutHovered ? Color.primary.opacity(0.14) : .clear
           )
           .overlay {
             RoundedRectangle(cornerRadius: outerCornerRadius)
               .stroke(
                 isCapturingKeys
                   ? Color.black.opacity(0.55)
-                  : hovered ? Color.primary.opacity(0.75) : .clear,
+                  : shortcutHovered ? Color.primary.opacity(0.75) : .clear,
                 lineWidth: 0.5
               )
           }
@@ -223,9 +227,7 @@ struct ShortcutInput: View {
           shortcutToken(token)
         }
       } else {
-        Text("Not set")
-          .font(.system(size: 11, weight: .medium, design: .rounded))
-          .foregroundStyle(.secondary)
+        notSetText
       }
     }
   }
@@ -235,14 +237,11 @@ struct ShortcutInput: View {
       clearShortcut()
     } label: {
       Image(systemName: "xmark")
-        .font(.system(size: 10, weight: .semibold))
-        .foregroundStyle(.secondary)
+        .font(.system(size: 9, weight: .semibold))
+        .foregroundStyle(clearHovered ? .primary : .secondary)
         .frame(width: 18, height: 18)
-        .background(
-          RoundedRectangle(cornerRadius: 4)
-            .fill(Color.secondary.opacity(0.14))
-        )
     }
+    .onHover(perform: onClearHover)
     .buttonStyle(.plain)
     .disabled(capturedShortcut == nil)
     .opacity(capturedShortcut == nil ? 0.45 : 1.0)
@@ -260,6 +259,12 @@ struct ShortcutInput: View {
     .buttonStyle(.plain)
   }
   
+  var notSetText: some View {
+    Text("Not set")
+      .font(.system(size: 10, weight: .semibold, design: .rounded))
+      .padding(.horizontal, 4)
+      .padding(.vertical, 3)
+  }
   
   func shortcutToken(_ token: String) -> some View {
     Text(token)
@@ -276,7 +281,6 @@ struct ShortcutInput: View {
     HStack {
       Text(label)
       Spacer()
-      restoreDefaultButton
       shortcutSection
       clearButton
     }
