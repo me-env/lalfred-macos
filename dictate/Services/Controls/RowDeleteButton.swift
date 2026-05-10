@@ -8,9 +8,22 @@ struct RowDeleteButton: View {
   var body: some View {
     Button(role: .destructive, action: action) {
       Image(systemName: "xmark.circle")
-        .foregroundStyle(isVisible ? Color.red : Color.clear)
+        .foregroundStyle(Color.red)
     }
     .buttonStyle(.borderless)
+    .opacity(isVisible ? 1 : 0)
+    .disabled(!isVisible)
     .help(helpText)
+  }
+}
+
+struct RowDeleteMenuButton: View {
+  let title: String
+  let action: () -> Void
+
+  var body: some View {
+    Button(role: .destructive, action: action) {
+      Label(title, systemImage: "xmark.circle")
+    }
   }
 }

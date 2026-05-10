@@ -1,6 +1,6 @@
 import SwiftUI
 
-private let fullSentenceMatchToggleTitle = "Only match when full sentence equals trigger"
+private let fullSentenceMatchToggleTitle = "Full match"
 
 struct Snippet: Hashable, Decodable, Encodable, Equatable {
   var key: String
@@ -51,10 +51,9 @@ struct SnippetsTabView: View {
   
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
-      SectionBox {
-        inputRow
-        snippetContent
-      }
+      inputRow
+        .padding(.bottom)
+      snippetContent
     }
     .padding([.bottom, .horizontal])
   }
@@ -67,7 +66,8 @@ struct SnippetsTabView: View {
           text: $newKey,
           controlHeight: inputControlHeight,
           width: 130,
-          onSubmit: addSnippet
+          onSubmit: addSnippet,
+          style: .light
         )
 
         InlineInputField(
@@ -75,7 +75,8 @@ struct SnippetsTabView: View {
           text: $newValue,
           controlHeight: inputControlHeight,
           expandToFill: true,
-          onSubmit: addSnippet
+          onSubmit: addSnippet,
+          style: .light
         )
 
         Button {
@@ -233,34 +234,28 @@ private struct SnippetRow: View {
   let snippet: Snippet
   let onToggleMatchEntireSentenceOnly: (Bool) -> Void
   let onRemove: () -> Void
+  @State var hovered: Bool = false
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      HStack(spacing: 10) {
-        Text("\(snippet.key) -> \(snippet.value)")
-          .font(.system(.body, design: .monospaced))
-          .lineLimit(1)
-          .truncationMode(.tail)
+    HStack(spacing: 10) {
+      Text("\(snippet.key)   →   \(snippet.value)")
+        .font(.system(.body, design: .serif))
+        .lineLimit(1)
+        .truncationMode(.tail)
 
-        Spacer()
+      Spacer()
 
-        Button(role: .destructive, action: onRemove) {
-          Image(systemName: "minus.circle")
-        }
-        .buttonStyle(.borderless)
-        .help("Remove snippet")
-      }
+      SnippetConfigurationMenu(
+        isVisible: hovered,
+        isMatchEntireSentenceOnly: snippet.matchEntireSentenceOnly,
+        onToggleMatchEntireSentenceOnly: onToggleMatchEntireSentenceOnly
+      )
 
-      Toggle(
-        isOn: Binding(
-          get: { snippet.matchEntireSentenceOnly },
-          set: { onToggleMatchEntireSentenceOnly($0) }
-        )
-      ) {
-        FullSentenceMatchLabel()
-      }
-      .toggleStyle(.checkbox)
-      .font(.caption)
+      RowDeleteButton(
+        helpText: "Remove snippet",
+        isVisible: hovered,
+        action: onRemove
+      )
     }
     .padding(.horizontal, 10)
     .padding(.vertical, 8)
@@ -270,35 +265,86 @@ private struct SnippetRow: View {
     )
     .overlay(
       RoundedRectangle(cornerRadius: 8, style: .continuous)
-        .stroke(.separator.opacity(0.35), lineWidth: 1)
+        .stroke(.separator.opacity(0.85), lineWidth: 1)
     )
+    .onHover(perform: { hovered = $0 })
+    .animation(.interpolatingSpring, value: hovered)
     .contextMenu {
-      Button(role: .destructive, action: onRemove) {
-        Label("Remove", systemImage: "minus.circle")
-      }
+      SnippetFullMatchMenuButton(
+        isMatchEntireSentenceOnly: snippet.matchEntireSentenceOnly,
+        onToggleMatchEntireSentenceOnly: onToggleMatchEntireSentenceOnly
+      )
+
+      Divider()
+
+      RowDeleteMenuButton(title: "Remove snippet", action: onRemove)
+    }
+  }
+}
+
+private struct SnippetConfigurationMenu: View {
+  let isVisible: Bool
+  let isMatchEntireSentenceOnly: Bool
+  let onToggleMatchEntireSentenceOnly: (Bool) -> Void
+
+  var body: some View {
+    Menu {
+      SnippetFullMatchMenuButton(
+        isMatchEntireSentenceOnly: isMatchEntireSentenceOnly,
+        onToggleMatchEntireSentenceOnly: onToggleMatchEntireSentenceOnly
+      )
+    } label: {
+      Image(systemName: "slider.horizontal.3")
+        .foregroundStyle(Color.secondary)
+    }
+    .menuStyle(.borderlessButton)
+    .menuIndicator(.hidden)
+    .opacity(isVisible ? 1 : 0)
+    .disabled(!isVisible)
+    .help("Configure snippet")
+  }
+}
+
+private struct SnippetFullMatchMenuButton: View {
+  let isMatchEntireSentenceOnly: Bool
+  let onToggleMatchEntireSentenceOnly: (Bool) -> Void
+
+  var body: some View {
+    Button {
+      onToggleMatchEntireSentenceOnly(!isMatchEntireSentenceOnly)
+    } label: {
+      Label(
+        isMatchEntireSentenceOnly ? "Disable Full Match" : "Enable Full Match",
+        systemImage: isMatchEntireSentenceOnly ? "checkmark.circle.fill" : "checkmark.circle"
+      )
     }
   }
 }
 
 private struct FullSentenceMatchLabel: View {
   @State private var isTooltipPresented = false
+  @State private var isHovered = false
 
   var body: some View {
-    HStack(spacing: 4) {
-      Text(fullSentenceMatchToggleTitle)
+    Button {
+      isTooltipPresented = true
+    } label: {
+      HStack(spacing: 4) {
+        Text(fullSentenceMatchToggleTitle)
 
-      Image(systemName: "info.circle")
-        .foregroundStyle(.secondary)
-    }
-    .contentShape(Rectangle())
-    .onHover { isHovering in
-      isTooltipPresented = isHovering
-    }
-    .simultaneousGesture(
-      TapGesture().onEnded {
-        isTooltipPresented.toggle()
+        Image(systemName: "info.circle")
+          .foregroundStyle(isHovered ? Color.accentColor : Color.secondary)
       }
-    )
+      .padding(.horizontal, 4)
+      .padding(.vertical, 2)
+      .background(
+        RoundedRectangle(cornerRadius: 5, style: .continuous)
+          .fill(Color.accentColor.opacity(isHovered ? 0.08 : 0))
+      )
+    }
+    .buttonStyle(.plain)
+    .onHover { isHovered = $0 }
+    .animation(.easeInOut(duration: 0.12), value: isHovered)
     .popover(isPresented: $isTooltipPresented, arrowEdge: .bottom) {
       FullSentenceMatchTooltipView()
         .frame(width: 420)
@@ -313,25 +359,25 @@ private struct FullSentenceMatchTooltipView: View {
       Text("When to enable full sentence match")
         .font(.headline)
 
-      Text("Use full match for exact commands. Keep it off for phrases that should expand inside a longer sentence.")
+      Text("Use full match for replacement where the text to replace is the entire sentence you dictated")
         .font(.subheadline)
         .foregroundStyle(.secondary)
 
       FullSentenceUseCaseCard(
-        title: "Use case: \"email\"",
-        badge: "Enable full match",
+        title: "Use case: \"address\"",
+        badge: "ON",
         badgeColor: .green,
-        primaryLine: "Sentence: \"email\" -> replace with your actual email",
-        secondaryLine: "Sentence: \"I'll send you an email\" -> do not replace",
+        primaryLine: "\"address\" -> \"123 rue du blé\"",
+        secondaryLine: "\"What's your address ?\" -> \"What's your address ?\"",
         secondaryIcon: "xmark.circle"
       )
 
       FullSentenceUseCaseCard(
         title: "Use case: \"pro signature\"",
-        badge: "Leave full match off",
+        badge: "OFF",
         badgeColor: .orange,
-        primaryLine: "Sentence: \"Please add my pro signature below\" -> replace",
-        secondaryLine: "Sentence: \"pro signature\" alone -> replace",
+        primaryLine: "\"pro signature\" -> \"Cyprien Ricque, Dev\"",
+        secondaryLine: "\"... regards, pro signature\" -> \"... regards, Cyprien Ricque, Dev\"",
         secondaryIcon: "checkmark.circle"
       )
     }
@@ -372,7 +418,7 @@ private struct FullSentenceUseCaseCard: View {
 
       Label(secondaryLine, systemImage: secondaryIcon)
         .font(.caption)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(.primary)
     }
     .padding(10)
     .frame(maxWidth: .infinity, alignment: .leading)

@@ -1,5 +1,10 @@
 import SwiftUI
 
+enum LalfredInputFieldStyle {
+  case def
+  case light
+}
+
 struct InlineInputField: View {
   let title: String
   @Binding var text: String
@@ -7,19 +12,24 @@ struct InlineInputField: View {
   var width: CGFloat? = nil
   var expandToFill: Bool = false
   var onSubmit: (() -> Void)? = nil
+  var style: LalfredInputFieldStyle = .def
 
   var body: some View {
     TextField(title, text: $text)
       .textFieldStyle(.plain)
       .padding(.horizontal, 12)
       .padding(.vertical, 10)
+//      .background(
+//        RoundedRectangle(cornerRadius: 8, style: .continuous)
+//          .fill(style == .def ? .background : .quaternary.opacity(0.2))
+//      )
       .background(
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
-          .fill(.background)
+        style == .def ? .quinary : .quaternary,
+        in: RoundedRectangle(cornerRadius: 8, style: .continuous)
       )
       .overlay(
         RoundedRectangle(cornerRadius: 8, style: .continuous)
-          .stroke(.separator.opacity(0.35), lineWidth: 1)
+          .stroke(.separator.opacity(style == .def ? 0.35 : 1), lineWidth: 1)
       )
       .onSubmit {
         onSubmit?()
@@ -41,5 +51,23 @@ private struct InputWidthModifier: ViewModifier {
     } else {
       content
     }
+  }
+}
+
+
+#Preview {
+  VStack {
+    InlineInputField(
+      title: "Username",
+      text: Binding(get: {"oui"}, set: { _ in }),
+      style: LalfredInputFieldStyle.def
+    )
+    .padding()
+    InlineInputField(
+      title: "Username",
+      text: Binding(get: {"oui"}, set: { _ in }),
+      style: LalfredInputFieldStyle.light
+    )
+    .padding()
   }
 }
