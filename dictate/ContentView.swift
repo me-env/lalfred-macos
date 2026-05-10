@@ -109,6 +109,8 @@ struct TabsView: View {
 
   init(initialTab: Tabs = .home) {
     _currentTab = State(initialValue: initialTab)
+//    UINavigationBar.appearance().largeTitleTextAttributes = [.font : UIFont(name: "Georgia-Bold", size: 20)!]
+//
   }
   
   func tabIcon(tab: Tabs) -> some View {
@@ -168,11 +170,15 @@ struct TabsView: View {
         currentTab = .account
       }
     }
-    .navigationTitle(currentTab.title)
-    .toolbar{
-      ToolbarItem(placement: .primaryAction) {
-        Text("")
+    .navigationTitle("")
+    .toolbar {
+      ToolbarItem(placement: .navigation) {
+        Text(currentTab.title)
+          .padding(.leading, 8)
+          .font(.title2)
+          .fontWeight(.ultraLight)
       }
+      .sharedBackgroundVisibility(.hidden)
     }
   }
 

@@ -51,17 +51,6 @@ struct SnippetsTabView: View {
   
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
-      Text("TEXT REPLACEMENT")
-        .foregroundStyle(Color(red: 0.76471, green: 0.5451, blue: 0.51765))
-      
-      Text("Snippets")
-        .font(.system(size: 24))
-        .italic()
-        .fontWeight(.ultraLight)
-
-      Text("Add a trigger text and its replacement value.")
-        .font(.subheadline)
-      
       SectionBox {
         inputRow
         snippetContent

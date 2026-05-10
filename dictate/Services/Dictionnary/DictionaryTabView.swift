@@ -16,7 +16,7 @@ struct DictionaryTabView: View {
   }
   
   var body: some View {
-    SectionBoxWithTitle("Dictionary", caption: "Press Return to add. Use the remove button to remove.") {
+    VStack {
       inputField
       wordContent
     }
