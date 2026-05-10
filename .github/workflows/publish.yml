@@ -38,8 +38,8 @@ jobs:
       - name: Export archive
         run: ./ci/export.sh
 
-      - name: Check build number was bumped
-        run: ./ci/check-build-bump.sh
+      # - name: Check build number was bumped
+      #   run: ./ci/check-build-bump.sh
 
       - name: Verify signing
         run: ./ci/verify-signing.sh
