@@ -15,22 +15,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dmgbuild
-        run: pip3 install --break-system-packages dmgbuild
+      - name: Install Python deps
+        # `dmgbuild` builds the .dmg; `cryptography` derives the Sparkle
+        # public key from the private key for the pre-sign sanity check
+        # in `build-zip-and-appcast.sh`.
+        run: pip3 install --break-system-packages dmgbuild cryptography
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
 
-      - name: Import signing certificate
+      - name: Set up signing keychain
         env:
           MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
-        run: ./ci/build.sh
+        run: ./ci/setup-keychain.sh
+
+      - name: Archive
+        run: ./ci/archive.sh
 
       - name: Export archive
-        run: ./ci/archive.sh
+        run: ./ci/export.sh
 
       - name: Check build number was bumped
         run: ./ci/check-build-bump.sh
@@ -41,7 +47,7 @@ jobs:
       - name: Notarize app
         env:
           AC_API_KEY_BASE64: ${{ secrets.AC_API_KEY_BASE64 }}
-        run: ./ci/notorize.sh
+        run: ./ci/notarize.sh
 
       - name: Build & notarize DMG
         env:
@@ -50,6 +56,11 @@ jobs:
 
       - name: Install Sparkle
         run: ./ci/install-sparkle.sh
+
+      - name: Verify Sparkle key pair
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: ./ci/verify-sparkle-key.sh
 
       - name: Build Sparkle zip & appcast
         env:
@@ -70,3 +81,10 @@ jobs:
             build/LAlfred-*.dmg
             build/LAlfred-*.zip
             build/appcast.xml
+
+      - name: Tear down signing keychain
+        # `if: always()` so the keychain is removed even if an earlier
+        # step failed. Idempotent — safe even if `setup-keychain.sh`
+        # never ran.
+        if: always()
+        run: ./ci/teardown-keychain.sh

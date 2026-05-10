@@ -19,9 +19,14 @@ DOWNLOAD_URL="${DOWNLOAD_BASE}/LAlfred-${VERSION}.zip"
 mkdir -p "${DIST_DIR}"
 
 # --- Write Sparkle private key to a temp file ---
+# Key/Info.plist consistency is enforced by `verify-sparkle-key.sh`,
+# run earlier in the pipeline — by the time we get here we know the
+# secret matches the binary we're about to sign for.
+# `sign_update -f` trims trailing whitespace, so a trailing newline from
+# `echo` is harmless.
 SPARKLE_KEY_PATH="$(mktemp -t sparkle_key)"
 trap 'rm -f "${SPARKLE_KEY_PATH}"' EXIT
-printf '%s' "${SPARKLE_PRIVATE_KEY}" > "${SPARKLE_KEY_PATH}"
+echo "${SPARKLE_PRIVATE_KEY}" > "${SPARKLE_KEY_PATH}"
 
 # --- Locate Sparkle tools ---
 # `ci/install-sparkle.sh` (run earlier) fetches a pinned, checksum-verified
