@@ -34,7 +34,7 @@ struct SoundsTabView: View {
         }
       }
     }
-    .padding()
+    .padding([.bottom, .horizontal])
   }
 
   private func selectKind(_ kind: SoundEffectKind) {

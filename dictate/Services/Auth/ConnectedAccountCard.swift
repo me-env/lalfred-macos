@@ -6,7 +6,7 @@ struct ConnectedAccountCard: View {
   @AppStorage(AppDefaultsKey.accountEmail) private var accountEmail = ""
   @AppStorage(AppDefaultsKey.accountFirstName) private var accountFirstName = ""
   @AppStorage(AppDefaultsKey.accountLastName) private var accountLastName = ""
-  @AppStorage(AppDefaultsKey.accountCredits) private var accountCredits = -1
+  @AppStorage(AppDefaultsKey.accountCredits) private var accountCredits = Int.min
   @AppStorage(AppDefaultsKey.accountIsSubscribed) private var accountIsSubscribed = false
 
   var body: some View {
@@ -143,12 +143,16 @@ struct ConnectedAccountCard: View {
     model.isLoadingAccountDetails && trimmedEmail.isEmpty
   }
 
+  private var hasLoadedCredits: Bool {
+    accountCredits != Int.min
+  }
+
   private var isLoadingCredits: Bool {
-    model.isLoadingAccountDetails && accountCredits < 0
+    model.isLoadingAccountDetails && !hasLoadedCredits
   }
 
   private var creditsLabel: String {
-    guard accountCredits >= 0 else {
+    guard hasLoadedCredits else {
       return "Credits unavailable"
     }
     let formatted = accountCredits.formatted(.number.grouping(.automatic))

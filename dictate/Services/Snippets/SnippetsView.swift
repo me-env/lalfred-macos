@@ -67,7 +67,7 @@ struct SnippetsTabView: View {
         snippetContent
       }
     }
-    .padding()
+    .padding([.bottom, .horizontal])
   }
   
   private var inputRow: some View {
@@ -256,7 +256,7 @@ private struct SnippetRow: View {
         Spacer()
 
         Button(role: .destructive, action: onRemove) {
-          Image(systemName: "trash")
+          Image(systemName: "minus.circle")
         }
         .buttonStyle(.borderless)
         .help("Remove snippet")
@@ -285,7 +285,7 @@ private struct SnippetRow: View {
     )
     .contextMenu {
       Button(role: .destructive, action: onRemove) {
-        Label("Remove", systemImage: "trash")
+        Label("Remove", systemImage: "minus.circle")
       }
     }
   }

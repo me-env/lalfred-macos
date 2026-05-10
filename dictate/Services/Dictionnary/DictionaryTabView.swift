@@ -16,11 +16,11 @@ struct DictionaryTabView: View {
   }
   
   var body: some View {
-    SectionBoxWithTitle("Dictionary", caption: "Press Return to add. Use the trash icon to remove.") {
+    SectionBoxWithTitle("Dictionary", caption: "Press Return to add. Use the remove button to remove.") {
       inputField
       wordContent
     }
-    .padding()
+    .padding([.bottom, .horizontal])
   }
   
   private var inputField: some View {
@@ -92,7 +92,7 @@ private struct WordRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
       
       Button(role: .destructive, action: onRemove) {
-        Image(systemName: "trash")
+        Image(systemName: "minus.circle")
       }
       .buttonStyle(.borderless)
       .help("Remove \(word)")
@@ -109,7 +109,7 @@ private struct WordRow: View {
     )
     .contextMenu {
       Button(role: .destructive, action: onRemove) {
-        Label("Remove", systemImage: "trash")
+        Label("Remove", systemImage: "minus.circle")
       }
     }
   }

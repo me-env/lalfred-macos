@@ -37,7 +37,7 @@ struct AccountTabView: View {
 
       BringYourOwnKeySection(manager: apiKeyManager)
     }
-    .padding()
+    .padding([.bottom, .horizontal])
     .task(id: isSignedIn) {
       await model.handleSignedInChange(isSignedIn: isSignedIn)
       apiKeyManager.refresh()

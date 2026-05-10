@@ -25,92 +25,139 @@ struct GeneralTabView: View {
       }
       PermissionsInput()
     }
-    .padding()
+    .padding([.bottom, .horizontal])
     .textFieldStyle(.roundedBorder)
   }
 }
 
 
-enum Tabs {
+enum Tabs: Hashable, CaseIterable {
   case home
   case dictionary
   case snippets
   case sounds
   case account
+
+  var title: String {
+    switch self {
+    case .home:
+      "General"
+    case .dictionary:
+      "Dictionary"
+    case .snippets:
+      "Snippets"
+    case .sounds:
+      "Sounds"
+    case .account:
+      "Account"
+    }
+  }
+
+  var systemImage: String {
+    switch self {
+    case .home:
+      "gearshape"
+    case .dictionary:
+      "book"
+    case .snippets:
+      "text.bubble"
+    case .sounds:
+      "speaker.wave.2"
+    case .account:
+      "person.crop.circle"
+    }
+  }
+
+  var selectedSystemImage: String {
+    switch self {
+    case .home:
+      "gearshape.fill"
+    case .dictionary:
+      "book.fill"
+    case .snippets:
+      "text.bubble.fill"
+    case .sounds:
+      "speaker.wave.2.fill"
+    case .account:
+      "person.crop.circle.fill"
+    }
+  }
+
+  var iconColor: Color {
+    switch self {
+    case .home:
+      Color(red: 0.55, green: 0.55, blue: 0.58)
+    case .dictionary:
+      Color(red: 0.44, green: 0.32, blue: 0.90)
+    case .snippets:
+      Color(red: 0.44, green: 0.32, blue: 0.90)
+    case .sounds:
+      Color(red: 0.96, green: 0.36, blue: 0.42)
+    case .account:
+      Color(red: 0.24, green: 0.58, blue: 1.0)
+    }
+  }
 }
 
 struct TabsView: View {
   @State private var currentTab: Tabs
-  @State private var measuredTabHeights: [Tabs: CGFloat] = [:]
-  @State private var settingsWindow: NSWindow?
 
   private let deepLinkCoordinator = RedeemDeepLinkCoordinator.shared
 
-  private let minimumSettingsWidth: CGFloat = 640
-  private let minimumSettingsHeight: CGFloat = 320
-  private let tabBarChromeHeight: CGFloat = 80
+  private let minimumSettingsWidth: CGFloat = 740
+  private let minimumSettingsHeight: CGFloat = 420
 
   init(initialTab: Tabs = .home) {
     _currentTab = State(initialValue: initialTab)
   }
   
+  func tabIcon(tab: Tabs) -> some View {
+    Image(systemName: currentTab == tab ? tab.selectedSystemImage : tab.systemImage)
+      .font(.system(size: 11, weight: .medium))
+      .foregroundStyle(.white)
+      .frame(width: 20, height: 20)
+      .background(
+        RoundedRectangle(cornerRadius: 6, style: .continuous)
+          .fill(
+            LinearGradient(
+              colors: [tab.iconColor, tab.iconColor.opacity(0.7)],
+              startPoint: .top,
+              endPoint: .bottom
+            )
+          )
+      )
+  }
+  
   var body: some View {
-    TabView(selection: $currentTab) {
-      TabSection {
-        Tab(
-          "General",
-          systemImage: currentTab == .home ? "gearshape.fill" : "gearshape",
-          value: Tabs.home,
-          role: nil
-        ) {
-          GeneralTabView()
+    NavigationSplitView {
+      VStack(alignment: .leading, spacing: 4) {
+        ForEach(Tabs.allCases, id: \.self) { tab in
+          Label {
+            Text(tab.title)
+              .foregroundStyle(currentTab == tab ? .white : .secondary)
+          } icon: {
+            tabIcon(tab: tab)
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.vertical, 6)
+          .padding(.horizontal, 8)
+          .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+              .fill(currentTab == tab ? Color.white.opacity(0.1) : Color.clear)
+          )
+          .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+          .onTapGesture {
+            currentTab = tab
+          }
         }
+        Spacer()
       }
-      
-      TabSection {
-        Tab(
-          "Dict",
-          systemImage: currentTab == .dictionary ? "book.fill" : "book",
-          value: Tabs.dictionary,
-          role: nil
-        ) {
-          DictionaryTabView()
-        }
-        
-        Tab(
-          "Snippets",
-          systemImage: currentTab == .snippets ? "text.bubble.fill" : "text.bubble",
-          value: Tabs.snippets,
-          role: nil
-        ) {
-          SnippetsTabView()
-        }
+      .padding(.horizontal, 8)
+      .toolbar(removing: .sidebarToggle)
+    } detail: {
+      ScrollView {
+        selectedTabView
       }
-      
-      TabSection {
-        Tab(
-          "Sounds",
-          systemImage: currentTab == .sounds ? "speaker.wave.2.fill" : "speaker.wave.2",
-          value: Tabs.sounds,
-          role: nil
-        ) {
-          SoundsTabView()
-        }
-        
-        Tab(
-          "Account",
-          systemImage: currentTab == .account ? "person.crop.circle.fill" : "person.crop.circle",
-          value: Tabs.account,
-          role: nil
-        ) {
-          AccountTabView()
-        }
-      }
-    }
-    .tabViewStyle(.sidebarAdaptable)
-    .tabViewSidebarBottomBar {
-      Text("L'Alfred")
-        .padding(6)
     }
     .background(Color(red:0.12549, green:0.12549, blue:0.11765 ))
     .onAppear {
@@ -121,6 +168,28 @@ struct TabsView: View {
         currentTab = .account
       }
     }
+    .navigationTitle(currentTab.title)
+    .toolbar{
+      ToolbarItem(placement: .primaryAction) {
+        Text("")
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var selectedTabView: some View {
+    switch currentTab {
+    case .home:
+      GeneralTabView()
+    case .dictionary:
+      DictionaryTabView()
+    case .snippets:
+      SnippetsTabView()
+    case .sounds:
+      SoundsTabView()
+    case .account:
+      AccountTabView()
+    }
   }
 
   private func jumpToAccountIfRedeemPending() {
@@ -129,8 +198,8 @@ struct TabsView: View {
     }
   }
 }
-  
-  
+
+
 struct ContentView: View {
   private let initialTab: Tabs
 
@@ -142,6 +211,7 @@ struct ContentView: View {
     TabsView(initialTab: initialTab)
   }
 }
+
 
 #Preview("General") {
   ContentView(initialTab: .home)
