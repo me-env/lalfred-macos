@@ -5,3 +5,4 @@ build
 Certificates.p12
 AuthKey*
 .env
+sparkle_private_key.txt
