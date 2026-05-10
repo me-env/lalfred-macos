@@ -4,3 +4,4 @@ CLAUDE.md
 build
 Certificates.p12
 AuthKey*
+.env

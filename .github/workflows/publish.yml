@@ -1,0 +1,72 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & sign macOS app
+    runs-on: macos-latest
+    environment: prod
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dmgbuild
+        run: pip3 install --break-system-packages dmgbuild
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Import signing certificate
+        env:
+          MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: ./ci/build.sh
+
+      - name: Export archive
+        run: ./ci/archive.sh
+
+      - name: Check build number was bumped
+        run: ./ci/check-build-bump.sh
+
+      - name: Verify signing
+        run: ./ci/verify-signing.sh
+
+      - name: Notarize app
+        env:
+          AC_API_KEY_BASE64: ${{ secrets.AC_API_KEY_BASE64 }}
+        run: ./ci/notorize.sh
+
+      - name: Build & notarize DMG
+        env:
+          AC_API_KEY_BASE64: ${{ secrets.AC_API_KEY_BASE64 }}
+        run: ./ci/build-dmg.sh
+
+      - name: Install Sparkle
+        run: ./ci/install-sparkle.sh
+
+      - name: Build Sparkle zip & appcast
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: ./ci/build-zip-and-appcast.sh
+
+      - name: Publish to Scaleway
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+        run: ./ci/upload-release.sh
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lalfred-release
+          path: |
+            build/LAlfred-*.dmg
+            build/LAlfred-*.zip
+            build/appcast.xml
