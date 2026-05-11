@@ -26,7 +26,7 @@ final class AuthManager {
   }
   
   private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "Auth")
-  private let tokenStore: APIKeyDefaultsStore
+  private let tokenStore: APIKeyStore
   private let userDefaults: UserDefaults
   private let urlSession: URLSession
   
@@ -36,7 +36,7 @@ final class AuthManager {
   ) {
     self.userDefaults = userDefaults
     self.urlSession = urlSession
-    self.tokenStore = APIKeyDefaultsStore(
+    self.tokenStore = APIKeyStore(
       key: AppDefaultsKey.authToken
     )
   }

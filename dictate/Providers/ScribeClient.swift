@@ -1,51 +1,46 @@
 import Foundation
 
-struct ScribeClient {
-  enum ScribeError: LocalizedError {
-    case missingAPIKey
-    case missingAuthToken
-    case invalidProxyEndpoint
-    case invalidResponse
-    case requestFailed(statusCode: Int, message: String)
 
-    var errorDescription: String? {
-      switch self {
-      case .missingAPIKey:
-        return "Missing ElevenLabs API key"
-      case .missingAuthToken:
-        return "Missing auth token"
-      case .invalidProxyEndpoint:
-        return "Transcription proxy endpoint is not configured"
-      case .invalidResponse:
-        return "Unexpected API response"
-      case let .requestFailed(statusCode, message):
-        return "Scribe request failed (\(statusCode)): \(message)"
-      }
+enum ScribeError: LocalizedError {
+  case missingAPIKey
+  case missingAuthToken
+  case invalidResponse
+  case requestFailed(statusCode: Int, message: String)
+
+  var errorDescription: String? {
+    switch self {
+    case .missingAPIKey:
+      return "Missing ElevenLabs API key"
+    case .missingAuthToken:
+      return "Missing auth token"
+    case .invalidResponse:
+      return "Unexpected API response"
+    case let .requestFailed(statusCode, message):
+      return "Scribe request failed (\(statusCode)): \(message)"
     }
   }
+}
 
-  private let apiKeyStore: APIKeyDefaultsStore
-  private let authTokenStore: APIKeyDefaultsStore
+
+struct ScribeClient {
+  private let apiKeyStore: APIKeyStore
+  private let authTokenStore: APIKeyStore
   private let session: URLSession
-  private let directEndpoint: URL
-  private let proxyEndpoint: URL?
+  private let directEndpoint: URL = URL(string: "https://api.elevenlabs.io/v1/speech-to-text")!
+  private let proxyEndpoint: URL = ScribeClient.defaultProxyEndpoint
   private let mode: TransportMode
   private let userDefaults: UserDefaults
 
   init(
-    apiKeyStore: APIKeyDefaultsStore = APIKeyDefaultsStore(key: AppDefaultsKey.apiKeyElevenLabs),
-    authTokenStore: APIKeyDefaultsStore = APIKeyDefaultsStore(key: AppDefaultsKey.authToken),
+    apiKeyStore: APIKeyStore = APIKeyStore(key: AppDefaultsKey.apiKeyElevenLabs),
+    authTokenStore: APIKeyStore = APIKeyStore(key: AppDefaultsKey.authToken),
     session: URLSession = .shared,
-    directEndpoint: URL = URL(string: "https://api.elevenlabs.io/v1/speech-to-text")!,
-    proxyEndpoint: URL? = ScribeClient.defaultProxyEndpoint,
     mode: TransportMode = .direct,
     userDefaults: UserDefaults = .standard
   ) {
     self.apiKeyStore = apiKeyStore
     self.authTokenStore = authTokenStore
     self.session = session
-    self.directEndpoint = directEndpoint
-    self.proxyEndpoint = proxyEndpoint
     self.mode = mode
     self.userDefaults = userDefaults
   }
@@ -59,10 +54,11 @@ struct ScribeClient {
       keyterms: keyterms
     )
     let requestURL = try makeRequestURL(mode: mode)
-
     var request = URLRequest(url: requestURL)
+    
     request.httpMethod = "POST"
     request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+    
     switch mode {
     case .direct:
       let apiKey = try loadAPIKey()
@@ -88,15 +84,8 @@ struct ScribeClient {
     case .direct:
       return directEndpoint
     case .proxy:
-      return try requireProxyEndpoint()
+      return proxyEndpoint
     }
-  }
-
-  private func requireProxyEndpoint() throws -> URL {
-    guard let proxyEndpoint else {
-      throw ScribeError.invalidProxyEndpoint
-    }
-    return proxyEndpoint
   }
 
   private func loadAPIKey() throws -> String {

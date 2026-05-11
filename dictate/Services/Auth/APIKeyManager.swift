@@ -43,14 +43,14 @@ final class APIKeyManager {
   /// The value the user is typing in the editor sheet.
   var pendingAPIKey: String = ""
 
-  @ObservationIgnored private let storeFactory: (APIKeyProvider) -> APIKeyDefaultsStore
+  @ObservationIgnored private let storeFactory: (APIKeyProvider) -> APIKeyStore
 
   init() {
     self.storeFactory = APIKeyManager.defaultStoreFactory
   }
 
-  static let defaultStoreFactory: (APIKeyProvider) -> APIKeyDefaultsStore = { provider in
-    APIKeyDefaultsStore(key: provider.defaultsKey)
+  static let defaultStoreFactory: (APIKeyProvider) -> APIKeyStore = { provider in
+    APIKeyStore(key: provider.defaultsKey)
   }
 
   // MARK: - Queries

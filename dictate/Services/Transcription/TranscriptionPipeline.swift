@@ -15,10 +15,10 @@ func runTransformationPipeline(at fileURL: URL) async throws -> String {
 }
 
 private func makeDefaultAudioTranscriber() -> STTProvider {
-  let apiKeyStore = APIKeyDefaultsStore(key: AppDefaultsKey.apiKeyElevenLabs)
+  let apiKeyStore = APIKeyStore(key: AppDefaultsKey.apiKeyElevenLabs)
   let isSubscribed = UserDefaults.standard.bool(forKey: AppDefaultsKey.accountIsSubscribed)
-  print("isSubscribed=\(isSubscribed) hasApiKeyElevenLabs=\(hasValue(apiKeyStore.load()))")
   let mode: TransportMode = isSubscribed && hasValue(apiKeyStore.load()) ? .direct : .proxy
+  
   return ScribeClient(apiKeyStore: apiKeyStore, mode: mode)
 }
 
