@@ -4,7 +4,8 @@ import AppKit
 
 struct AccessibilityPermissionService {
   func isTrusted() -> Bool {
-    AXIsProcessTrustedWithOptions(nil)
+    let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+    return AXIsProcessTrustedWithOptions(options)
   }
   
   func requestPrompt() -> Bool {
