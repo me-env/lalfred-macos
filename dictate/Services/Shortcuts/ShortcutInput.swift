@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 import Carbon.HIToolbox
 
+
 private final class LocalKeyDownMonitor {
   private var monitorToken: Any?
 
@@ -179,15 +180,15 @@ struct ShortcutInput: View {
         RoundedRectangle(cornerRadius: outerCornerRadius)
           .fill(
             isCapturingKeys
-              ? Color.black.opacity(0.14)
-              : shortcutHovered ? Color.primary.opacity(0.14) : .clear
+            ? Color.black.opacity(0.14)
+            : shortcutHovered ? Color.primary.opacity(0.14) : .clear
           )
           .overlay {
             RoundedRectangle(cornerRadius: outerCornerRadius)
               .stroke(
                 isCapturingKeys
-                  ? Color.black.opacity(0.55)
-                  : shortcutHovered ? Color.primary.opacity(0.75) : .clear,
+                ? Color.black.opacity(0.55)
+                : shortcutHovered ? Color.primary.opacity(0.75) : .clear,
                 lineWidth: 0.5
               )
           }
@@ -233,17 +234,13 @@ struct ShortcutInput: View {
   }
 
   var clearButton: some View {
-    Button {
-      clearShortcut()
-    } label: {
-      Image(systemName: "xmark")
-        .font(.system(size: 9, weight: .semibold))
-        .foregroundStyle(clearHovered ? .primary : .secondary)
-        .frame(width: 18, height: 18)
-    }
-    .onHover(perform: onClearHover)
-    .buttonStyle(.plain)
-    .disabled(capturedShortcut == nil)
+    Image(systemName: "xmark")
+      .font(.system(size: 9, weight: .semibold))
+      .foregroundStyle(clearHovered ? .primary : .secondary)
+      .padding(.all, 4)
+      .contentShape(Rectangle())
+      .onHover(perform: onClearHover)
+      .onTapGesture { clearShortcut() }
     .opacity(capturedShortcut == nil ? 0.45 : 1.0)
   }
 

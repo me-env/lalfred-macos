@@ -11,23 +11,12 @@ struct PermissionsInput: View {
   @State private var accessibilityGranted: Bool = false
   
   var body: some View {
-    SectionBoxWithTitle("Permissions", caption: "Accessibility is required to paste text from transcription into other apps.") {
-      permissionRow(
-        title: "Microphone",
-        granted: microphoneGranted,
-        buttonTitle: microphoneGranted ? "Granted" : "Request"
-      ) {
-        requestMicrophonePermission()
-      }
-
-      permissionRow(
-        title: "Accessibility",
-        granted: accessibilityGranted,
-        buttonTitle: accessibilityGranted ? "Granted" : "Request"
-      ) {
-        requestAccessibilityPermission()
-      }
-    }
+    PermissionsInputContent(
+      microphoneGranted: microphoneGranted,
+      accessibilityGranted: accessibilityGranted,
+      requestMicrophonePermission: requestMicrophonePermission,
+      requestAccessibilityPermission: requestAccessibilityPermission
+    )
     .onAppear {
       refreshStatuses()
     }
@@ -35,24 +24,6 @@ struct PermissionsInput: View {
       if newPhase == .active {
         refreshStatuses()
       }
-    }
-  }
-  
-  @ViewBuilder
-  private func permissionRow(
-    title: String,
-    granted: Bool,
-    buttonTitle: String,
-    action: @escaping () -> Void
-  ) -> some View {
-    HStack {
-      Text(title)
-      Spacer()
-      Text(granted ? "Granted" : "Not granted")
-        .font(.caption)
-        .foregroundStyle(granted ? .green : .secondary)
-      Button(buttonTitle, action: action)
-        .disabled(granted)
     }
   }
   
@@ -100,7 +71,73 @@ struct PermissionsInput: View {
   }
 }
 
-#Preview {
-  PermissionsInput()
-    .padding()
+private struct PermissionsInputContent: View {
+  let microphoneGranted: Bool
+  let accessibilityGranted: Bool
+  let requestMicrophonePermission: () -> Void
+  let requestAccessibilityPermission: () -> Void
+
+  var body: some View {
+    SectionBoxWithTitle("Permissions", caption: "Accessibility is required to paste text from transcription into other apps.") {
+      permissionRow(
+        icon: microphoneGranted ? "microphone" : "microphone.slash",
+        title: "Microphone",
+        granted: microphoneGranted,
+        action: requestMicrophonePermission
+      )
+
+      permissionRow(
+        icon: "accessibility",
+        title: "Accessibility",
+        granted: accessibilityGranted,
+        action: requestAccessibilityPermission
+      )
+    }
+  }
+  
+  @ViewBuilder
+  private func permissionRow(
+    icon: String,
+    title: String,
+    granted: Bool,
+    action: @escaping () -> Void
+  ) -> some View {
+    HStack {
+      Image(systemName: icon)
+        .frame(width: 24)
+        .foregroundStyle(granted ? Color(red: 0.88627, green: 0.88627, blue: 0.88627) : .red)
+      Text(title)
+      Spacer()
+
+      if !granted {
+        Button(action: action) {
+          Text("Request")
+        }
+      } else {
+        Image(systemName: "checkmark.circle.fill")
+          .foregroundStyle(Color.green)
+      }
+    }
+    .frame(height: 24)
+  }
 }
+#Preview("Permissions Granted") {
+  PermissionsInputContent(
+    microphoneGranted: true,
+    accessibilityGranted: true,
+    requestMicrophonePermission: {},
+    requestAccessibilityPermission: {}
+  )
+  .padding()
+}
+
+#Preview("Permissions Not Granted") {
+  PermissionsInputContent(
+    microphoneGranted: false,
+    accessibilityGranted: false,
+    requestMicrophonePermission: {},
+    requestAccessibilityPermission: {}
+  )
+  .padding()
+}
+
