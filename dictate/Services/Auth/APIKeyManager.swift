@@ -43,14 +43,14 @@ final class APIKeyManager {
   /// The value the user is typing in the editor sheet.
   var pendingAPIKey: String = ""
 
-  @ObservationIgnored private let storeFactory: (APIKeyProvider) -> APIKeyStore
+  @ObservationIgnored private let storeFactory: (APIKeyProvider) -> KeychainStore
 
   init() {
     self.storeFactory = APIKeyManager.defaultStoreFactory
   }
 
-  static let defaultStoreFactory: (APIKeyProvider) -> APIKeyStore = { provider in
-    APIKeyStore(key: provider.defaultsKey)
+  static let defaultStoreFactory: (APIKeyProvider) -> KeychainStore = { provider in
+    KeychainStore(key: provider.defaultsKey)
   }
 
   // MARK: - Queries
@@ -66,19 +66,16 @@ final class APIKeyManager {
   // MARK: - Actions
 
   func refresh() {
-    print("[AccountTab] refreshAPIKeyStatuses() begin")
     var suffixes: [APIKeyProvider: String] = [:]
 
     for provider in APIKeyProvider.allCases {
       let loaded = storeFactory(provider).load()
-      print("[AccountTab] refresh provider=\(provider.rawValue) loaded=\(loaded == nil ? "nil" : "non-nil(len=\(loaded!.count))")")
       guard let key = loaded else {
         continue
       }
 
       let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !trimmed.isEmpty else {
-        print("[AccountTab] refresh provider=\(provider.rawValue) trimmed empty, skipping")
         continue
       }
 
@@ -86,11 +83,9 @@ final class APIKeyManager {
     }
 
     configuredKeySuffixes = suffixes
-    print("[AccountTab] refreshAPIKeyStatuses() end suffixes=\(suffixes.mapValues { $0 })")
   }
 
   func beginEditing(_ provider: APIKeyProvider) {
-    print("[AccountTab] beginEditing provider=\(provider.rawValue)")
     pendingAPIKey = storeFactory(provider).load() ?? ""
     editingProvider = provider
   }
@@ -104,14 +99,11 @@ final class APIKeyManager {
   /// and silently no-ops if the trimmed value is empty.
   func saveCurrent() {
     guard let provider = editingProvider else {
-      print("[AccountTab] saveCurrent ABORT — no editingProvider")
       return
     }
 
     let trimmed = pendingAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
-    print("[AccountTab] saveAPIKey provider=\(provider.rawValue) trimmedLength=\(trimmed.count)")
     guard !trimmed.isEmpty else {
-      print("[AccountTab] saveAPIKey ABORT — trimmed empty provider=\(provider.rawValue)")
       return
     }
 
@@ -119,13 +111,10 @@ final class APIKeyManager {
     configuredKeySuffixes[provider] = String(trimmed.suffix(4))
     editingProvider = nil
     pendingAPIKey = ""
-    print("[AccountTab] saveAPIKey done provider=\(provider.rawValue) suffix=\(trimmed.suffix(4))")
   }
 
   func delete(_ provider: APIKeyProvider) {
-    print("[AccountTab] deleteKey CLICKED provider=\(provider.rawValue)")
     let ok = storeFactory(provider).remove()
     configuredKeySuffixes[provider] = nil
-    print("[AccountTab] deleteKey done provider=\(provider.rawValue) defaultsOK=\(ok)")
   }
 }

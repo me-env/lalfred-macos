@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct APIKeyInputView: View {
-  private static let apiKeyStore = APIKeyStore(key: AppDefaultsKey.apiKeyElevenLabs)
+  private static let apiKeyStore = KeychainStore(key: AppDefaultsKey.apiKeyElevenLabs)
 
   @State private var apiKey: String
 

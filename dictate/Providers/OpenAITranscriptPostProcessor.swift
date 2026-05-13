@@ -29,16 +29,16 @@ enum OpenAITranscriptPostProcessorError: LocalizedError {
 
 
 struct OpenAITranscriptPostProcessor: LLMProvider {
-  private let apiKeyStore: APIKeyStore
-  private let authTokenStore: APIKeyStore
+  private let apiKeyStore: KeychainStore
+  private let authTokenStore: KeychainStore
   private let session: URLSession
   private let directEndpoint: URL
   private let proxyEndpoint: URL?
   private let mode: TransportMode
 
   init(
-    apiKeyStore: APIKeyStore = APIKeyStore(key: AppDefaultsKey.apiKeyOpenAI),
-    authTokenStore: APIKeyStore = APIKeyStore(key: AppDefaultsKey.authToken),
+    apiKeyStore: KeychainStore = KeychainStore(key: AppDefaultsKey.apiKeyOpenAI),
+    authTokenStore: KeychainStore = KeychainStore(key: AppDefaultsKey.authToken),
     session: URLSession = .shared,
     directEndpoint: URL = URL(string: "https://api.openai.com/v1/chat/completions")!,
     proxyEndpoint: URL? = OpenAITranscriptPostProcessor.defaultProxyEndpoint,

@@ -15,7 +15,7 @@ func runTransformationPipeline(at fileURL: URL) async throws -> String {
 }
 
 private func makeDefaultAudioTranscriber() -> STTProvider {
-  let apiKeyStore = APIKeyStore(key: AppDefaultsKey.apiKeyElevenLabs)
+  let apiKeyStore = KeychainStore(key: AppDefaultsKey.apiKeyElevenLabs)
   let isSubscribed = UserDefaults.standard.bool(forKey: AppDefaultsKey.accountIsSubscribed)
   let mode: TransportMode = isSubscribed && hasValue(apiKeyStore.load()) ? .direct : .proxy
   

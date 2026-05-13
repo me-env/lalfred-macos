@@ -23,8 +23,8 @@ enum ScribeError: LocalizedError {
 
 
 struct ScribeClient {
-  private let apiKeyStore: APIKeyStore
-  private let authTokenStore: APIKeyStore
+  private let apiKeyStore: KeychainStore
+  private let authTokenStore: KeychainStore
   private let session: URLSession
   private let directEndpoint: URL = URL(string: "https://api.elevenlabs.io/v1/speech-to-text")!
   private let proxyEndpoint: URL = ScribeClient.defaultProxyEndpoint
@@ -32,8 +32,8 @@ struct ScribeClient {
   private let userDefaults: UserDefaults
 
   init(
-    apiKeyStore: APIKeyStore = APIKeyStore(key: AppDefaultsKey.apiKeyElevenLabs),
-    authTokenStore: APIKeyStore = APIKeyStore(key: AppDefaultsKey.authToken),
+    apiKeyStore: KeychainStore = KeychainStore(key: AppDefaultsKey.apiKeyElevenLabs),
+    authTokenStore: KeychainStore = KeychainStore(key: AppDefaultsKey.authToken),
     session: URLSession = .shared,
     mode: TransportMode = .direct,
     userDefaults: UserDefaults = .standard
