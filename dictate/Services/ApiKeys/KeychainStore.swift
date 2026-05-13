@@ -5,7 +5,6 @@ import Security
 import os
 
 
-
 private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "APIKeyDefaultsStore")
 
 
