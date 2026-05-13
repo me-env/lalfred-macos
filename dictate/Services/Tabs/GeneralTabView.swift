@@ -4,22 +4,29 @@ import AppKit
 
 struct GeneralTabView: View {
   @State private var activeShortcutEditorID: String?
-  
+
+  @State private var toggleRecordingRecorder = ShortcutRecorder(
+    id: AppDefaultsKey.shortcutToggleRecording,
+    defaultShortcut: AppDefaultShortcuts.toggleRecording
+  )
+  @State private var holdToSpeakRecorder = ShortcutRecorder(
+    id: AppDefaultsKey.shortcutHoldToSpeak,
+    defaultShortcut: AppDefaultShortcuts.holdToSpeak
+  )
+
   var body: some View {
     VStack {
       PreferencesInput()
       SectionBoxWithTitle("Keyboard Shortcuts") {
         ShortcutInput(
           label: "Toggle Recording",
-          storeKey: AppDefaultsKey.shortcutToggleRecording,
-          defaultShortcut: AppDefaultShortcuts.toggleRecording,
+          recorder: toggleRecordingRecorder,
           activeShortcutEditorID: $activeShortcutEditorID
         )
         Divider()
         ShortcutInput(
           label: "Hold to Speak",
-          storeKey: AppDefaultsKey.shortcutHoldToSpeak,
-          defaultShortcut: AppDefaultShortcuts.holdToSpeak,
+          recorder: holdToSpeakRecorder,
           activeShortcutEditorID: $activeShortcutEditorID
         )
       }
