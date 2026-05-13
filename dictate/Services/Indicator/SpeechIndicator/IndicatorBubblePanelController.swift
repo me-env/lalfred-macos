@@ -12,8 +12,8 @@ final class IndicatorBubblePanelController {
   private let viewModel: IndicatorViewModel
 
   init(
-    viewModel: IndicatorViewModel = .init(),
-    size: CGSize = IndicatorPanelMetrics.compactBubbleSize
+    viewModel: IndicatorViewModel,
+    size: CGSize
   ) {
     self.viewModel = viewModel
     self.panel = OverlayPanel(

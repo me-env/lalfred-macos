@@ -3,6 +3,10 @@ import Foundation
 import Observation
 import OSLog
 
+
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "Redeem")
+
+
 /// Result of a successful redemption, exposed to the success sheet.
 struct RedeemClaimSuccess: Equatable, Sendable {
   enum Kind: String, Sendable {
@@ -29,17 +33,8 @@ final class RedeemClaimViewModel {
   private(set) var errorMessage: String = ""
   private(set) var lastSuccess: RedeemClaimSuccess?
 
-  @ObservationIgnored private let authManager: AuthManager
-  @ObservationIgnored private let urlSession: URLSession
-  @ObservationIgnored private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "Redeem")
-
-  init(
-    authManager: AuthManager = .shared,
-    urlSession: URLSession = .shared
-  ) {
-    self.authManager = authManager
-    self.urlSession = urlSession
-  }
+  @ObservationIgnored private let authManager: AuthManager = .shared
+  @ObservationIgnored private let urlSession: URLSession = .shared
 
   // MARK: - Input helpers
 
@@ -193,32 +188,4 @@ private extension JSONDecoder {
     decoder.dateDecodingStrategy = .iso8601
     return decoder
   }()
-}
-
-// MARK: - Errors
-
-enum RedeemError: LocalizedError {
-  case invalidResponse
-  case unauthorized
-  case invalidKey
-  case alreadyClaimed
-  case serverError(status: Int, message: String)
-
-  var errorDescription: String? {
-    switch self {
-    case .invalidResponse:
-      return "Unexpected server response."
-    case .unauthorized:
-      return "You need to be signed in to redeem a code."
-    case .invalidKey:
-      return "We couldn't find that code. Double-check it and try again."
-    case .alreadyClaimed:
-      return "This code has already been redeemed."
-    case let .serverError(status, message):
-      let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
-      return trimmed.isEmpty
-        ? "Server error (\(status)). Please try again later."
-        : "Server error (\(status)): \(trimmed)"
-    }
-  }
 }

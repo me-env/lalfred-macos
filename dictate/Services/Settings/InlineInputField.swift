@@ -1,9 +1,11 @@
 import SwiftUI
 
+
 enum LalfredInputFieldStyle {
   case def
   case light
 }
+
 
 struct InlineInputField: View {
   let title: String
@@ -19,10 +21,6 @@ struct InlineInputField: View {
       .textFieldStyle(.plain)
       .padding(.horizontal, 12)
       .padding(.vertical, 10)
-//      .background(
-//        RoundedRectangle(cornerRadius: 8, style: .continuous)
-//          .fill(style == .def ? .background : .quaternary.opacity(0.2))
-//      )
       .background(
         style == .def ? .quinary : .quaternary,
         in: RoundedRectangle(cornerRadius: 8, style: .continuous)

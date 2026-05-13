@@ -7,7 +7,7 @@ struct AccountTabView: View {
   @AppStorage(AppDefaultsKey.isSignedIn) private var isSignedIn = false
 
   @State private var model: AccountTabViewModel
-  @State private var apiKeyManager: APIKeyManager
+  @State private var apiKeyManager: APIKeyViewModel
   @State private var redeemModel: RedeemClaimViewModel
 
   private let deepLinkCoordinator = RedeemDeepLinkCoordinator.shared
@@ -22,7 +22,7 @@ struct AccountTabView: View {
         initialAuthErrorMessage: initialAuthErrorMessage
       )
     )
-    _apiKeyManager = State(initialValue: APIKeyManager())
+    _apiKeyManager = State(initialValue: APIKeyViewModel())
     _redeemModel = State(initialValue: RedeemClaimViewModel())
   }
 
@@ -46,7 +46,6 @@ struct AccountTabView: View {
     .padding([.bottom, .horizontal])
     .task(id: isSignedIn) {
       await model.handleSignedInChange(isSignedIn: isSignedIn)
-      apiKeyManager.refresh()
       consumePendingDeepLinkKey()
     }
     .onAppear {

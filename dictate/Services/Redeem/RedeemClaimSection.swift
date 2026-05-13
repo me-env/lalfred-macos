@@ -6,7 +6,6 @@ import SwiftUI
 /// sheet is rendered by the parent so confetti covers the whole window.
 struct RedeemClaimSection: View {
   @Bindable var model: RedeemClaimViewModel
-
   @FocusState private var isInputFocused: Bool
 
   var body: some View {

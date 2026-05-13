@@ -1,5 +1,9 @@
 import Foundation
 import OSLog
+import Foundation
+import Security
+import os
+
 
 
 private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "APIKeyDefaultsStore")
@@ -33,16 +37,6 @@ struct KeychainStore {
   }
 }
 
-import Foundation
-import Security
-
-enum KeychainError: Error {
-    case unexpectedStatus(OSStatus)
-}
-
-import Foundation
-import Security
-import os
 
 struct Keychain {
   let service: String = "fr.lalfred.dictate"

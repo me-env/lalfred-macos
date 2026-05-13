@@ -11,7 +11,7 @@ struct PermissionsInput: View {
   @State private var accessibilityGranted: Bool = false
   
   var body: some View {
-    PermissionsInputContent(
+    PermissionsView(
       microphoneGranted: microphoneGranted,
       accessibilityGranted: accessibilityGranted,
       requestMicrophonePermission: requestMicrophonePermission,
@@ -22,15 +22,27 @@ struct PermissionsInput: View {
     }
     .onChange(of: scenePhase) { _, newPhase in
       if newPhase == .active {
-        refreshStatuses()
+        refreshStatusesIfNeeded()
       }
     }
+    .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
+      refreshStatusesIfNeeded()
+    }
+  }
+
+  private var hasMissingPermission: Bool {
+    !microphoneGranted || !accessibilityGranted
   }
   
   private func refreshStatuses() {
     microphoneGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
     accessibilityGranted = accessibilityPermissionService.isTrusted()
     print("[PermissionsInput] refreshStatuses accessibilityGranted=\(accessibilityGranted)")
+  }
+
+  private func refreshStatusesIfNeeded() {
+    guard hasMissingPermission else { return }
+    refreshStatuses()
   }
   
   private func requestMicrophonePermission() {
@@ -57,36 +69,29 @@ struct PermissionsInput: View {
   
   private func requestAccessibilityPermission() {
     accessibilityGranted = accessibilityPermissionService.requestPrompt()
-    print("[PermissionsInput] requestAccessibilityPermission immediate result=\(accessibilityGranted)")
-
-    // The trust prompt and Settings grant are asynchronous, refresh shortly after.
-    Task {
-      try? await Task.sleep(for: .seconds(0.8))
-      refreshStatuses()
-
-      if !accessibilityGranted {
-        accessibilityPermissionService.openSettings()
-      }
-    }
+    refreshStatuses()
   }
 }
 
-private struct PermissionsInputContent: View {
+private struct PermissionsView: View {
   let microphoneGranted: Bool
   let accessibilityGranted: Bool
   let requestMicrophonePermission: () -> Void
   let requestAccessibilityPermission: () -> Void
-
+  
   var body: some View {
-    SectionBoxWithTitle("Permissions", caption: "Accessibility is required to paste text from transcription into other apps.") {
-      permissionRow(
+    SectionBoxWithTitle(
+      "Permissions",
+      caption: "Accessibility is required to paste text from transcription into other apps."
+    ) {
+      PermissionRow(
         icon: microphoneGranted ? "microphone" : "microphone.slash",
         title: "Microphone",
         granted: microphoneGranted,
         action: requestMicrophonePermission
       )
-
-      permissionRow(
+      
+      PermissionRow(
         icon: "accessibility",
         title: "Accessibility",
         granted: accessibilityGranted,
@@ -94,18 +99,21 @@ private struct PermissionsInputContent: View {
       )
     }
   }
+}
   
-  @ViewBuilder
-  private func permissionRow(
-    icon: String,
-    title: String,
-    granted: Bool,
-    action: @escaping () -> Void
-  ) -> some View {
+private struct PermissionRow: View {
+  let icon: String
+  let title: String
+  let granted: Bool
+  let action: () -> Void
+
+  var body: some View {
     HStack {
       Image(systemName: icon)
         .frame(width: 24)
-        .foregroundStyle(granted ? Color(red: 0.88627, green: 0.88627, blue: 0.88627) : .red)
+        .foregroundStyle(granted ? Color.iconDefault : Color.red)
+      
+
       Text(title)
       Spacer()
 
@@ -121,8 +129,9 @@ private struct PermissionsInputContent: View {
     .frame(height: 24)
   }
 }
+
 #Preview("Permissions Granted") {
-  PermissionsInputContent(
+  PermissionsView(
     microphoneGranted: true,
     accessibilityGranted: true,
     requestMicrophonePermission: {},
@@ -132,7 +141,7 @@ private struct PermissionsInputContent: View {
 }
 
 #Preview("Permissions Not Granted") {
-  PermissionsInputContent(
+  PermissionsView(
     microphoneGranted: false,
     accessibilityGranted: false,
     requestMicrophonePermission: {},

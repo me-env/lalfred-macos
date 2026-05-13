@@ -1,5 +1,6 @@
 import Foundation
 
+
 struct SnippetTranscriptProcessor {
   private let userDefaults: UserDefaults
 

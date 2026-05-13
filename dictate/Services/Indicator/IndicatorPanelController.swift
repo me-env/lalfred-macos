@@ -7,7 +7,10 @@ final class IndicatorPanelController {
   private var delayedHideTask: Task<Void, Never>?
 
   init() {
-    self.indicatorController = IndicatorBubblePanelController()
+    self.indicatorController = IndicatorBubblePanelController(
+      viewModel: IndicatorViewModel(),
+      size: IndicatorPanelMetrics.compactBubbleSize
+    )
   }
 
   // MARK: - Public API

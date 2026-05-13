@@ -4,21 +4,13 @@ import AppKit
 
 struct AccessibilityPermissionService {
   func isTrusted() -> Bool {
-    let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-    return AXIsProcessTrustedWithOptions(options)
+    return AXIsProcessTrusted()
   }
   
   func requestPrompt() -> Bool {
     let options = [
-      kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: kCFBooleanTrue as Any
+      kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true
     ] as CFDictionary
     return AXIsProcessTrustedWithOptions(options)
-  }
-  
-  func openSettings() {
-    guard let settingsURL = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") else {
-      return
-    }
-    NSWorkspace.shared.open(settingsURL)
   }
 }

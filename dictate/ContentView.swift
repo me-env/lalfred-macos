@@ -2,103 +2,6 @@ import SwiftUI
 import AppKit
 
 
-struct GeneralTabView: View {
-  @State private var activeShortcutEditorID: String?
-  
-  var body: some View {
-    VStack {
-      PreferencesInput()
-      SectionBoxWithTitle("Keyboard Shortcuts") {
-        ShortcutInput(
-          label: "Toggle Recording",
-          storeKey: AppDefaultsKey.shortcutToggleRecording,
-          defaultShortcut: AppDefaultShortcuts.toggleRecording,
-          activeShortcutEditorID: $activeShortcutEditorID
-        )
-        Divider()
-        ShortcutInput(
-          label: "Hold to Speak",
-          storeKey: AppDefaultsKey.shortcutHoldToSpeak,
-          defaultShortcut: AppDefaultShortcuts.holdToSpeak,
-          activeShortcutEditorID: $activeShortcutEditorID
-        )
-      }
-      PermissionsInput()
-    }
-    .padding([.bottom, .horizontal])
-    .textFieldStyle(.roundedBorder)
-  }
-}
-
-
-enum Tabs: Hashable, CaseIterable {
-  case home
-  case dictionary
-  case snippets
-  case sounds
-  case account
-
-  var title: String {
-    switch self {
-    case .home:
-      "General"
-    case .dictionary:
-      "Dictionary"
-    case .snippets:
-      "Snippets"
-    case .sounds:
-      "Sounds"
-    case .account:
-      "Account"
-    }
-  }
-
-  var systemImage: String {
-    switch self {
-    case .home:
-      "gearshape"
-    case .dictionary:
-      "book"
-    case .snippets:
-      "text.bubble"
-    case .sounds:
-      "speaker.wave.2"
-    case .account:
-      "person.crop.circle"
-    }
-  }
-
-  var selectedSystemImage: String {
-    switch self {
-    case .home:
-      "gearshape.fill"
-    case .dictionary:
-      "book.fill"
-    case .snippets:
-      "text.bubble.fill"
-    case .sounds:
-      "speaker.wave.2.fill"
-    case .account:
-      "person.crop.circle.fill"
-    }
-  }
-
-  var iconColor: Color {
-    switch self {
-    case .home:
-      Color(red: 0.55, green: 0.55, blue: 0.58)
-    case .dictionary:
-      Color(red: 0.44, green: 0.32, blue: 0.90)
-    case .snippets:
-      Color(red: 0.44, green: 0.32, blue: 0.90)
-    case .sounds:
-      Color(red: 0.96, green: 0.36, blue: 0.42)
-    case .account:
-      Color(red: 0.24, green: 0.58, blue: 1.0)
-    }
-  }
-}
-
 struct TabsView: View {
   @State private var currentTab: Tabs
 
@@ -109,8 +12,6 @@ struct TabsView: View {
 
   init(initialTab: Tabs = .home) {
     _currentTab = State(initialValue: initialTab)
-//    UINavigationBar.appearance().largeTitleTextAttributes = [.font : UIFont(name: "Georgia-Bold", size: 20)!]
-//
   }
   
   func tabIcon(tab: Tabs) -> some View {
@@ -136,7 +37,7 @@ struct TabsView: View {
         ForEach(Tabs.allCases, id: \.self) { tab in
           Label {
             Text(tab.title)
-              .foregroundStyle(currentTab == tab ? .white : .secondary)
+              .foregroundStyle(currentTab == tab ? Color.primary : .secondary)
           } icon: {
             tabIcon(tab: tab)
           }
@@ -145,7 +46,7 @@ struct TabsView: View {
           .padding(.horizontal, 8)
           .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-              .fill(currentTab == tab ? Color.white.opacity(0.1) : Color.clear)
+              .fill(currentTab == tab ? Color.secondary.opacity(0.15) : Color.clear)
           )
           .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
           .onTapGesture {
@@ -161,7 +62,6 @@ struct TabsView: View {
         selectedTabView
       }
     }
-    .background(Color(red:0.12549, green:0.12549, blue:0.11765 ))
     .onAppear {
       jumpToAccountIfRedeemPending()
     }

@@ -12,7 +12,7 @@ import AppKit
 import OSLog
 
  
-private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "SoundEffect")
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "SoundEffectPlayer")
 
 
 @MainActor
@@ -45,22 +45,18 @@ final class SoundEffectPlayer {
 
   // MARK: - Public API
 
-  /// Plays the start sound for the currently-selected pack.
   func playStart() {
     play(resource: store.load().startResource)
   }
 
-  /// Plays the stop sound for the currently-selected pack.
   func playStop() {
     play(resource: store.load().stopResource)
   }
 
-  /// Previews a specific pack's start sound (used by the Sounds tab).
   func previewStart(of kind: SoundEffectKind) {
     play(resource: kind.startResource)
   }
 
-  /// Previews a specific pack's stop sound (used by the Sounds tab).
   func previewStop(of kind: SoundEffectKind) {
     play(resource: kind.stopResource)
   }
