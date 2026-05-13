@@ -7,7 +7,6 @@ struct ShortcutInput: View {
 
   @State private var shortcutHovered: Bool = false
   @State private var clearHovered: Bool = false
-  @State private var recordingPulse: Bool = false
 
   let innerRecCorderRadier: CGFloat = 4
   let padding: CGFloat = 4
@@ -52,25 +51,11 @@ struct ShortcutInput: View {
   var currentShortcut: some View {
     HStack(spacing: 6) {
       if recorder.isCapturing {
-        recordingIndicator
+        ShortcutRecordingIndicator()
       }
 
       shortcutTokens
     }
-  }
-
-  var recordingIndicator: some View {
-    Circle()
-      .fill(.red)
-      .frame(width: 8, height: 8)
-      .scaleEffect(recordingPulse ? 1.0 : 0.65)
-      .opacity(recordingPulse ? 1.0 : 0.55)
-      .animation(
-        .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
-        value: recordingPulse
-      )
-      .onAppear { recordingPulse = true }
-      .onDisappear { recordingPulse = false }
   }
 
   var shortcutTokens: some View {
@@ -97,19 +82,6 @@ struct ShortcutInput: View {
         recorder.clear()
       }
       .opacity(recorder.shortcut == nil ? 0.45 : 1.0)
-  }
-
-  var restoreDefaultButton: some View {
-    Button {
-      activeShortcutEditorID = nil
-      recorder.restoreDefault()
-    } label: {
-      Image(systemName: "arrow.counterclockwise")
-        .font(.system(size: 10, weight: .semibold))
-        .foregroundStyle(.secondary)
-        .frame(width: 18, height: 18)
-    }
-    .buttonStyle(.plain)
   }
 
   var notSetText: some View {

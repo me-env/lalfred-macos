@@ -53,7 +53,6 @@ final class ShortcutRecorder {
   private(set) var shortcut: Shortcut?
   private(set) var isCapturing: Bool = false
 
-  @ObservationIgnored private let defaultShortcut: Shortcut
   @ObservationIgnored private let store: ShortcutDefaultsStore
   @ObservationIgnored private var pendingModifiers: ShortcutModifiers = []
   @ObservationIgnored private let keyDownMonitor = LocalKeyDownMonitor()
@@ -62,11 +61,9 @@ final class ShortcutRecorder {
   init(
     id: String,
     defaultShortcut: Shortcut,
-    userDefaults: UserDefaults = .standard
   ) {
     self.id = id
-    self.defaultShortcut = defaultShortcut
-    self.store = ShortcutDefaultsStore(key: id, userDefaults: userDefaults)
+    self.store = ShortcutDefaultsStore(key: id, userDefaults: .standard)
     self.store.ensureDefault(defaultShortcut)
     self.shortcut = self.store.load()
   }
@@ -100,14 +97,6 @@ final class ShortcutRecorder {
     pendingModifiers = []
     shortcut = nil
     store.remove()
-    stopCapture()
-    NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
-  }
-
-  func restoreDefault() {
-    pendingModifiers = []
-    shortcut = defaultShortcut
-    store.save(defaultShortcut)
     stopCapture()
     NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
   }
