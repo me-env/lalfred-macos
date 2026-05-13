@@ -1,6 +1,6 @@
 import Foundation
 
-struct Shortcut: Codable, Hashable {
+struct Shortcut: Codable, Hashable, Sendable {
   static let modifierOnlyKeyCode = UInt16.max
 
   var keyCode: UInt16
@@ -10,7 +10,7 @@ struct Shortcut: Codable, Hashable {
     keyCode == Self.modifierOnlyKeyCode && !modifiers.isEmpty
   }
   
-  func toLabels() -> [String] {
+  var labels: [String] {
     var tokens: [String] = []
     
     if self.modifiers.contains(.control) {

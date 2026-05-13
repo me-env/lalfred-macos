@@ -224,7 +224,7 @@ struct ShortcutInput: View {
   var shortcutTokens: some View {
     HStack(spacing: 3) {
       if let capturedShortcut {
-        ForEach(capturedShortcut.toLabels(), id: \.self) { token in
+        ForEach(capturedShortcut.labels, id: \.self) { token in
           shortcutToken(token)
         }
       } else {
@@ -241,7 +241,7 @@ struct ShortcutInput: View {
       .contentShape(Rectangle())
       .onHover(perform: onClearHover)
       .onTapGesture { clearShortcut() }
-    .opacity(capturedShortcut == nil ? 0.45 : 1.0)
+      .opacity(capturedShortcut == nil ? 0.45 : 1.0)
   }
 
   var restoreDefaultButton: some View {

@@ -1,5 +1,10 @@
 import Foundation
 import Carbon.HIToolbox
+import os
+
+
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "CarbonHotKeyMonitor")
+
 
 final class CarbonHotKeyMonitor {
   private let hotKeyID: EventHotKeyID
@@ -12,14 +17,12 @@ final class CarbonHotKeyMonitor {
   private var eventHandlerRef: EventHandlerRef?
   
   init(
-    signature: OSType = OSType(0x44494354), // 'DICT'
-    id: UInt32 = HotKeyIDAllocator.next(),
     shortcutProvider: @escaping () -> Shortcut?,
     reloadOnShortcutChange: Bool = false,
     onKeyDown: @escaping @MainActor () -> Void,
     onKeyUp: (@MainActor () -> Void)? = nil
   ) {
-    self.hotKeyID = EventHotKeyID(signature: signature, id: id)
+    self.hotKeyID = EventHotKeyID(signature: OSType(0x44494354), id: HotKeyIDAllocator.next())
     self.shortcutProvider = shortcutProvider
     self.onKeyDown = onKeyDown
     self.onKeyUp = onKeyUp
@@ -61,7 +64,8 @@ final class CarbonHotKeyMonitor {
     
     if status != noErr {
       hotKeyRef = nil
-      print("Failed to register hot key (\(hotKeyID.id)): \(status)")
+      let hotKeyId = hotKeyID.id
+      logger.error("Failed to register hot key (\(hotKeyId)): \(status)")
     }
   }
   
