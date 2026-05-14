@@ -24,38 +24,59 @@ struct OnboardingView: View {
   private let accessibilityPermissionService = AccessibilityPermissionService()
 
   @State private var accountModel = AccountTabViewModel()
+  @State private var showCompletion: Bool = false
+  @Environment(Shortcuts.self) private var shortcuts
+  @AppStorage(AppDefaultsKey.hasCompletedOnboarding) private var hasCompletedOnboarding = false
 
   private let steps: [OnboardingStep] = [.signIn, .microphone, .accessibility]
 
   private var currentStep: OnboardingStep {
     steps.first { !$0.isComplete(configuration) } ?? .accessibility
   }
+  
+  var onboardingSteps: some View {
+    VStack(spacing: 10) {
+      ForEach(steps, id: \.self) { step in
+        OnboardingStepRow(
+          step: step,
+          state: state(for: step),
+          isLoading: isLoading(for: step),
+          errorMessage: errorMessage(for: step),
+          action: { perform(step) }
+        )
+      }
+    }
+  }
 
   var body: some View {
-    ScrollView {
-      VStack(spacing: 28) {
-        header
-
-        VStack(spacing: 10) {
-          ForEach(steps, id: \.self) { step in
-            OnboardingStepRow(
-              step: step,
-              state: state(for: step),
-              isLoading: isLoading(for: step),
-              errorMessage: errorMessage(for: step),
-              action: { perform(step) }
-            )
-          }
-        }
-
-        footer
-      }
-      .frame(maxWidth: 520)
-      .padding(.horizontal, 40)
-      .padding(.vertical, 32)
-      .frame(maxWidth: .infinity)
+    VStack(spacing: 28) {
+      header
+      onboardingSteps
+      footer
     }
-    .background(Color(nsColor: .windowBackgroundColor))
+    .padding(.horizontal, 40)
+    .padding(.vertical, 32)
+    .onAppear(perform: syncCompletionPresentation)
+    .onChange(of: configuration.isFullyConfigured) { _, _ in
+      syncCompletionPresentation()
+    }
+    .sheet(isPresented: $showCompletion) {
+      OnboardingCompletionView(
+        toggleRecordingShortcut: shortcuts.toggleRecording.shortcut
+      ) {
+        hasCompletedOnboarding = true
+      }
+      .interactiveDismissDisabled()
+    }
+  }
+
+  /// Surfaces the completion modal the moment all three prerequisites pass,
+  /// and only while the user has not yet acknowledged it. Acknowledgment
+  /// (the modal's "Continue" button) is what latches
+  /// ``AppDefaultsKey/hasCompletedOnboarding``, which then routes the user
+  /// out of ``OnboardingView`` and drops the activation policy to `.accessory`.
+  private func syncCompletionPresentation() {
+    showCompletion = configuration.isFullyConfigured && !hasCompletedOnboarding
   }
 
   private var header: some View {
@@ -272,7 +293,69 @@ private struct OnboardingStepRow: View {
 }
 
 
+/// Celebratory hand-off shown the instant the three onboarding prerequisites
+/// pass. Presented as a sheet over ``OnboardingView``; the only way out is
+/// the "Continue" CTA, which is what writes
+/// ``AppDefaultsKey/hasCompletedOnboarding``.
+struct OnboardingCompletionView: View {
+  let toggleRecordingShortcut: Shortcut?
+  let onContinue: () -> Void
+
+  var body: some View {
+    VStack(spacing: 24) {
+      VStack(spacing: 16) {
+        Image(nsImage: NSApp.applicationIconImage)
+          .resizable()
+          .frame(width: 96, height: 96)
+
+        Text("Onboarding complete!")
+          .font(.title2.weight(.semibold))
+      }
+
+      VStack(alignment: .leading, spacing: 12) {
+        Text("L'Alfred is moving to the menu bar. No Dock icon, no window in your way.")
+          .fixedSize(horizontal: false, vertical: true)
+
+        Text("To open this again, click the L'Alfred icon up top → **Settings**.")
+          .fixedSize(horizontal: false, vertical: true)
+
+        if let shortcut = toggleRecordingShortcut {
+          let keys = shortcut.labels.joined()
+          Text("**Try it out:** in any app, press **\(keys)**, speak, then press **\(keys)** again to transcribe.")
+            .fixedSize(horizontal: false, vertical: true)
+        }
+      }
+      .font(.callout)
+      .foregroundStyle(.secondary)
+      .frame(maxWidth: .infinity, alignment: .leading)
+
+      Button("Continue", action: onContinue)
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .keyboardShortcut(.defaultAction)
+    }
+    .padding(.horizontal, 40)
+    .padding(.vertical, 32)
+    .frame(width: 480)
+  }
+}
+
+
 #Preview("Onboarding: Fresh start") {
   OnboardingView()
     .frame(width: 740, height: 520)
+}
+
+#Preview("Onboarding: Completion modal") {
+  OnboardingCompletionView(
+    toggleRecordingShortcut: AppDefaultShortcuts.toggleRecording,
+    onContinue: {}
+  )
+}
+
+#Preview("Onboarding: Completion modal — no shortcut") {
+  OnboardingCompletionView(
+    toggleRecordingShortcut: nil,
+    onContinue: {}
+  )
 }

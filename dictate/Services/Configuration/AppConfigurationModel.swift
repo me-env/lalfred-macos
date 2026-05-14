@@ -1,6 +1,10 @@
 import Foundation
 import Observation
 import AppKit
+import os
+
+
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "AppConfigurationModel")
 
 
 /// Single source of truth for "is the user fully set up?". Combines auth
@@ -66,6 +70,7 @@ final class AppConfigurationModel {
     let micGranted = microphonePermissionService.isAuthorized()
     let axGranted = accessibilityPermissionService.isTrusted()
 
+    logger.info("signedIn=\(signedIn) micGranted=\(micGranted) axGranted=\(axGranted)")
     if isSignedIn != signedIn { isSignedIn = signedIn }
     if microphoneGranted != micGranted { microphoneGranted = micGranted }
     if accessibilityGranted != axGranted { accessibilityGranted = axGranted }

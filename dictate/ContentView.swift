@@ -7,9 +7,6 @@ struct TabsView: View {
 
   private let deepLinkCoordinator = RedeemDeepLinkCoordinator.shared
 
-  private let minimumSettingsWidth: CGFloat = 740
-  private let minimumSettingsHeight: CGFloat = 420
-
   init(initialTab: Tabs = .home) {
     _currentTab = State(initialValue: initialTab)
   }
@@ -59,7 +56,10 @@ struct TabsView: View {
       .toolbar(removing: .sidebarToggle)
     } detail: {
       ScrollView {
-        selectedTabView
+        VStack(spacing: 8) {
+          PermissionRegressionBanner()
+          selectedTabView
+        }
       }
     }
     .onAppear {
@@ -108,17 +108,18 @@ struct TabsView: View {
 
 struct ContentView: View {
   private let initialTab: Tabs
-  private let configuration = AppConfigurationModel.shared
+  @AppStorage(AppDefaultsKey.hasCompletedOnboarding) private var hasCompletedOnboarding = false
 
   init(initialTab: Tabs = .home) {
     self.initialTab = initialTab
   }
 
   var body: some View {
-    if configuration.isFullyConfigured {
+    if hasCompletedOnboarding {
       TabsView(initialTab: initialTab)
     } else {
       OnboardingView()
+        .frame(minHeight: 550, maxHeight: 560)
     }
   }
 }

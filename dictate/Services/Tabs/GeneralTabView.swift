@@ -25,7 +25,6 @@ struct GeneralTabView: View {
 
   var body: some View {
     VStack {
-      BackgroundRunNoticeBanner()
       PreferencesInput()
       SectionBoxWithTitle("Keyboard Shortcuts") {
         ShortcutInput(
@@ -40,8 +39,7 @@ struct GeneralTabView: View {
           activeShortcutEditorID: $activeShortcutEditorID
         )
       }
-      PermissionsInput()
-      
+
       if let sparkleUpdater {
         updatesSection(sparkleUpdater: sparkleUpdater)
       }

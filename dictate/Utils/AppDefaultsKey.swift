@@ -20,5 +20,5 @@ enum AppDefaultsKey {
 
     static let soundEffectKind = "sound.effectKind"
 
-    static let hasAcknowledgedBackgroundRunNotice = "ui.hasAcknowledgedBackgroundRunNotice"
+    static let hasCompletedOnboarding = "ui.hasCompletedOnboarding"
 }
