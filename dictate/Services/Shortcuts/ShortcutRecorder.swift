@@ -49,23 +49,17 @@ private final class LocalFlagsChangedMonitor {
 
 @Observable
 final class ShortcutRecorder {
-  let id: String
   private(set) var shortcut: Shortcut?
   private(set) var isCapturing: Bool = false
 
-  @ObservationIgnored private let store: ShortcutDefaultsStore
+  @ObservationIgnored let store: ShortcutStore
   @ObservationIgnored private var pendingModifiers: ShortcutModifiers = []
   @ObservationIgnored private let keyDownMonitor = LocalKeyDownMonitor()
   @ObservationIgnored private let flagsChangedMonitor = LocalFlagsChangedMonitor()
 
-  init(
-    id: String,
-    defaultShortcut: Shortcut,
-  ) {
-    self.id = id
-    self.store = ShortcutDefaultsStore(key: id, userDefaults: .standard)
-    self.store.ensureDefault(defaultShortcut)
-    self.shortcut = self.store.load()
+  init(store: ShortcutStore) {
+    self.store = store
+    self.shortcut = store.shortcut
   }
 
   deinit {
@@ -89,7 +83,7 @@ final class ShortcutRecorder {
   func cancel() {
     guard isCapturing else { return }
     pendingModifiers = []
-    shortcut = store.load()
+    shortcut = store.shortcut
     stopCapture()
   }
 
@@ -98,7 +92,6 @@ final class ShortcutRecorder {
     shortcut = nil
     store.remove()
     stopCapture()
-    NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
   }
 
   private func finishCapture(saving newShortcut: Shortcut) {
@@ -106,7 +99,6 @@ final class ShortcutRecorder {
     shortcut = newShortcut
     store.save(newShortcut)
     stopCapture()
-    NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
   }
 
   private func stopCapture() {

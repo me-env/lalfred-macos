@@ -2,14 +2,26 @@ import SwiftUI
 
 struct ShortcutInput: View {
   let label: String
-  let recorder: ShortcutRecorder
+  let store: ShortcutStore
   @Binding var activeShortcutEditorID: String?
 
+  @State private var recorder: ShortcutRecorder
   @State private var shortcutHovered: Bool = false
   @State private var clearHovered: Bool = false
 
   let innerRecCorderRadier: CGFloat = 4
   let padding: CGFloat = 4
+
+  init(
+    label: String,
+    store: ShortcutStore,
+    activeShortcutEditorID: Binding<String?>
+  ) {
+    self.label = label
+    self.store = store
+    _activeShortcutEditorID = activeShortcutEditorID
+    _recorder = State(initialValue: ShortcutRecorder(store: store))
+  }
 
   var outerCornerRadius: CGFloat {
     innerRecCorderRadier + padding
@@ -44,7 +56,7 @@ struct ShortcutInput: View {
               )
           }
       }
-      .onTapGesture { activeShortcutEditorID = recorder.id }
+      .onTapGesture { activeShortcutEditorID = store.key }
       .backgroundStyle(.clear)
   }
 
@@ -110,14 +122,14 @@ struct ShortcutInput: View {
       clearButton
     }
     .onChange(of: activeShortcutEditorID) { _, activeID in
-      if activeID == recorder.id {
+      if activeID == store.key {
         recorder.begin()
       } else {
         recorder.cancel()
       }
     }
     .onChange(of: recorder.isCapturing) { _, isCapturing in
-      if !isCapturing && activeShortcutEditorID == recorder.id {
+      if !isCapturing && activeShortcutEditorID == store.key {
         activeShortcutEditorID = nil
       }
     }
@@ -130,10 +142,7 @@ struct ShortcutInput: View {
 #Preview {
   ShortcutInput(
     label: "Toggle Recording",
-    recorder: ShortcutRecorder(
-      id: AppDefaultsKey.shortcutToggleRecording,
-      defaultShortcut: AppDefaultShortcuts.toggleRecording
-    ),
+    store: ShortcutStore(key: AppDefaultsKey.shortcutToggleRecording),
     activeShortcutEditorID: .constant(nil)
   )
   .padding()

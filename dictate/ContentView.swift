@@ -121,21 +121,26 @@ struct ContentView: View {
 
 #Preview("General") {
   ContentView(initialTab: .home)
+    .environment(Shortcuts())
 }
 
 #Preview("Dictionary") {
   ContentView(initialTab: .dictionary)
+    .environment(Shortcuts())
 }
 
 #Preview("Snippets") {
   ContentView(initialTab: .snippets)
+    .environment(Shortcuts())
 }
 
 #Preview("Sounds") {
   ContentView(initialTab: .sounds)
+    .environment(Shortcuts())
 }
 
 #Preview("Account") {
   ContentView(initialTab: .account)
+    .environment(Shortcuts())
 }
 

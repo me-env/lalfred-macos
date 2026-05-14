@@ -1,6 +1,10 @@
 import AppKit
 import Foundation
 import Observation
+import os
+
+
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "AccountTabViewModel")
 
 /// Owns the transient state (loading flags, error messages) and actions for the
 /// Account tab. Persistent values (email, credits, isSignedIn) continue to live
@@ -47,6 +51,7 @@ final class AccountTabViewModel {
 
   /// Reacts to `isSignedIn` flips. Caller wires this up via `.task(id: isSignedIn)`.
   func handleSignedInChange(isSignedIn: Bool) async {
+    logger.info("handleSignedInChange isSignedIn=\(isSignedIn)")
     guard isSignedIn else {
       isLoadingAccountDetails = false
       accountDetailsErrorMessage = ""
@@ -59,6 +64,7 @@ final class AccountTabViewModel {
   }
 
   func loadAccountDetails() async {
+    logger.info("loadAccountDetails isLoadingAccountDetails=\(self.isLoadingAccountDetails)")
     guard !isLoadingAccountDetails else { return }
 
     isLoadingAccountDetails = true
@@ -68,6 +74,7 @@ final class AccountTabViewModel {
     do {
       try await authManager.refreshAccountDetails()
     } catch {
+      logger.error("Error while fetching account details \(error)")
       accountDetailsErrorMessage = errorMessage(
         from: error,
         fallback: "Failed to load account details."

@@ -11,14 +11,12 @@ final class CarbonHotKeyMonitor {
   private let shortcutProvider: () -> Shortcut?
   private let onKeyDown: @MainActor () -> Void
   private let onKeyUp: (@MainActor () -> Void)?
-  private let reloadOnShortcutChange: Bool
-  
+
   private var hotKeyRef: EventHotKeyRef?
   private var eventHandlerRef: EventHandlerRef?
-  
+
   init(
     shortcutProvider: @escaping () -> Shortcut?,
-    reloadOnShortcutChange: Bool = false,
     onKeyDown: @escaping @MainActor () -> Void,
     onKeyUp: (@MainActor () -> Void)? = nil
   ) {
@@ -26,30 +24,17 @@ final class CarbonHotKeyMonitor {
     self.shortcutProvider = shortcutProvider
     self.onKeyDown = onKeyDown
     self.onKeyUp = onKeyUp
-    self.reloadOnShortcutChange = reloadOnShortcutChange
-    
+
     installHandlerIfNeeded()
-    
-    if reloadOnShortcutChange {
-      NotificationCenter.default.addObserver(
-        self,
-        selector: #selector(handleShortcutChange),
-        name: .shortcutDidChange,
-        object: nil
-      )
-    }
   }
-  
+
   deinit {
-    if reloadOnShortcutChange {
-      NotificationCenter.default.removeObserver(self)
-    }
     deactivate()
     if let eventHandlerRef {
       RemoveEventHandler(eventHandlerRef)
     }
   }
-  
+
   func activate() {
     guard hotKeyRef == nil else { return }
     guard let shortcut = shortcutProvider() else { return }
@@ -61,29 +46,24 @@ final class CarbonHotKeyMonitor {
       0,
       &hotKeyRef
     )
-    
+
     if status != noErr {
       hotKeyRef = nil
       let hotKeyId = hotKeyID.id
       logger.error("Failed to register hot key (\(hotKeyId)): \(status)")
     }
   }
-  
+
   func deactivate() {
     if let hotKeyRef {
       UnregisterEventHotKey(hotKeyRef)
       self.hotKeyRef = nil
     }
   }
-  
-  @objc private func handleShortcutChange() {
-    deactivate()
-    activate()
-  }
-  
+
   private func installHandlerIfNeeded() {
     guard eventHandlerRef == nil else { return }
-    
+
     var eventSpecs = [
       EventTypeSpec(
         eventClass: OSType(kEventClassKeyboard),
@@ -98,7 +78,7 @@ final class CarbonHotKeyMonitor {
         )
       )
     }
-    
+
     let selfPointer = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
     _ = eventSpecs.withUnsafeMutableBufferPointer { specsBuffer in
       InstallEventHandler(
@@ -108,9 +88,9 @@ final class CarbonHotKeyMonitor {
                 let userData else {
             return noErr
           }
-          
+
           let monitor = Unmanaged<CarbonHotKeyMonitor>.fromOpaque(userData).takeUnretainedValue()
-          
+
           var receivedID = EventHotKeyID()
           let status = GetEventParameter(
             event,
@@ -121,13 +101,13 @@ final class CarbonHotKeyMonitor {
             nil,
             &receivedID
           )
-          
+
           guard status == noErr,
                 receivedID.id == monitor.hotKeyID.id,
                 receivedID.signature == monitor.hotKeyID.signature else {
             return OSStatus(eventNotHandledErr)
           }
-          
+
           let eventKind = GetEventKind(event)
           Task { @MainActor in
             if eventKind == UInt32(kEventHotKeyPressed) {

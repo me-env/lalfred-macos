@@ -1,27 +1,26 @@
 import SwiftUI
 import Carbon.HIToolbox
+
+
 @MainActor
 final class AppRuntimeCoordinator {
+  private let shortcuts: Shortcuts
   private let indicator: IndicatorPresenting
   private let pasteService: PastingAtCursor
   private let recordingService: AudioRecordingServicing
 
-  private let toggleRecordingShortcutStore = ShortcutDefaultsStore(key: AppDefaultsKey.shortcutToggleRecording)
-  private let holdToSpeakShortcutStore = ShortcutDefaultsStore(key: AppDefaultsKey.shortcutHoldToSpeak)
-
   private var sessionState = DictationSessionStateMachine()
-  
+
   private var toggleRecordingMonitor: UnifiedShortcutMonitor?
   private var holdToSpeakMonitor: UnifiedShortcutMonitor?
   private var escapeHotKeyMonitor: CarbonHotKeyMonitor?
-  
+
   private var shortcutCaptureObserver: NSObjectProtocol?
-  private var shortcutDidChangeObserver: NSObjectProtocol?
   private var isShortcutCaptureActive = false
   private var isHoldToSpeakActive = false
   private var lastPressDate: Date = .distantPast
   private let minimumPressInterval: TimeInterval = 0.30
-  
+
   private lazy var listeningFlow = ListeningFlowHandler(
     recordingService: recordingService,
     indicator: indicator,
@@ -32,7 +31,7 @@ final class AppRuntimeCoordinator {
       self?.deactivateListeningHotKeys()
     }
   )
-  
+
   private lazy var processingFlowHandler = ProcessingFlowHandler(
     recordingService: recordingService,
     pasteService: pasteService,
@@ -43,10 +42,12 @@ final class AppRuntimeCoordinator {
   )
 
   init(
+    shortcuts: Shortcuts,
     indicator: IndicatorPresenting? = nil,
     pasteService: PastingAtCursor? = nil,
     recordingService: AudioRecordingServicing? = nil,
   ) {
+    self.shortcuts = shortcuts
     self.indicator = indicator ?? IndicatorPanelController()
     self.pasteService = pasteService ?? PasteAtCursorService()
     self.recordingService = recordingService ?? AudioRecordingService()
@@ -56,33 +57,36 @@ final class AppRuntimeCoordinator {
     if let shortcutCaptureObserver {
       NotificationCenter.default.removeObserver(shortcutCaptureObserver)
     }
-    if let shortcutDidChangeObserver {
-      NotificationCenter.default.removeObserver(shortcutDidChangeObserver)
-    }
   }
-  
+
   private func registerAudioLevelUpdateCallback() {
     recordingService.onAudioLevelUpdate = { [weak self] level in
       guard let self, self.sessionState.isListening else { return }
       self.indicator.updateListeningLevel(CGFloat(level))
     }
   }
-  
-  private func setDefaultShortcuts() {
-    toggleRecordingShortcutStore.ensureDefault(AppDefaultShortcuts.toggleRecording)
-    holdToSpeakShortcutStore.ensureDefault(AppDefaultShortcuts.holdToSpeak)
-  }
 
   func start() {
     guard toggleRecordingMonitor == nil else {
       return
     }
-    
-    registerAudioLevelUpdateCallback()
-    setDefaultShortcuts()
 
-    rebuildToggleRecordingMonitor()
-    rebuildHoldToSpeakMonitor()
+    registerAudioLevelUpdateCallback()
+
+    let toggleMonitor = UnifiedShortcutMonitor(
+      store: shortcuts.toggleRecording,
+      onKeyDown: { [weak self] in self?.handleShortcutPress() }
+    )
+    toggleRecordingMonitor = toggleMonitor
+    toggleMonitor.activate()
+
+    let holdMonitor = UnifiedShortcutMonitor(
+      store: shortcuts.holdToSpeak,
+      onKeyDown: { [weak self] in self?.handleHoldToSpeakPress() },
+      onKeyUp: { [weak self] in self?.handleHoldToSpeakRelease() }
+    )
+    holdToSpeakMonitor = holdMonitor
+    holdMonitor.activate()
 
     escapeHotKeyMonitor = CarbonHotKeyMonitor(
       shortcutProvider: { AppDefaultShortcuts.escape },
@@ -100,16 +104,6 @@ final class AppRuntimeCoordinator {
 
       Task { @MainActor [weak self] in
         self?.handleShortcutCaptureStateChange(isCapturing)
-      }
-    }
-
-    shortcutDidChangeObserver = NotificationCenter.default.addObserver(
-      forName: .shortcutDidChange,
-      object: nil,
-      queue: .main
-    ) { [weak self] _ in
-      Task { @MainActor [weak self] in
-        self?.handleShortcutDidChange()
       }
     }
   }
@@ -222,49 +216,5 @@ final class AppRuntimeCoordinator {
       sessionState: &sessionState,
       errorMessage: Self.errorMessage(for:)
     )
-  }
-
-  private func handleShortcutDidChange() {
-    rebuildToggleRecordingMonitor()
-    rebuildHoldToSpeakMonitor()
-  }
-
-  private func rebuildToggleRecordingMonitor() {
-    toggleRecordingMonitor?.deactivate()
-    toggleRecordingMonitor = nil
-
-    toggleRecordingMonitor = UnifiedShortcutMonitor(
-      shortcutProvider: { [toggleRecordingShortcutStore] in
-        toggleRecordingShortcutStore.load()
-      },
-      onKeyDown: { [weak self] in
-        self?.handleShortcutPress()
-      }
-    )
-
-    guard !isShortcutCaptureActive else { return }
-    toggleRecordingMonitor?.activate()
-  }
-
-  private func rebuildHoldToSpeakMonitor() {
-    holdToSpeakMonitor?.deactivate()
-    holdToSpeakMonitor = nil
-
-    guard holdToSpeakShortcutStore.load() != nil else { return }
-
-    holdToSpeakMonitor = UnifiedShortcutMonitor(
-      shortcutProvider: { [holdToSpeakShortcutStore] in
-        holdToSpeakShortcutStore.load()
-      },
-      onKeyDown: { [weak self] in
-        self?.handleHoldToSpeakPress()
-      },
-      onKeyUp: { [weak self] in
-        self?.handleHoldToSpeakRelease()
-      }
-    )
-
-    guard !isShortcutCaptureActive else { return }
-    holdToSpeakMonitor?.activate()
   }
 }

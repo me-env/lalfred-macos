@@ -3,16 +3,8 @@ import AppKit
 
 
 struct GeneralTabView: View {
+  @Environment(Shortcuts.self) private var shortcuts
   @State private var activeShortcutEditorID: String?
-
-  @State private var toggleRecordingRecorder = ShortcutRecorder(
-    id: AppDefaultsKey.shortcutToggleRecording,
-    defaultShortcut: AppDefaultShortcuts.toggleRecording
-  )
-  @State private var holdToSpeakRecorder = ShortcutRecorder(
-    id: AppDefaultsKey.shortcutHoldToSpeak,
-    defaultShortcut: AppDefaultShortcuts.holdToSpeak
-  )
 
   var body: some View {
     VStack {
@@ -20,13 +12,13 @@ struct GeneralTabView: View {
       SectionBoxWithTitle("Keyboard Shortcuts") {
         ShortcutInput(
           label: "Toggle Recording",
-          recorder: toggleRecordingRecorder,
+          store: shortcuts.toggleRecording,
           activeShortcutEditorID: $activeShortcutEditorID
         )
         Divider()
         ShortcutInput(
           label: "Hold to Speak",
-          recorder: holdToSpeakRecorder,
+          store: shortcuts.holdToSpeak,
           activeShortcutEditorID: $activeShortcutEditorID
         )
       }

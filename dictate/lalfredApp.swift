@@ -39,6 +39,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   func application(_ application: NSApplication, open urls: [URL]) {
+    logger.info("application \(urls)")
     guard !urls.isEmpty else {
       logger.error("Application open URL event received with no URLs")
       return
@@ -97,19 +98,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct lalfredApp: App {
   @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-  @State private var runtimeCoordinator = AppRuntimeCoordinator()
+  @State private var shortcuts: Shortcuts
+  @State private var runtimeCoordinator: AppRuntimeCoordinator
   @AppStorage(AppDefaultsKey.showMenuBarExtra) private var showMenuBarExtra = true
   private let updaterController: SPUStandardUpdaterController
 
   init() {
+    let shortcuts = Shortcuts()
+    let coordinator = AppRuntimeCoordinator(shortcuts: shortcuts)
+    _shortcuts = State(initialValue: shortcuts)
+    _runtimeCoordinator = State(initialValue: coordinator)
     updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     LaunchAtLoginService().synchronizeStoredPreference()
-    runtimeCoordinator.start()
+    coordinator.start()
   }
 
   var body: some Scene {
     Window("Settings", id: "main") {
       ContentView()
+        .environment(shortcuts)
     }
     .defaultLaunchBehavior(.suppressed) // no window on first launch
     .handlesExternalEvents(matching: ["main"])

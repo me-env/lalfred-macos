@@ -1,4 +1,8 @@
 import SwiftUI
+import os
+
+
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "AccountTabView")
 
 /// Coordinator for the Account tab. Owns the per-tab view models and composes
 /// the three sections: signed-in/signed-out card, redeem-a-code (when signed
@@ -66,6 +70,7 @@ struct AccountTabView: View {
   /// keep it pending until after sign-in).
   private func consumePendingDeepLinkKey() {
     guard isSignedIn, let key = deepLinkCoordinator.pendingKey else { return }
+    logger.info("consumePendingDeepLinkKey \(key)")
     redeemModel.inputKey = key
     deepLinkCoordinator.clearPending()
   }

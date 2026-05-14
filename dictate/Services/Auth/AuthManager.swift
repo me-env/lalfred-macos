@@ -1,6 +1,9 @@
 import Foundation
 import OSLog
 
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "AuthManager")
+
+
 @MainActor
 final class AuthManager {
   static let shared = AuthManager()
@@ -25,7 +28,6 @@ final class AuthManager {
     }
   }
   
-  private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "Auth")
   private let tokenStore: KeychainStore
   private let userDefaults: UserDefaults
   private let urlSession: URLSession
@@ -67,6 +69,7 @@ final class AuthManager {
   
   @discardableResult
   func handleIncomingURL(_ url: URL) -> Bool {
+    logger.info("handleIncomingURL \(url)")
     let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
     let queryKeys = components?.queryItems?.map(\.name) ?? []
     
@@ -104,9 +107,9 @@ final class AuthManager {
       guard let self else { return }
       do {
         try await self.refreshAccountDetails()
-        self.logger.info("Loaded account details after sign-in")
+        logger.info("Loaded account details after sign-in")
       } catch {
-        self.logger.error("Failed loading account details after sign-in: \(error.localizedDescription, privacy: .public)")
+        logger.error("Failed loading account details after sign-in: \(error.localizedDescription, privacy: .public)")
       }
     }
   }
