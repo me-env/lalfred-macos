@@ -1,9 +1,16 @@
 name: Publish
 
 on:
-  release:
-    types: [published]
+  push:
+    tags: ['v*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to (re)publish, e.g. v1.16.5'
+        required: true
+
+permissions:
+  contents: write  # needed to create the GitHub Release and upload assets
 
 jobs:
   build:
@@ -14,6 +21,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Full history so `git log <prev-tag>..<tag>` works in the
+          # release-notes step. Default shallow clone would miss it.
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
 
       - name: Install Python deps
         # `dmgbuild` builds the .dmg; `cryptography` derives the Sparkle
@@ -81,6 +104,43 @@ jobs:
             build/LAlfred-*.dmg
             build/LAlfred-*.zip
             build/appcast.xml
+
+      - name: Generate release notes
+        id: notes
+        env:
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+        run: |
+          NOTE="$(./ci/generate-release-notes.sh "${{ steps.tag.outputs.tag }}")"
+          {
+            echo "note<<RELEASE_NOTE_EOF"
+            echo "${NOTE}"
+            echo "RELEASE_NOTE_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create / update GitHub Release
+        # Idempotent: if the release already exists (e.g. re-running via
+        # workflow_dispatch after a botched build) we re-upload the assets
+        # rather than failing. Body is only set on initial creation.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          NOTE: ${{ steps.notes.outputs.note }}
+        run: |
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "==> Release ${TAG} already exists; re-uploading assets."
+            gh release upload "${TAG}" \
+              build/LAlfred-*.dmg \
+              build/LAlfred-*.zip \
+              build/appcast.xml \
+              --clobber
+          else
+            gh release create "${TAG}" \
+              --title "${TAG}" \
+              --notes "${NOTE}" \
+              build/LAlfred-*.dmg \
+              build/LAlfred-*.zip \
+              build/appcast.xml
+          fi
 
       - name: Tear down signing keychain
         # `if: always()` so the keychain is removed even if an earlier
