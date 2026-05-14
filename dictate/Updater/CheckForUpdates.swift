@@ -20,16 +20,30 @@ final class CheckForUpdatesViewModel: ObservableObject {
 struct CheckForUpdatesView: View {
     @ObservedObject private var checkForUpdatesViewModel: CheckForUpdatesViewModel
     private let updater: SPUUpdater
-    
+
     init(updater: SPUUpdater) {
         self.updater = updater
-        
+
         // Create our view model for our CheckForUpdatesView
         self.checkForUpdatesViewModel = CheckForUpdatesViewModel(updater: updater)
     }
-    
+
     var body: some View {
-        Button("Check for Updates…", action: updater.checkForUpdates)
-            .disabled(!checkForUpdatesViewModel.canCheckForUpdates)
+        Button("Check for Updates", action: updater.checkForUpdates)
+          .disabled(!checkForUpdatesViewModel.canCheckForUpdates)
+    }
+}
+
+// Exposes the Sparkle updater through the SwiftUI environment so views deeper
+// in the hierarchy (e.g. the General tab) can present update controls without
+// having the controller threaded through every initializer.
+private struct SparkleUpdaterKey: EnvironmentKey {
+    static let defaultValue: SPUUpdater? = nil
+}
+
+extension EnvironmentValues {
+    var sparkleUpdater: SPUUpdater? {
+        get { self[SparkleUpdaterKey.self] }
+        set { self[SparkleUpdaterKey.self] = newValue }
     }
 }

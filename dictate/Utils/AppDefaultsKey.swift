@@ -19,4 +19,6 @@ enum AppDefaultsKey {
     static let signupBonusCredits = "auth.signup.bonus.credits"
 
     static let soundEffectKind = "sound.effectKind"
+
+    static let hasAcknowledgedBackgroundRunNotice = "ui.hasAcknowledgedBackgroundRunNotice"
 }

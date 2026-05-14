@@ -1,75 +1,49 @@
 import SwiftUI
 import AVFoundation
 import AppKit
+import os
+
+
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "PermissionsInput")
+
 
 struct PermissionsInput: View {
-  @Environment(\.scenePhase) private var scenePhase
-
+  private let configuration = AppConfigurationModel.shared
+  private let microphonePermissionService = MicrophonePermissionService()
   private let accessibilityPermissionService = AccessibilityPermissionService()
 
-  @State private var microphoneGranted: Bool = false
-  @State private var accessibilityGranted: Bool = false
-  
   var body: some View {
     PermissionsView(
-      microphoneGranted: microphoneGranted,
-      accessibilityGranted: accessibilityGranted,
+      microphoneGranted: configuration.microphoneGranted,
+      accessibilityGranted: configuration.accessibilityGranted,
       requestMicrophonePermission: requestMicrophonePermission,
       requestAccessibilityPermission: requestAccessibilityPermission
     )
-    .onAppear {
-      refreshStatuses()
-    }
-    .onChange(of: scenePhase) { _, newPhase in
-      if newPhase == .active {
-        refreshStatusesIfNeeded()
-      }
-    }
-    .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
-      refreshStatusesIfNeeded()
-    }
   }
 
-  private var hasMissingPermission: Bool {
-    !microphoneGranted || !accessibilityGranted
-  }
-  
-  private func refreshStatuses() {
-    microphoneGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
-    accessibilityGranted = accessibilityPermissionService.isTrusted()
-    print("[PermissionsInput] refreshStatuses accessibilityGranted=\(accessibilityGranted)")
-  }
-
-  private func refreshStatusesIfNeeded() {
-    guard hasMissingPermission else { return }
-    refreshStatuses()
-  }
-  
   private func requestMicrophonePermission() {
-    let status = AVCaptureDevice.authorizationStatus(for: .audio)
-    
-    switch status {
+    switch microphonePermissionService.authorizationStatus() {
     case .authorized:
-      microphoneGranted = true
+      configuration.refresh()
     case .notDetermined:
-      AVCaptureDevice.requestAccess(for: .audio) { granted in
-        DispatchQueue.main.async {
-          microphoneGranted = granted
-        }
+      microphonePermissionService.requestAccess { granted in
+        logger.info("microphone requestAccess granted=\(granted)")
+        configuration.refresh()
       }
     case .denied, .restricted:
-      microphoneGranted = false
-      if let settingsURL = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
-        NSWorkspace.shared.open(settingsURL)
-      }
+      microphonePermissionService.openSystemSettings()
+      configuration.refresh()
     @unknown default:
-      microphoneGranted = false
+      configuration.refresh()
     }
   }
-  
+
   private func requestAccessibilityPermission() {
-    accessibilityGranted = accessibilityPermissionService.requestPrompt()
-    refreshStatuses()
+    // Returns the *current* trust value; the actual grant happens later in
+    // System Settings, picked up via `NSApplication.didBecomeActiveNotification`
+    // observed by ``AppConfigurationModel``.
+    _ = accessibilityPermissionService.requestPrompt()
+    configuration.refresh()
   }
 }
 
@@ -149,4 +123,3 @@ private struct PermissionRow: View {
   )
   .padding()
 }
-

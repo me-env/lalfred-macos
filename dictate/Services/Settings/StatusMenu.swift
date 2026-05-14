@@ -4,13 +4,18 @@ import AppKit
 struct StatusMenu: View {
   @Environment(\.openSettings) private var openSettings
   @Environment(\.openWindow) private var openWindow
+  @Environment(\.sparkleUpdater) private var sparkleUpdater
 
   var body: some View {
     Group {
       settingsButton
       Divider()
-      versionLabel
+      if let sparkleUpdater {
+        CheckForUpdatesView(updater: sparkleUpdater)
+      }
       quitButton
+      
+      versionLabel
     }
   }
   
@@ -18,7 +23,7 @@ struct StatusMenu: View {
     Button {
       openAppSettings()
     } label: {
-      Label("Settings...", systemImage: "gearshape")
+      Label("Settings", systemImage: "gearshape")
     }
     .keyboardShortcut(",")
   }
@@ -39,10 +44,7 @@ struct StatusMenu: View {
   }
   
   private var versionLabel: some View {
-    let name = Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "App"
-    let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
-    let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-    return Text("\(name) \(version) (\(build))")
+    Text("\(AppVersion.name) \(AppVersion.version)")
       .foregroundStyle(.secondary)
   }
 }

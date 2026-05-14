@@ -2,6 +2,7 @@ import Foundation
 import ApplicationServices
 import AppKit
 
+
 struct AccessibilityPermissionService {
   func isTrusted() -> Bool {
     return AXIsProcessTrusted()

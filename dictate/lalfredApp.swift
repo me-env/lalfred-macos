@@ -1,6 +1,7 @@
 import SwiftUI
 import OSLog
 import AppKit
+import AVFoundation
 import Sparkle
 import Combine
 
@@ -12,6 +13,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   /// Keep the menu-bar runtime alive when the user closes the main window.
   func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
     false
+  }
+
+  /// The scene declares `.defaultLaunchBehavior(.suppressed)` so configured
+  /// users land directly in the menu bar. For first-run / partially-configured
+  /// users we override that by surfacing the settings window so they can
+  /// complete sign-in and grant required permissions.
+  func applicationDidFinishLaunching(_ notification: Notification) {
+    Task { @MainActor in
+      // First `.shared` access triggers `init()` which performs the initial
+      // refresh; no need to call `refresh()` again here.
+      guard !AppConfigurationModel.shared.isFullyConfigured else {
+        logger.info("launch: fully configured, staying in menu bar")
+        return
+      }
+      logger.info("launch: configuration incomplete, surfacing settings window")
+      showMainWindow()
+    }
   }
 
   func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -106,6 +124,7 @@ struct lalfredApp: App {
   init() {
     let shortcuts = Shortcuts()
     let coordinator = AppRuntimeCoordinator(shortcuts: shortcuts)
+
     _shortcuts = State(initialValue: shortcuts)
     _runtimeCoordinator = State(initialValue: coordinator)
     updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
@@ -117,17 +136,16 @@ struct lalfredApp: App {
     Window("Settings", id: "main") {
       ContentView()
         .environment(shortcuts)
+        .environment(\.sparkleUpdater, updaterController.updater)
     }
-    .defaultLaunchBehavior(.suppressed) // no window on first launch
+    // Suppressed by default; AppDelegate.applicationDidFinishLaunching opens
+    // the window when the user is not yet signed in or is missing permissions.
+    .defaultLaunchBehavior(.suppressed)
     .handlesExternalEvents(matching: ["main"])
-    .commands {
-      CommandGroup(after: .appInfo) {
-        CheckForUpdatesView(updater: updaterController.updater)
-      }
-    }
 
     MenuBarExtra("L'Alfred", image: "MenuBarIcon", isInserted: $showMenuBarExtra) {
       StatusMenu()
+        .environment(\.sparkleUpdater, updaterController.updater)
     }
   }
 }
