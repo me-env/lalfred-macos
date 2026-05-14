@@ -108,13 +108,18 @@ struct TabsView: View {
 
 struct ContentView: View {
   private let initialTab: Tabs
+  private let configuration = AppConfigurationModel.shared
 
   init(initialTab: Tabs = .home) {
     self.initialTab = initialTab
   }
 
   var body: some View {
-    TabsView(initialTab: initialTab)
+    if configuration.isFullyConfigured {
+      TabsView(initialTab: initialTab)
+    } else {
+      OnboardingView()
+    }
   }
 }
 
