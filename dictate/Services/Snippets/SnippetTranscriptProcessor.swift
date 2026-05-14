@@ -21,12 +21,12 @@ struct SnippetTranscriptProcessor {
 
     let normalizedTranscript = String(normalizedText.characters)
     if let exactSnippet = snippets.first(where: {
-      $0.matchEntireSentenceOnly && $0.normalizedKey == normalizedTranscript
+      $0.fullMatch && $0.normalizedKey == normalizedTranscript
     }) {
       return exactSnippet.replacement
     }
 
-    let inlineSnippets = snippets.filter { !$0.matchEntireSentenceOnly }
+    let inlineSnippets = snippets.filter { !$0.fullMatch }
     guard !inlineSnippets.isEmpty else {
       return transcript
     }
@@ -64,7 +64,7 @@ struct SnippetTranscriptProcessor {
         return ProcessedSnippet(
           rawKey: key,
           replacement: value,
-          matchEntireSentenceOnly: snippet.matchEntireSentenceOnly
+          fullMatch: snippet.fullMatch
         )
       }
       .filter { !$0.replacement.isEmpty }
@@ -77,7 +77,7 @@ struct SnippetTranscriptProcessor {
         return ProcessedSnippet(
           rawKey: snippet.rawKey,
           replacement: snippet.replacement,
-          matchEntireSentenceOnly: snippet.matchEntireSentenceOnly,
+          fullMatch: snippet.fullMatch,
           normalizedKey: normalizedKey,
           normalizedKeyCharacters: Array(normalizedKey)
         )
@@ -225,20 +225,20 @@ struct SnippetTranscriptProcessor {
 private struct ProcessedSnippet {
   let rawKey: String
   let replacement: String
-  let matchEntireSentenceOnly: Bool
+  let fullMatch: Bool
   let normalizedKey: String
   let normalizedKeyCharacters: [Character]
 
   init(
     rawKey: String,
     replacement: String,
-    matchEntireSentenceOnly: Bool = false,
+    fullMatch: Bool = false,
     normalizedKey: String = "",
     normalizedKeyCharacters: [Character] = []
   ) {
     self.rawKey = rawKey
     self.replacement = replacement
-    self.matchEntireSentenceOnly = matchEntireSentenceOnly
+    self.fullMatch = fullMatch
     self.normalizedKey = normalizedKey
     self.normalizedKeyCharacters = normalizedKeyCharacters
   }

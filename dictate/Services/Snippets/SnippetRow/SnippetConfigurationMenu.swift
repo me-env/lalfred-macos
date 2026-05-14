@@ -2,14 +2,14 @@ import SwiftUI
 
 struct SnippetConfigurationMenu: View {
   let isVisible: Bool
-  let isMatchEntireSentenceOnly: Bool
-  let onToggleMatchEntireSentenceOnly: (Bool) -> Void
+  let isFullMatch: Bool
+  let onToggleFullMatch: (Bool) -> Void
 
   var body: some View {
     Menu {
       SnippetFullMatchMenuButton(
-        isMatchEntireSentenceOnly: isMatchEntireSentenceOnly,
-        onToggleMatchEntireSentenceOnly: onToggleMatchEntireSentenceOnly
+        isFullMatch: isFullMatch,
+        onToggleFullMatch: onToggleFullMatch
       )
     } label: {
       Image(systemName: "slider.horizontal.3")

@@ -1,6 +1,6 @@
 import SwiftUI
 
-private let fullSentenceMatchToggleTitle = "Full match"
+private let fullMatchToggleTitle = "Full match"
 
 
 struct FullSentenceMatchLabel: View {
@@ -12,7 +12,7 @@ struct FullSentenceMatchLabel: View {
       isTooltipPresented = true
     } label: {
       HStack(spacing: 4) {
-        Text(fullSentenceMatchToggleTitle)
+        Text(fullMatchToggleTitle)
 
         Image(systemName: "info.circle")
           .foregroundStyle(isHovered ? Color.accentColor : Color.secondary)
@@ -39,8 +39,8 @@ struct FullSentenceMatchLabel: View {
 #Preview {
   SnippetConfigurationMenu(
     isVisible: false,
-    isMatchEntireSentenceOnly: false,
-    onToggleMatchEntireSentenceOnly: { _ in }
+    isFullMatch: false,
+    onToggleFullMatch: { _ in }
   )
   .padding()
 }

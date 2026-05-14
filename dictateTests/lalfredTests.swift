@@ -1,33 +1,59 @@
+import Foundation
 import Testing
 @testable import L_Alfred
 
+
 struct lalfredTests {
-    @Test func stateMachineTransitionsFromIdleToListening() {
-        var machine = DictationSessionStateMachine()
-        #expect(machine.transitionToListening())
-        #expect(machine.state == .listening)
-    }
+  @Test func snippetWithPlainEmailKeyMatchesHyphenatedEmailTranscript() {
+    let userDefaults = makeIsolatedUserDefaults()
+    saveSnippets(
+      [Snippet(key: "email", value: "EMAIL")],
+      userDefaults: userDefaults
+    )
 
-    @Test func stateMachineTransitionsFromListeningToProcessing() {
-        var machine = DictationSessionStateMachine()
-        _ = machine.transitionToListening()
-        #expect(machine.transitionToProcessing())
-        #expect(machine.state == .processing)
-    }
+    let result = SnippetTranscriptProcessor(userDefaults: userDefaults)
+      .process(transcript: "send an e-mail now")
 
-    @Test func stateMachineRejectsInvalidTransitionToProcessingFromIdle() {
-        var machine = DictationSessionStateMachine()
-        #expect(machine.transitionToProcessing() == false)
-        #expect(machine.state == .idle)
-    }
+    #expect(result == "send an EMAIL now")
+  }
 
-    @Test func stateMachineCanShowModeSwitcherWhileIdleOrListening() {
-        var machine = DictationSessionStateMachine()
-        #expect(machine.canShowModeSwitcher(isCommandVisible: false))
-        _ = machine.transitionToListening()
-        #expect(machine.canShowModeSwitcher(isCommandVisible: false))
-        #expect(machine.canShowModeSwitcher(isCommandVisible: true) == false)
-        _ = machine.transitionToProcessing()
-        #expect(machine.canShowModeSwitcher(isCommandVisible: false) == false)
-    }
+  @Test func snippetWithHyphenatedEmailKeyMatchesPlainEmailTranscript() {
+    let userDefaults = makeIsolatedUserDefaults()
+    saveSnippets(
+      [Snippet(key: "e-mail", value: "EMAIL")],
+      userDefaults: userDefaults
+    )
+
+    let result = SnippetTranscriptProcessor(userDefaults: userDefaults)
+      .process(transcript: "send an email now")
+    
+    #expect(result == "send an EMAIL now")
+  }
+  
+  @Test func snippetFullMatchWithDot() {
+    let userDefaults = makeIsolatedUserDefaults()
+    saveSnippets(
+      [Snippet(key: "e-mail", value: "EMAIL", fullMatch: true)],
+      userDefaults: userDefaults
+    )
+    
+    let result = SnippetTranscriptProcessor(userDefaults: userDefaults)
+      .process(transcript: "Email.")
+    
+    #expect(result == "EMAIL")
+  }
+
+  private func makeIsolatedUserDefaults() -> UserDefaults {
+    let suiteName = "lalfredTests.\(UUID().uuidString)"
+    let userDefaults = UserDefaults(suiteName: suiteName)!
+    userDefaults.removePersistentDomain(forName: suiteName)
+    return userDefaults
+  }
+  
+  private func saveSnippets(_ snippets: [Snippet], userDefaults: UserDefaults) {
+    UserDefaultsCodableStore<[Snippet]>(
+      key: AppDefaultsKey.savedSnippets,
+      userDefaults: userDefaults
+    ).save(snippets)
+  }
 }

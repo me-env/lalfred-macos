@@ -5,7 +5,7 @@ struct SnippetsTabView: View {
   @AppStorage(AppDefaultsKey.savedSnippets) private var savedSnippetsData: Data = Data()
   @State private var newKey: String = ""
   @State private var newValue: String = ""
-  @State private var newMatchEntireSentenceOnly = false
+  @State private var newFullMatch = false
   private let inputControlHeight: CGFloat = 32
   
   private var snippets: [Snippet] {
@@ -76,7 +76,7 @@ struct SnippetsTabView: View {
         addButton
       }
 
-      Toggle(isOn: $newMatchEntireSentenceOnly) {
+      Toggle(isOn: $newFullMatch) {
         FullSentenceMatchLabel()
       }
       .toggleStyle(.checkbox)
@@ -113,8 +113,8 @@ struct SnippetsTabView: View {
         ForEach(snippets, id: \.self) { snippet in
           SnippetRow(
             snippet: snippet,
-            onToggleMatchEntireSentenceOnly: { isEnabled in
-              updateSnippetMatchMode(snippet, matchEntireSentenceOnly: isEnabled)
+            onToggleFullMatch: { isEnabled in
+              updateSnippetFullMatch(snippet, fullMatch: isEnabled)
             },
             onRemove: {
               removeSnippet(snippet)
@@ -134,7 +134,7 @@ struct SnippetsTabView: View {
   private func addSnippet() {
     let key = sanitizedKey
     let value = sanitizedValue
-    let matchEntireSentenceOnly = newMatchEntireSentenceOnly
+    let fullMatch = newFullMatch
 
     guard !key.isEmpty, !value.isEmpty else { return }
 
@@ -142,12 +142,12 @@ struct SnippetsTabView: View {
     let exists = current.contains {
       $0.key.caseInsensitiveCompare(key) == .orderedSame &&
       $0.value.caseInsensitiveCompare(value) == .orderedSame &&
-      $0.matchEntireSentenceOnly == matchEntireSentenceOnly
+      $0.fullMatch == fullMatch
     }
     guard !exists else {
       newKey = ""
       newValue = ""
-      newMatchEntireSentenceOnly = false
+      newFullMatch = false
       return
     }
 
@@ -155,13 +155,13 @@ struct SnippetsTabView: View {
       Snippet(
         key: key,
         value: value,
-        matchEntireSentenceOnly: matchEntireSentenceOnly
+        fullMatch: fullMatch
       )
     )
     saveSnippets(current)
     newKey = ""
     newValue = ""
-    newMatchEntireSentenceOnly = false
+    newFullMatch = false
   }
   
   private func removeSnippet(_ snippet: Snippet) {
@@ -170,16 +170,16 @@ struct SnippetsTabView: View {
     saveSnippets(current)
   }
 
-  private func updateSnippetMatchMode(
+  private func updateSnippetFullMatch(
     _ snippet: Snippet,
-    matchEntireSentenceOnly: Bool
+    fullMatch: Bool
   ) {
     var current = snippets
     guard let index = current.firstIndex(of: snippet) else {
       return
     }
 
-    current[index].matchEntireSentenceOnly = matchEntireSentenceOnly
+    current[index].fullMatch = fullMatch
     saveSnippets(deduplicatedSnippets(from: current))
   }
 
@@ -191,7 +191,7 @@ struct SnippetsTabView: View {
       let identifier = [
         snippet.key.lowercased(),
         snippet.value.lowercased(),
-        snippet.matchEntireSentenceOnly ? "1" : "0"
+        snippet.fullMatch ? "1" : "0"
       ].joined(separator: "|")
 
       if seen.insert(identifier).inserted {

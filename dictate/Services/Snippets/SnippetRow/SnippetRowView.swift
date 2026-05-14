@@ -3,7 +3,7 @@ import SwiftUI
 
 struct SnippetRow: View {
   let snippet: Snippet
-  let onToggleMatchEntireSentenceOnly: (Bool) -> Void
+  let onToggleFullMatch: (Bool) -> Void
   let onRemove: () -> Void
   @State var hovered: Bool = false
 
@@ -18,8 +18,8 @@ struct SnippetRow: View {
 
       SnippetConfigurationMenu(
         isVisible: hovered,
-        isMatchEntireSentenceOnly: snippet.matchEntireSentenceOnly,
-        onToggleMatchEntireSentenceOnly: onToggleMatchEntireSentenceOnly
+        isFullMatch: snippet.fullMatch,
+        onToggleFullMatch: onToggleFullMatch
       )
 
       RowDeleteButton(
@@ -42,8 +42,8 @@ struct SnippetRow: View {
     .animation(.interpolatingSpring, value: hovered)
     .contextMenu {
       SnippetFullMatchMenuButton(
-        isMatchEntireSentenceOnly: snippet.matchEntireSentenceOnly,
-        onToggleMatchEntireSentenceOnly: onToggleMatchEntireSentenceOnly
+        isFullMatch: snippet.fullMatch,
+        onToggleFullMatch: onToggleFullMatch
       )
 
       Divider()
@@ -57,7 +57,7 @@ struct SnippetRow: View {
 #Preview {
   SnippetRow(
     snippet: .init(key: "oui", value: "ah"),
-    onToggleMatchEntireSentenceOnly: { _ in },
+    onToggleFullMatch: { _ in },
     onRemove: {}
   )
   .padding()

@@ -1,16 +1,16 @@
 import SwiftUI
 
 struct SnippetFullMatchMenuButton: View {
-  let isMatchEntireSentenceOnly: Bool
-  let onToggleMatchEntireSentenceOnly: (Bool) -> Void
+  let isFullMatch: Bool
+  let onToggleFullMatch: (Bool) -> Void
 
   var body: some View {
     Button {
-      onToggleMatchEntireSentenceOnly(!isMatchEntireSentenceOnly)
+      onToggleFullMatch(!isFullMatch)
     } label: {
       Label(
-        isMatchEntireSentenceOnly ? "Disable Full Match" : "Enable Full Match",
-        systemImage: isMatchEntireSentenceOnly ? "checkmark.circle.fill" : "checkmark.circle"
+        isFullMatch ? "Disable Full Match" : "Enable Full Match",
+        systemImage: isFullMatch ? "checkmark.circle.fill" : "checkmark.circle"
       )
     }
   }
@@ -19,14 +19,14 @@ struct SnippetFullMatchMenuButton: View {
 #Preview {
   VStack {
     SnippetFullMatchMenuButton(
-      isMatchEntireSentenceOnly: true,
-      onToggleMatchEntireSentenceOnly: { _ in }
+      isFullMatch: true,
+      onToggleFullMatch: { _ in }
     )
     .padding()
     
     SnippetFullMatchMenuButton(
-      isMatchEntireSentenceOnly: false,
-      onToggleMatchEntireSentenceOnly: { _ in }
+      isFullMatch: false,
+      onToggleFullMatch: { _ in }
     )
     .padding()
   }
