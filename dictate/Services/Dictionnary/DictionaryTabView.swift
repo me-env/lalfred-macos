@@ -1,5 +1,6 @@
 import SwiftUI
 
+
 struct DictionaryTabView: View {
   @State private var words: [String]
   @State private var newWord: String = ""
@@ -20,9 +21,13 @@ struct DictionaryTabView: View {
     guard !sanitizedInput.isEmpty else {
       return words
     }
-    
+
     return words.filter { word in
-      word.localizedCaseInsensitiveContains(sanitizedInput)
+      word.range(
+        of: sanitizedInput,
+        options: [.caseInsensitive, .diacriticInsensitive],
+        locale: .current
+      ) != nil
     }
   }
   
@@ -67,35 +72,14 @@ struct DictionaryTabView: View {
   }
   
   private var searchField: some View {
-    HStack(spacing: 8) {
-      Image(systemName: "magnifyingglass")
-        .foregroundStyle(.secondary)
-      
-      TextField("Search words", text: $newWord)
-        .textFieldStyle(.plain)
-        .focused($isSearchFocused)
-      
-      if !newWord.isEmpty {
-        Button {
-          newWord = ""
-        } label: {
-          Image(systemName: "xmark.circle.fill")
-            .foregroundStyle(.secondary)
-        }
-        .buttonStyle(.plain)
-        .help("Clear search")
-      }
-    }
-    .padding(.horizontal, 12)
-    .frame(height: 32)
-    .background(
-      RoundedRectangle(cornerRadius: 8, style: .continuous)
-        .fill(.background)
+    InlineInputField(
+      title: "Search",
+      systemImage: "magnifyingglass",
+      text: $newWord,
+      onSubmit: addWord,
+      style: .light
     )
-    .overlay(
-      RoundedRectangle(cornerRadius: 8, style: .continuous)
-        .stroke(.separator.opacity(0.35), lineWidth: 1)
-    )
+    .focused($isSearchFocused)
   }
   
   @ViewBuilder
@@ -201,4 +185,5 @@ private struct WordRow: View {
 
 #Preview {
   DictionaryTabView()
+    .padding(.top)
 }

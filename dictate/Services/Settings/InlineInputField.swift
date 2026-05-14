@@ -9,31 +9,56 @@ enum LalfredInputFieldStyle {
 
 struct InlineInputField: View {
   let title: String
+  let systemImage: String?
+  
   @Binding var text: String
-  var controlHeight: CGFloat = 32
-  var width: CGFloat? = nil
-  var expandToFill: Bool = false
-  var onSubmit: (() -> Void)? = nil
-  var style: LalfredInputFieldStyle = .def
+  
+  var controlHeight: CGFloat
+  var width: CGFloat?
+  var expandToFill: Bool
+  var onSubmit: (() -> Void)?
+  var style: LalfredInputFieldStyle
+  
+  init(
+    title: String,
+    systemImage: String? = nil,
+    text: Binding<String>,
+    controlHeight: CGFloat = 32,
+    width: CGFloat? = nil,
+    expandToFill: Bool = false,
+    onSubmit: (() -> Void)? = nil,
+    style: LalfredInputFieldStyle = .def
+  ) {
+    self.title = title
+    self.systemImage = systemImage
+    self._text = text
+    self.controlHeight = controlHeight
+    self.width = width
+    self.expandToFill = expandToFill
+    self.onSubmit = onSubmit
+    self.style = style
+  }
 
   var body: some View {
-    TextField(title, text: $text)
-      .textFieldStyle(.plain)
-      .padding(.horizontal, 12)
-      .padding(.vertical, 10)
-      .background(
-        style == .def ? .quinary : .quaternary,
-        in: RoundedRectangle(cornerRadius: 8, style: .continuous)
-      )
-      .overlay(
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
-          .stroke(.separator.opacity(style == .def ? 0.35 : 1), lineWidth: 1)
-      )
-      .onSubmit {
-        onSubmit?()
+    HStack {
+      if let systemImage = self.systemImage {
+        Image(systemName: systemImage)
       }
-      .modifier(InputWidthModifier(width: width, expandToFill: expandToFill))
-      .frame(height: controlHeight)
+      TextField(title, text: $text)
+        .onSubmit { onSubmit?() }
+        .textFieldStyle(.plain)
+        .modifier(InputWidthModifier(width: width, expandToFill: expandToFill))
+    }
+    .padding(.horizontal, 12)
+    .padding(.vertical, 9)
+    .background(
+      style == .def ? .quinary : .quaternary,
+      in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+    )
+    .overlay(
+      RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .stroke(.separator.opacity(style == .def ? 0.35 : 1), lineWidth: 1)
+    )
   }
 }
 
