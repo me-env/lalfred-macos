@@ -7,7 +7,7 @@ struct GeneralTabView: View {
   @Environment(Shortcuts.self) private var shortcuts
   @Environment(\.sparkleUpdater) private var sparkleUpdater
   @State private var activeShortcutEditorID: String?
-  
+
   func updatesSection(sparkleUpdater: SPUUpdater) -> some View {
     SectionBoxWithTitle("Updates") {
       HStack {
@@ -43,6 +43,8 @@ struct GeneralTabView: View {
       if let sparkleUpdater {
         updatesSection(sparkleUpdater: sparkleUpdater)
       }
+
+      DeveloperSection()
     }
     .padding([.bottom, .horizontal])
     .textFieldStyle(.roundedBorder)

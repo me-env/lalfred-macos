@@ -5,7 +5,7 @@
 	<key>SUPublicEDKey</key>
 	<string>2zrk9MPS7OeJ9pkiPRywRmqwqW6QnVhPea7Ge0I9HOg=</string>
 	<key>SUFeedURL</key>
-	<string>https://lalfred.ai/dictate/appcast.xml</string>
+	<string>https://api.dictate.lalfred.ai/releases/appcast.xml</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -17,7 +17,5 @@
 			</array>
 		</dict>
 	</array>
-	<key>LalfredAPIBaseURL</key>
-	<string>https://api.dictate.lalfred.ai</string>
 </dict>
 </plist>

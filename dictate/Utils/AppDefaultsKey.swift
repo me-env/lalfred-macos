@@ -21,4 +21,6 @@ enum AppDefaultsKey {
     static let soundEffectKind = "sound.effectKind"
 
     static let hasCompletedOnboarding = "ui.hasCompletedOnboarding"
+
+    static let apiEnvironment = "api.environment"
 }

@@ -10,10 +10,10 @@ DIST_DIR="build"
 ZIP_PATH="${DIST_DIR}/LAlfred-${VERSION}.zip"
 APPCAST_PATH="${DIST_DIR}/appcast.xml"
 
-# Public URLs go through the landing site so we can swap hosting providers
-# later without invalidating the URLs Sparkle already cached on user machines.
-# The landing routes are thin redirects to the actual bucket.
-DOWNLOAD_BASE="https://lalfred.ai/dictate/releases"
+# Public URLs go through the FastAPI release endpoints so we can swap
+# hosting providers later without invalidating the URLs Sparkle already
+# cached on user machines. The API routes are thin redirects to the bucket.
+DOWNLOAD_BASE="https://api.dictate.lalfred.ai/releases/files"
 DOWNLOAD_URL="${DOWNLOAD_BASE}/LAlfred-${VERSION}.zip"
 
 mkdir -p "${DIST_DIR}"
@@ -65,7 +65,7 @@ cat > "${APPCAST_PATH}" <<EOF
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
     <channel>
         <title>L'Alfred</title>
-        <link>https://lalfred.ai/dictate/appcast.xml</link>
+        <link>https://api.dictate.lalfred.ai/releases/appcast.xml</link>
         <description>L'Alfred updates</description>
         <language>en</language>
         <item>

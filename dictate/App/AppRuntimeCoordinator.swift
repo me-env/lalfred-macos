@@ -202,13 +202,7 @@ final class AppRuntimeCoordinator {
   }
 
   private static func errorMessage(for error: Error) -> String {
-    if let localizedError = error as? LocalizedError,
-       let description = localizedError.errorDescription,
-       !description.isEmpty {
-      return description
-    }
-
-    return "Something went wrong"
+    UserFacingErrorMessage.format(error)
   }
 
   private func beginListening() {
