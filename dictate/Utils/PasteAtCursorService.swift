@@ -15,7 +15,7 @@ struct PasteAtCursorService {
   }
 
   func paste(_ text: String) -> Bool {
-    logger.info("[PasteAtCursorService] paste() called. text='\(text)'")
+    logger.info("[PasteAtCursorService] NON paste() called. text='\(text)'")
 
     let trusted = accessibilityPermissionService.isTrusted()
     logger.info("[PasteAtCursorService] Accessibility trusted: \(trusted)")
@@ -65,7 +65,7 @@ struct PasteAtCursorService {
 
     vUp.flags = []
     vUp.post(tap: .cghidEventTap)
-    
+
     logger.info("[PasteAtCursorService] Cmd+V events posted")
     return true
   }

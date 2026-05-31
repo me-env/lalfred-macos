@@ -16,7 +16,6 @@ private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "CursorCo
 /// Returns the raw concatenation of those lines (no `\n` separators inserted) — this
 /// is for debugging, line-break preservation is intentionally out of scope here.
 enum CFRangeLineByLineStrategy {
-
   private static let maxIterations = 4096
 
   static func run(in element: AXUIElement, cursorPos: Int?, lookback: Int) -> String? {

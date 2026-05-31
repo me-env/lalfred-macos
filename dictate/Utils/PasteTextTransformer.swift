@@ -3,6 +3,45 @@ import os
 
 private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "PasteTextTransformer")
 
+struct RawCursorTextContext: Equatable, Hashable {
+  let text: String
+  let cursorPosition: Int
+  
+  func printContext() {
+    guard let cursorIndex = text.index(text.startIndex, offsetBy: cursorPosition, limitedBy: text.endIndex) else {
+      logger.error("Failed to get string index for (\(text)) \(cursorPosition)")
+      return
+    }
+    let res = text.prefix(upTo: cursorIndex) + "<CURSOR>" + text.suffix(from: cursorIndex)
+    logger.debug("Context: (\(res))")
+  }
+  
+  func toCursorTextContext() -> CursorTextContext {
+    guard text.count > 0 else { return .empty }
+    
+    var previousNonWhitespaceCharacter: Character? = nil
+    var hasLineBreakBeforeCursor = false
+    
+    let index = String.Index(utf16Offset: cursorPosition, in: text)
+    let prefix = text[..<index]
+    logger.info("Prefix=\"\(prefix)\"")
+
+    for ch in prefix.reversed() {
+      if ch.isNewline {
+        hasLineBreakBeforeCursor = true
+      } else if !ch.isWhitespace {
+        previousNonWhitespaceCharacter = ch
+        break
+      }
+    }
+    
+    return CursorTextContext(
+      previousCharacter: prefix.last,
+      previousNonWhitespaceCharacter: previousNonWhitespaceCharacter,
+      hasLineBreakBeforeCursor: hasLineBreakBeforeCursor
+    )
+  }
+}
 
 struct CursorTextContext: Equatable, Hashable {
   let previousCharacter: Character?
