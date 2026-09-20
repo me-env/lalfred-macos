@@ -7,6 +7,7 @@ struct GeneralTabView: View {
   @Environment(Shortcuts.self) private var shortcuts
   @Environment(\.sparkleUpdater) private var sparkleUpdater
   @State private var activeShortcutEditorID: String?
+  @AppStorage(AppDefaultsKey.smartPasteFormatting) private var smartPasteFormatting = true
 
   func updatesSection(sparkleUpdater: SPUUpdater) -> some View {
     SectionBoxWithTitle("Updates") {
@@ -20,6 +21,15 @@ struct GeneralTabView: View {
         Spacer()
         CheckForUpdatesView(updater: sparkleUpdater)
       }
+    }
+  }
+
+  var experimentalSection: some View {
+    SectionBoxWithTitle(
+      "Experimental",
+      caption: "Uses accessibility to read what sits before the cursor. Heuristic, so it gets abbreviations and quotes wrong sometimes."
+    ) {
+      Toggle("Match surrounding text when pasting", isOn: $smartPasteFormatting)
     }
   }
 
@@ -39,6 +49,8 @@ struct GeneralTabView: View {
           activeShortcutEditorID: $activeShortcutEditorID
         )
       }
+
+      experimentalSection
 
       if let sparkleUpdater {
         updatesSection(sparkleUpdater: sparkleUpdater)

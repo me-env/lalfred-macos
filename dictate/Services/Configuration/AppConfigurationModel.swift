@@ -7,8 +7,9 @@ import os
 private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "AppConfigurationModel")
 
 
-/// Single source of truth for "is the user fully set up?". Combines auth
-/// state with the microphone and accessibility permissions.
+/// Single source of truth for "is the user fully set up?" — the microphone
+/// and accessibility permissions. Signing in is optional and deliberately not
+/// part of this.
 ///
 /// macOS exposes no notification for permission changes (`AXIsProcessTrusted`
 /// is a pure query and `AVCaptureDevice` only signals via the per-call
@@ -17,8 +18,6 @@ private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "AppConfi
 /// * `NSApplication.didBecomeActiveNotification` — covers System Settings
 ///   round trips for accessibility and any TCC prompt that briefly resigns
 ///   active state.
-/// * `Notification.Name.appAuthStateDidChange` — posted by ``AuthManager``
-///   on token mutations, so OAuth deep-link callbacks update us deterministically.
 /// * Explicit ``refresh()`` calls from ``PermissionsInput`` after an inline
 ///   `requestAccess` completion, where the active state may not change.
 @MainActor
@@ -26,12 +25,11 @@ private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "AppConfi
 final class AppConfigurationModel {
   static let shared = AppConfigurationModel()
 
-  private(set) var isSignedIn: Bool = false
   private(set) var microphoneGranted: Bool = false
   private(set) var accessibilityGranted: Bool = false
 
   var isFullyConfigured: Bool {
-    isSignedIn && microphoneGranted && accessibilityGranted
+    microphoneGranted && accessibilityGranted
   }
 
   private let microphonePermissionService = MicrophonePermissionService()
@@ -41,21 +39,9 @@ final class AppConfigurationModel {
     refresh()
 
     // Singleton: lives for the app's lifetime, so we don't bother tearing
-    // these observers down. The `[weak self]` is therefore strictly defensive.
-    let center = NotificationCenter.default
-
-    center.addObserver(
+    // this observer down. The `[weak self]` is therefore strictly defensive.
+    NotificationCenter.default.addObserver(
       forName: NSApplication.didBecomeActiveNotification,
-      object: nil,
-      queue: .main
-    ) { [weak self] _ in
-      MainActor.assumeIsolated {
-        self?.refresh()
-      }
-    }
-
-    center.addObserver(
-      forName: .appAuthStateDidChange,
       object: nil,
       queue: .main
     ) { [weak self] _ in
@@ -66,12 +52,10 @@ final class AppConfigurationModel {
   }
 
   func refresh() {
-    let signedIn = AuthManager.shared.authToken() != nil
     let micGranted = microphonePermissionService.isAuthorized()
     let axGranted = accessibilityPermissionService.isTrusted()
 
-    logger.info("signedIn=\(signedIn) micGranted=\(micGranted) axGranted=\(axGranted)")
-    if isSignedIn != signedIn { isSignedIn = signedIn }
+    logger.info("micGranted=\(micGranted) axGranted=\(axGranted)")
     if microphoneGranted != micGranted { microphoneGranted = micGranted }
     if accessibilityGranted != axGranted { accessibilityGranted = axGranted }
   }

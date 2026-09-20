@@ -30,10 +30,57 @@ struct AccountTabView: View {
       }
 
       BringYourOwnKeySection(manager: apiKeyManager)
+
+      DeveloperResetSection()
     }
     .padding([.bottom, .horizontal])
     .task(id: isSignedIn) {
       await model.handleSignedInChange(isSignedIn: isSignedIn)
+    }
+  }
+}
+
+private struct DeveloperResetSection: View {
+  @AppStorage(AppDefaultsKey.accountEmail) private var accountEmail = ""
+  @State private var isConfirming = false
+
+  var body: some View {
+    if developerEmails.contains(accountEmail) {
+      SectionBoxWithTitle(
+        "Developer",
+        caption: "Puts the app back to a first-launch state. Only macOS permissions survive."
+      ) {
+        Button("Sign out and erase all data", role: .destructive) {
+          isConfirming = true
+        }
+        .confirmationDialog(
+          "Erase all local data?",
+          isPresented: $isConfirming,
+          titleVisibility: .visible
+        ) {
+          Button("Erase everything", role: .destructive, action: eraseAllLocalData)
+          Button("Cancel", role: .cancel) {}
+        } message: {
+          Text("Signs you out and deletes every keyword, snippet, shortcut, sound, API key and preference stored on this Mac. This cannot be undone.")
+        }
+      }
+    }
+  }
+
+  private func eraseAllLocalData() {
+    Keychain().deleteAll()
+
+    let defaults = UserDefaults.standard
+    guard let bundleIdentifier = Bundle.main.bundleIdentifier,
+          let domain = defaults.persistentDomain(forName: bundleIdentifier) else {
+      return
+    }
+
+    // Key by key rather than `removePersistentDomain`, so every `@AppStorage`
+    // observing one of them actually sees the change and the UI drops back to
+    // onboarding immediately.
+    for key in domain.keys {
+      defaults.removeObject(forKey: key)
     }
   }
 }

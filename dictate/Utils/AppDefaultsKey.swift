@@ -18,6 +18,8 @@ enum AppDefaultsKey {
 
     static let hasCompletedOnboarding = "ui.hasCompletedOnboarding"
 
+    static let smartPasteFormatting = "experimental.smartPasteFormatting"
+
     static let apiEnvironment = "api.environment"
 
     static let accountScoped: [String] = [
@@ -27,4 +29,3 @@ enum AppDefaultsKey {
         accountLastName,
     ]
 }
-

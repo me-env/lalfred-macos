@@ -77,6 +77,17 @@ struct Keychain {
     return str
   }
   
+  func deleteAll() {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service
+    ]
+    let status = SecItemDelete(query as CFDictionary)
+    if status != errSecSuccess && status != errSecItemNotFound {
+      logger.error("Keychain deleteAll failed: \(status)")
+    }
+  }
+  
   func delete(_ key: String) {
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,

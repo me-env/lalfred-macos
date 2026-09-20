@@ -12,23 +12,22 @@ private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "Onboardi
 /// Replaces the entire `ContentView` root while
 /// ``AppConfigurationModel/isFullyConfigured`` is `false`. Because there's no
 /// surrounding chrome the user can interact with, the only way out is to
-/// complete all three steps — no dismiss button, no escape hatch.
+/// complete both steps — no dismiss button, no escape hatch.
 ///
 /// Step completion is derived directly from the corresponding observable
 /// boolean on ``AppConfigurationModel``, so the active row auto-advances as
-/// soon as the underlying state flips (OAuth callback returns, microphone
-/// prompt is accepted, accessibility trust toggled in System Settings…).
+/// soon as the underlying state flips (microphone prompt is accepted,
+/// accessibility trust toggled in System Settings…).
 struct OnboardingView: View {
   private let configuration = AppConfigurationModel.shared
   private let microphonePermissionService = MicrophonePermissionService()
   private let accessibilityPermissionService = AccessibilityPermissionService()
 
-  @State private var accountModel = AccountTabViewModel()
   @State private var showCompletion: Bool = false
   @Environment(Shortcuts.self) private var shortcuts
   @AppStorage(AppDefaultsKey.hasCompletedOnboarding) private var hasCompletedOnboarding = false
 
-  private let steps: [OnboardingStep] = [.signIn, .microphone, .accessibility]
+  private let steps: [OnboardingStep] = [.microphone, .accessibility]
 
   private var currentStep: OnboardingStep {
     steps.first { !$0.isComplete(configuration) } ?? .accessibility
@@ -40,8 +39,6 @@ struct OnboardingView: View {
         OnboardingStepRow(
           step: step,
           state: state(for: step),
-          isLoading: isLoading(for: step),
-          errorMessage: errorMessage(for: step),
           action: { perform(step) }
         )
       }
@@ -70,7 +67,7 @@ struct OnboardingView: View {
     }
   }
 
-  /// Surfaces the completion modal the moment all three prerequisites pass,
+  /// Surfaces the completion modal the moment both prerequisites pass,
   /// and only while the user has not yet acknowledged it. Acknowledgment
   /// (the modal's "Continue" button) is what latches
   /// ``AppDefaultsKey/hasCompletedOnboarding``, which then routes the user
@@ -88,7 +85,7 @@ struct OnboardingView: View {
       Text("Welcome to L'Alfred")
         .font(.title.weight(.semibold))
 
-      Text("Three quick steps and you'll be dictating.")
+      Text("Two quick steps and you'll be dictating.")
         .font(.subheadline)
         .foregroundStyle(.secondary)
     }
@@ -109,20 +106,8 @@ struct OnboardingView: View {
     return step == currentStep ? .active : .pending
   }
 
-  private func isLoading(for step: OnboardingStep) -> Bool {
-    step == .signIn && accountModel.isLoadingAuthURL
-  }
-
-  private func errorMessage(for step: OnboardingStep) -> String? {
-    guard step == .signIn else { return nil }
-    let message = accountModel.authErrorMessage
-    return message.isEmpty ? nil : message
-  }
-
   private func perform(_ step: OnboardingStep) {
     switch step {
-    case .signIn:
-      Task { await accountModel.startGoogleOAuth() }
     case .microphone:
       requestMicrophone()
     case .accessibility:
@@ -158,13 +143,11 @@ struct OnboardingView: View {
 
 
 enum OnboardingStep: Hashable {
-  case signIn
   case microphone
   case accessibility
 
   var title: String {
     switch self {
-    case .signIn:        return "Sign in with Google"
     case .microphone:    return "Allow microphone access"
     case .accessibility: return "Allow accessibility access"
     }
@@ -172,8 +155,6 @@ enum OnboardingStep: Hashable {
 
   var caption: String {
     switch self {
-    case .signIn:
-      return "Lets you bring your own API keys."
     case .microphone:
       return "Required so L'Alfred can hear what you say."
     case .accessibility:
@@ -183,7 +164,6 @@ enum OnboardingStep: Hashable {
 
   var actionTitle: String {
     switch self {
-    case .signIn:        return "Continue with Google"
     case .microphone:    return "Grant microphone"
     case .accessibility: return "Grant accessibility"
     }
@@ -191,7 +171,6 @@ enum OnboardingStep: Hashable {
 
   var systemImage: String {
     switch self {
-    case .signIn:        return "person.crop.circle"
     case .microphone:    return "microphone"
     case .accessibility: return "accessibility"
     }
@@ -199,7 +178,6 @@ enum OnboardingStep: Hashable {
 
   func isComplete(_ configuration: AppConfigurationModel) -> Bool {
     switch self {
-    case .signIn:        return configuration.isSignedIn
     case .microphone:    return configuration.microphoneGranted
     case .accessibility: return configuration.accessibilityGranted
     }
@@ -212,8 +190,6 @@ private struct OnboardingStepRow: View {
 
   let step: OnboardingStep
   let state: State
-  let isLoading: Bool
-  let errorMessage: String?
   let action: () -> Void
 
   var body: some View {
@@ -232,27 +208,10 @@ private struct OnboardingStepRow: View {
           .fixedSize(horizontal: false, vertical: true)
 
         if state == .active {
-          Button(action: action) {
-            HStack(spacing: 6) {
-              if isLoading {
-                ProgressView()
-                  .controlSize(.small)
-              }
-              Text(isLoading ? "Opening…" : step.actionTitle)
-            }
-          }
-          .buttonStyle(.borderedProminent)
-          .controlSize(.regular)
-          .disabled(isLoading)
-          .padding(.top, 6)
-        }
-
-        if let errorMessage {
-          Text(errorMessage)
-            .font(.caption)
-            .foregroundStyle(.red)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.top, 2)
+          Button(step.actionTitle, action: action)
+            .buttonStyle(.borderedProminent)
+            .controlSize(.regular)
+            .padding(.top, 6)
         }
       }
 

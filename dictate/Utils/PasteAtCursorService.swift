@@ -9,9 +9,14 @@ private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "PasteAtC
 struct PasteAtCursorService {
   private let accessibilityPermissionService = AccessibilityPermissionService()
   private let cursorContextReader: CursorContextReading
+  private let userDefaults: UserDefaults
 
-  init(cursorContextReader: CursorContextReading = CursorContextReader()) {
+  init(
+    cursorContextReader: CursorContextReading = CursorContextReader(),
+    userDefaults: UserDefaults = .standard
+  ) {
     self.cursorContextReader = cursorContextReader
+    self.userDefaults = userDefaults
   }
 
   func paste(_ text: String) -> Bool {
@@ -32,10 +37,13 @@ struct PasteAtCursorService {
     let frontmostApp = NSWorkspace.shared.frontmostApplication
     logger.info("[PasteAtCursorService] Frontmost app: \(frontmostApp?.localizedName ?? "unknown") (pid: \(frontmostApp?.processIdentifier ?? -1))")
 
-    let cursorContext = cursorContextReader.readContext()
-    let textToPaste = PasteTextTransformer.transform(text, context: cursorContext)
-    if textToPaste != text {
-      logger.info("[PasteAtCursorService] Adapted text for cursor context: '\(textToPaste)'")
+    var textToPaste = text
+    if userDefaults.bool(forKey: AppDefaultsKey.smartPasteFormatting) {
+      let cursorContext = cursorContextReader.readContext()
+      textToPaste = PasteTextTransformer.transform(text, context: cursorContext)
+      if textToPaste != text {
+        logger.info("[PasteAtCursorService] Adapted text for cursor context: '\(textToPaste)'")
+      }
     }
 
     let pasteboard = NSPasteboard.general

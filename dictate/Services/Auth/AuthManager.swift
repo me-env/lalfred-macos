@@ -4,14 +4,6 @@ import OSLog
 private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "AuthManager")
 
 
-extension Notification.Name {
-  /// Posted on the main thread whenever the auth token is set or cleared.
-  /// Subscribers (e.g. ``AppConfigurationModel``) use this to refresh their
-  /// view of `isSignedIn` without having to poll `UserDefaults`.
-  static let appAuthStateDidChange = Notification.Name("fr.lalfred.dictate.AuthStateDidChange")
-}
-
-
 @MainActor
 final class AuthManager {
   static let shared = AuthManager()
@@ -122,7 +114,6 @@ final class AuthManager {
     tokenStore.save(trimmedToken)
     userDefaults.set(true, forKey: AppDefaultsKey.isSignedIn)
     logger.info("Saved auth token and marked user as signed in")
-    NotificationCenter.default.post(name: .appAuthStateDidChange, object: nil)
     
     Task { [weak self] in
       guard let self else { return }
@@ -143,7 +134,6 @@ final class AuthManager {
     }
     
     logger.info("Signed out: cleared the auth token and account-scoped values only")
-    NotificationCenter.default.post(name: .appAuthStateDidChange, object: nil)
   }
   
   func authToken() -> String? {

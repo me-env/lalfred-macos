@@ -25,6 +25,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   /// Done in `applicationWillFinishLaunching` (before any windows materialize)
   /// to avoid a Dock-tile flash on launch.
   func applicationWillFinishLaunching(_ notification: Notification) {
+    UserDefaults.standard.register(defaults: [AppDefaultsKey.smartPasteFormatting: true])
+
     Task { @MainActor in
       applyActivationPolicy()
       observeActivationPolicyTriggers()
