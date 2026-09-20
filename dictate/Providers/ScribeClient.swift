@@ -3,7 +3,6 @@ import Foundation
 
 enum ScribeError: LocalizedError {
   case missingAPIKey
-  case missingAuthToken
   case invalidResponse
   case requestFailed(statusCode: Int, message: String)
 
@@ -11,8 +10,6 @@ enum ScribeError: LocalizedError {
     switch self {
     case .missingAPIKey:
       return "Missing ElevenLabs API key"
-    case .missingAuthToken:
-      return "Missing auth token"
     case .invalidResponse:
       return "Unexpected API response"
     case let .requestFailed(statusCode, message):
@@ -24,49 +21,29 @@ enum ScribeError: LocalizedError {
 
 struct ScribeClient {
   private let apiKeyStore: KeychainStore
-  private let authTokenStore: KeychainStore
   private let session: URLSession
   private let directEndpoint: URL = URL(string: "https://api.elevenlabs.io/v1/speech-to-text")!
-  private let proxyEndpoint: URL = ScribeClient.defaultProxyEndpoint
-  private let mode: TransportMode
-  private let userDefaults: UserDefaults
 
   init(
     apiKeyStore: KeychainStore = KeychainStore(key: AppDefaultsKey.apiKeyElevenLabs),
-    authTokenStore: KeychainStore = KeychainStore(key: AppDefaultsKey.authToken),
-    session: URLSession = .shared,
-    mode: TransportMode = .direct,
-    userDefaults: UserDefaults = .standard
+    session: URLSession = .shared
   ) {
     self.apiKeyStore = apiKeyStore
-    self.authTokenStore = authTokenStore
     self.session = session
-    self.mode = mode
-    self.userDefaults = userDefaults
   }
 
-  func transcribeAudio(at fileURL: URL, additionalVocabulary: [String]) async throws -> String {
+  func transcribeAudio(at fileURL: URL, keyterms: [String]) async throws -> String {
     let boundary = "Boundary-\(UUID().uuidString)"
-    let keyterms = mergedKeyterms(additionalVocabulary: additionalVocabulary)
     let body = try makeMultipartBody(
       fileURL: fileURL,
       boundary: boundary,
       keyterms: keyterms
     )
-    let requestURL = try makeRequestURL(mode: mode)
-    var request = URLRequest(url: requestURL)
+    var request = URLRequest(url: directEndpoint)
     
     request.httpMethod = "POST"
     request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-    
-    switch mode {
-    case .direct:
-      let apiKey = try loadAPIKey()
-      request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")
-    case .proxy:
-      let authToken = try loadAuthToken()
-      request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-    }
+    request.setValue(try loadAPIKey(), forHTTPHeaderField: "xi-api-key")
 
     let (data, response) = try await session.upload(for: request, from: body)
     let httpResponse = try unwrapHTTPResponse(response)
@@ -77,15 +54,6 @@ struct ScribeClient {
     }
 
     return try parseTranscript(from: data)
-  }
-
-  private func makeRequestURL(mode: TransportMode) throws -> URL {
-    switch mode {
-    case .direct:
-      return directEndpoint
-    case .proxy:
-      return proxyEndpoint
-    }
   }
 
   private func loadAPIKey() throws -> String {
@@ -99,21 +67,6 @@ struct ScribeClient {
     }
 
     return key
-  }
-
-  private func loadAuthToken() throws -> String {
-    guard let token = loadAuthTokenIfPresent() else {
-      throw ScribeError.missingAuthToken
-    }
-    return token
-  }
-
-  private func loadAuthTokenIfPresent() -> String? {
-    guard let rawToken = authTokenStore.load() else {
-      return nil
-    }
-    let token = rawToken.trimmingCharacters(in: .whitespacesAndNewlines)
-    return token.isEmpty ? nil : token
   }
 
   private func unwrapHTTPResponse(_ response: URLResponse) throws -> HTTPURLResponse {
@@ -190,15 +143,6 @@ struct ScribeClient {
     default:
       return "application/octet-stream"
     }
-  }
-
-  private func mergedKeyterms(additionalVocabulary: [String]) -> [String] {
-    let store = KeyTermsStore(userDefaults: userDefaults)
-    return store.sanitize(store.load() + additionalVocabulary)
-  }
-
-  private static var defaultProxyEndpoint: URL {
-    APIEndpoints.transcribe
   }
 }
 

@@ -12,7 +12,7 @@ struct DeveloperSection: View {
   @AppStorage(AppDefaultsKey.apiEnvironment) private var apiEnvironmentRaw = APIEnvironment.production.rawValue
 
   private var isDeveloper: Bool {
-    DeveloperEmails.contains(accountEmail)
+    developerEmails.contains(accountEmail)
   }
 
   private var currentEnvironment: APIEnvironment {
@@ -41,7 +41,7 @@ struct DeveloperSection: View {
         set: { newValue in
           guard newValue != currentEnvironment else { return }
           apiEnvironmentRaw = newValue.rawValue
-          AuthManager.shared.clearToken()
+          AuthManager.shared.signOut()
         }
       )
     ) {

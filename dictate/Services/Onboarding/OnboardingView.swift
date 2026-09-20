@@ -173,7 +173,7 @@ enum OnboardingStep: Hashable {
   var caption: String {
     switch self {
     case .signIn:
-      return "Tracks your credits and lets you bring your own API keys."
+      return "Lets you bring your own API keys."
     case .microphone:
       return "Required so L'Alfred can hear what you say."
     case .accessibility:

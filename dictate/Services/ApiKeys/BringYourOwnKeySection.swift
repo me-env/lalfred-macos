@@ -6,17 +6,12 @@ struct BringYourOwnKeySection: View {
   let onContinueWithGoogle: () async -> Void
 
   @AppStorage(AppDefaultsKey.isSignedIn) private var isSignedIn = false
-  @AppStorage(AppDefaultsKey.accountIsSubscribed) private var accountIsSubscribed = false
-  @State private var accessTip: APIKeyAccessTip?
-
-  private var isSubscribed: Bool {
-    isSignedIn && accountIsSubscribed
-  }
+  @State private var showsSignInTip = false
 
   private var caption: String {
-    isSubscribed
+    isSignedIn
       ? "Stored in secure keychain on this Mac."
-      : "Requires an active subscription."
+      : "Requires you to be signed in."
   }
   
   var keysList: some View {
@@ -40,9 +35,8 @@ struct BringYourOwnKeySection: View {
   var body: some View {
     SectionBoxWithTitle("Bring your own keys", caption: caption) {
       VStack(alignment: .leading, spacing: 10) {
-        if let accessTip {
+        if showsSignInTip {
           APIKeyAccessTipView(
-            tip: accessTip,
             isLoadingAuthURL: isLoadingAuthURL,
             onContinueWithGoogle: onContinueWithGoogle
           )
@@ -51,11 +45,10 @@ struct BringYourOwnKeySection: View {
           .id(manager.refreshToken)
       }
     }
-    .onChange(of: isSignedIn) { _, _ in
-      clearAccessErrorIfAllowed()
-    }
-    .onChange(of: accountIsSubscribed) { _, _ in
-      clearAccessErrorIfAllowed()
+    .onChange(of: isSignedIn) { _, signedIn in
+      if signedIn {
+        showsSignInTip = false
+      }
     }
     .sheet(item: $manager.editingProvider) { provider in
       APIKeyEditorSheet(
@@ -68,23 +61,12 @@ struct BringYourOwnKeySection: View {
 
   private func beginEditingIfAllowed(_ provider: APIKeyProvider) {
     guard isSignedIn else {
-      accessTip = .signedOut
+      showsSignInTip = true
       return
     }
 
-    guard accountIsSubscribed else {
-      accessTip = .notSubscribed
-      return
-    }
-
-    accessTip = nil
+    showsSignInTip = false
     manager.beginEditing(provider)
-  }
-
-  private func clearAccessErrorIfAllowed() {
-    if isSubscribed {
-      accessTip = nil
-    }
   }
 }
 

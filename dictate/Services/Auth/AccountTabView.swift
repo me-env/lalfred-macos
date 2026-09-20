@@ -1,20 +1,12 @@
 import SwiftUI
-import os
-
-
-private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "AccountTabView")
 
 /// Coordinator for the Account tab. Owns the per-tab view models and composes
-/// the three sections: signed-in/signed-out card, redeem-a-code (when signed
-/// in), and the BYOK section.
+/// the signed-in/signed-out card and the BYOK section.
 struct AccountTabView: View {
   @AppStorage(AppDefaultsKey.isSignedIn) private var isSignedIn = false
 
   @State private var model: AccountTabViewModel
   @State private var apiKeyManager: APIKeyViewModel
-  @State private var redeemModel: RedeemClaimViewModel
-
-  private let deepLinkCoordinator = RedeemDeepLinkCoordinator.shared
 
   init(
     initialIsLoadingAuthURL: Bool = false,
@@ -27,14 +19,12 @@ struct AccountTabView: View {
       )
     )
     _apiKeyManager = State(initialValue: APIKeyViewModel())
-    _redeemModel = State(initialValue: RedeemClaimViewModel())
   }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       if isSignedIn {
         ConnectedAccountCard(model: model)
-        RedeemClaimSection(model: redeemModel)
       } else {
         LoggedOutCard(model: model)
       }
@@ -50,55 +40,7 @@ struct AccountTabView: View {
     .padding([.bottom, .horizontal])
     .task(id: isSignedIn) {
       await model.handleSignedInChange(isSignedIn: isSignedIn)
-      consumePendingDeepLinkKey()
     }
-    .onAppear {
-      consumePendingDeepLinkKey()
-    }
-    .onChange(of: deepLinkCoordinator.pendingKey) { _, _ in
-      consumePendingDeepLinkKey()
-    }
-    .sheet(item: redeemSuccessBinding) { success in
-      RedeemSuccessSheet(success: success) {
-        redeemModel.dismissSuccess()
-      }
-    }
-  }
-
-  /// If a redemption key arrived via deep link while we were elsewhere, push
-  /// it into the redeem field (only when the user is signed in — otherwise we
-  /// keep it pending until after sign-in).
-  private func consumePendingDeepLinkKey() {
-    guard isSignedIn, let key = deepLinkCoordinator.pendingKey else { return }
-    logger.info("consumePendingDeepLinkKey \(key)")
-    redeemModel.inputKey = key
-    deepLinkCoordinator.clearPending()
-  }
-
-  /// Bridges `lastSuccess: RedeemClaimSuccess?` into a `Binding<Item?>` for
-  /// `.sheet(item:)`. The `Item` must conform to `Identifiable`, so we wrap.
-  private var redeemSuccessBinding: Binding<IdentifiedSuccess?> {
-    Binding(
-      get: {
-        redeemModel.lastSuccess.map { IdentifiedSuccess(value: $0) }
-      },
-      set: { newValue in
-        if newValue == nil {
-          redeemModel.dismissSuccess()
-        }
-      }
-    )
-  }
-}
-
-private struct IdentifiedSuccess: Identifiable {
-  let value: RedeemClaimSuccess
-  let id = UUID()
-}
-
-private extension RedeemSuccessSheet {
-  init(success identifiable: IdentifiedSuccess, onDismiss: @escaping () -> Void) {
-    self.init(success: identifiable.value, onDismiss: onDismiss)
   }
 }
 
@@ -114,8 +56,7 @@ private struct AccountTabPreviewContainer: View {
     authErrorMessage: String = "",
     accountEmail: String? = nil,
     accountFirstName: String? = nil,
-    accountLastName: String? = nil,
-    accountCredits: Int? = nil
+    accountLastName: String? = nil
   ) {
     self.isSignedIn = isSignedIn
     self.authErrorMessage = authErrorMessage
@@ -135,10 +76,6 @@ private struct AccountTabPreviewContainer: View {
 
     if let accountLastName {
       defaults.set(accountLastName, forKey: AppDefaultsKey.accountLastName)
-    }
-
-    if let accountCredits {
-      defaults.set(accountCredits, forKey: AppDefaultsKey.accountCredits)
     }
 
     self.previewDefaults = defaults
@@ -177,7 +114,6 @@ private struct AccountTabPreviewContainer: View {
     isSignedIn: true,
     accountEmail: "jane@example.com",
     accountFirstName: "Jane",
-    accountLastName: "Doe",
-    accountCredits: 1200
+    accountLastName: "Doe"
   )
 }

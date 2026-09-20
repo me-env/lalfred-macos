@@ -449,7 +449,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.16.8;
+				MARKETING_VERSION = 1.16.9;
 				PRODUCT_BUNDLE_IDENTIFIER = fr.lalfred.dictate;
 				PRODUCT_NAME = "L'Alfred";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -501,7 +501,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.16.8;
+				MARKETING_VERSION = 1.16.9;
 				PRODUCT_BUNDLE_IDENTIFIER = fr.lalfred.dictate;
 				PRODUCT_NAME = "L'Alfred";
 				REGISTER_APP_GROUPS = YES;

@@ -2,14 +2,15 @@ import Foundation
 
 struct KeyTermsStore {
   static let maxTermLength = 50
-  static let maxTerms = 1000
+
+  static let maxRequestTerms = 1000
   
   private let store: UserDefaultsCodableStore<[String]>
   
   init(userDefaults: UserDefaults = .standard) {
     store = UserDefaultsCodableStore<[String]>(
       key: AppDefaultsKey.savedWords,
-      userDefaults: .standard
+      userDefaults: userDefaults
     )
   }
 
@@ -50,7 +51,9 @@ struct KeyTermsStore {
         seen.insert(normalized)
         return true
       }
-      .prefix(Self.maxTerms)
-      .map { $0 }
+  }
+  
+  func keyTermsForRequest() -> [String] {
+    Array(load().suffix(Self.maxRequestTerms))
   }
 }

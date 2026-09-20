@@ -7,7 +7,7 @@ import os
 private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "AccountTabViewModel")
 
 /// Owns the transient state (loading flags, error messages) and actions for the
-/// Account tab. Persistent values (email, credits, isSignedIn) continue to live
+/// Account tab. Persistent values (email, isSignedIn) continue to live
 /// in `UserDefaults` and are read directly from the views via `@AppStorage`.
 @MainActor
 @Observable
@@ -85,7 +85,7 @@ final class AccountTabViewModel {
   // MARK: - Sign-out
 
   func signOut() {
-    authManager.signOutAndResetPreferences()
+    authManager.signOut()
     authErrorMessage = ""
     accountDetailsErrorMessage = ""
     isLoadingAccountDetails = false

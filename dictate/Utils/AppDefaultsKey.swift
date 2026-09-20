@@ -2,7 +2,6 @@ import Foundation
 
 enum AppDefaultsKey {
     static let apiKeyElevenLabs = "apiKey.11l"
-    static let apiKeyOpenAI = "apiKey.openai"
     static let authToken = "auth.token"
     static let launchAtLogin = "launchAtLogin"
     static let savedSnippets = "savedSnippets"
@@ -14,13 +13,17 @@ enum AppDefaultsKey {
     static let accountEmail = "auth.account.email"
     static let accountFirstName = "auth.account.firstName"
     static let accountLastName = "auth.account.lastName"
-    static let accountCredits = "auth.account.credits"
-    static let accountIsSubscribed = "auth.account.isSubscribed"
-    static let signupBonusCredits = "auth.signup.bonus.credits"
 
     static let soundEffectKind = "sound.effectKind"
 
     static let hasCompletedOnboarding = "ui.hasCompletedOnboarding"
 
     static let apiEnvironment = "api.environment"
+
+    static let accountScoped: [String] = [
+        isSignedIn,
+        accountEmail,
+        accountFirstName,
+        accountLastName,
+    ]
 }

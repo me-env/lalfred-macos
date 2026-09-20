@@ -38,27 +38,13 @@ enum APIEnvironmentStore {
   }
 }
 
-/// Whitelist of developer email addresses that are allowed to toggle the API
-/// environment from within the app. Add additional teammates here.
-enum DeveloperEmails {
-  static let allowed: [String] = [
-    "cyprien.r25@gmail.com",
-  ]
-
-  static func contains(_ email: String) -> Bool {
-    let normalized = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-    guard !normalized.isEmpty else { return false }
-    return allowed.contains { $0.lowercased() == normalized }
-  }
-}
+let developerEmails: Set<String> = [
+  "cyprien.r25@gmail.com",
+]
 
 enum APIEndpoints {
   static var baseURL: URL { APIEnvironmentStore.current.baseURL }
 
   static var googleLogin: URL    { baseURL.appending(path: "auth/google/login") }
   static var accountProfile: URL { baseURL.appending(path: "users/me") }
-  static var transcribe: URL     { baseURL.appending(path: "transcribe") }
-  static var claimsRedeem: URL   { baseURL.appending(path: "claims/redeem") }
-  static var llmChat: URL        { baseURL.appending(path: "llm/chat") }
-  static var signupBonus: URL    { baseURL.appending(path: "credits/signup-bonus") }
 }

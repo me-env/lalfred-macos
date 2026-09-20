@@ -6,8 +6,6 @@ struct ConnectedAccountCard: View {
   @AppStorage(AppDefaultsKey.accountEmail) private var accountEmail = ""
   @AppStorage(AppDefaultsKey.accountFirstName) private var accountFirstName = ""
   @AppStorage(AppDefaultsKey.accountLastName) private var accountLastName = ""
-  @AppStorage(AppDefaultsKey.accountCredits) private var accountCredits = Int.min
-  @AppStorage(AppDefaultsKey.accountIsSubscribed) private var accountIsSubscribed = false
 
   var body: some View {
     VStack(alignment: .leading) {
@@ -49,27 +47,10 @@ struct ConnectedAccountCard: View {
         .textSelection(.enabled)
     }
 
-    subscriptionBadge
-      .padding(.top, 4)
-
     Divider()
       .padding(.vertical, 4)
 
     HStack(alignment: .center) {
-      if isLoadingCredits {
-        HStack(spacing: 8) {
-          ProgressView()
-            .controlSize(.small)
-          Text("Loading credits...")
-            .font(.subheadline.weight(.medium))
-            .foregroundStyle(.secondary)
-        }
-      } else {
-        Text(creditsLabel)
-          .font(.subheadline.weight(.medium))
-          .foregroundStyle(.primary)
-      }
-
       Spacer()
 
       Button("Sign out", role: .destructive) {
@@ -109,19 +90,6 @@ struct ConnectedAccountCard: View {
     }
   }
 
-  // MARK: - Subscription badge
-
-  private var subscriptionBadge: some View {
-    HStack(spacing: 4) {
-      Image(systemName: accountIsSubscribed ? "checkmark.seal.fill" : "xmark.seal.fill")
-        .foregroundStyle(accountIsSubscribed ? .green : .secondary)
-        .font(.caption)
-      Text(accountIsSubscribed ? "Subscribed" : "No active subscription")
-        .font(.caption.weight(.medium))
-        .foregroundStyle(accountIsSubscribed ? .green : .secondary)
-    }
-  }
-
   // MARK: - Derived display state
 
   private var displayName: String {
@@ -141,21 +109,5 @@ struct ConnectedAccountCard: View {
 
   private var isLoadingEmail: Bool {
     model.isLoadingAccountDetails && trimmedEmail.isEmpty
-  }
-
-  private var hasLoadedCredits: Bool {
-    accountCredits != Int.min
-  }
-
-  private var isLoadingCredits: Bool {
-    model.isLoadingAccountDetails && !hasLoadedCredits
-  }
-
-  private var creditsLabel: String {
-    guard hasLoadedCredits else {
-      return "Credits unavailable"
-    }
-    let formatted = accountCredits.formatted(.number.grouping(.automatic))
-    return "\(formatted) credits"
   }
 }

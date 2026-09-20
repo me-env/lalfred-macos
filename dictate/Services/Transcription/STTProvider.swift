@@ -2,5 +2,5 @@ import Foundation
 
 
 protocol STTProvider {
-  func transcribeAudio(at fileURL: URL, additionalVocabulary: [String]) async throws -> String
+  func transcribeAudio(at fileURL: URL, keyterms: [String]) async throws -> String
 }

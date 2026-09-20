@@ -5,8 +5,6 @@ import AppKit
 struct TabsView: View {
   @State private var currentTab: Tabs
 
-  private let deepLinkCoordinator = RedeemDeepLinkCoordinator.shared
-
   init(initialTab: Tabs = .home) {
     _currentTab = State(initialValue: initialTab)
   }
@@ -62,14 +60,6 @@ struct TabsView: View {
         }
       }
     }
-    .onAppear {
-      jumpToAccountIfRedeemPending()
-    }
-    .onChange(of: deepLinkCoordinator.pendingKey) { _, newValue in
-      if newValue != nil {
-        currentTab = .account
-      }
-    }
     .navigationTitle("")
     .toolbar {
       ToolbarItem(placement: .navigation) {
@@ -95,12 +85,6 @@ struct TabsView: View {
       SoundsTabView()
     case .account:
       AccountTabView()
-    }
-  }
-
-  private func jumpToAccountIfRedeemPending() {
-    if deepLinkCoordinator.pendingKey != nil {
-      currentTab = .account
     }
   }
 }

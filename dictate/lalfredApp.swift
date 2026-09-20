@@ -84,8 +84,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   /// Routes incoming `lalfred://…` URLs. Auth callbacks are handled by
-  /// ``AuthManager``; redemption deep links populate
-  /// ``RedeemDeepLinkCoordinator`` and surface the Settings window.
+  /// ``AuthManager``.
   @MainActor
   private func route(url: URL) {
     logger.info("incoming url=\(url.absoluteString, privacy: .public)")
@@ -100,8 +99,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     case "auth":
       let handled = AuthManager.shared.handleIncomingURL(url)
       logger.info("auth callback handled=\(handled, privacy: .public)")
-    case "redeem":
-      handleRedeemURL(url)
     case "main":
       // Handled by the Window scene via `.handlesExternalEvents(matching:)`.
       break
@@ -176,22 +173,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self?.observeConfigurationChanges()
       }
     }
-  }
-
-  @MainActor
-  private func handleRedeemURL(_ url: URL) {
-    let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-    guard let key = components?.queryItems?.first(where: { $0.name == "key" })?.value,
-          !key.isEmpty
-    else {
-      logger.error("redeem URL missing 'key' query item")
-      return
-    }
-
-    RedeemDeepLinkCoordinator.shared.setPending(key)
-    logger.info("redeem key stored, opening main window")
-
-    showMainWindow()
   }
 }
 

@@ -2,7 +2,6 @@ import SwiftUI
 
 
 struct APIKeyAccessTipView: View {
-  let tip: APIKeyAccessTip
   let isLoadingAuthURL: Bool
   let onContinueWithGoogle: () async -> Void
 
@@ -12,25 +11,18 @@ struct APIKeyAccessTipView: View {
         .foregroundStyle(.tint)
 
       VStack(alignment: .leading, spacing: 8) {
-        Text(tip.message)
+        Text("Sign in to add your own API key.")
           .font(.caption)
           .foregroundStyle(.secondary)
 
-        switch tip {
-        case .signedOut:
-          Button(isLoadingAuthURL ? "Opening Google..." : "Continue with Google") {
-            Task {
-              await onContinueWithGoogle()
-            }
+        Button(isLoadingAuthURL ? "Opening Google..." : "Continue with Google") {
+          Task {
+            await onContinueWithGoogle()
           }
-          .buttonStyle(.borderedProminent)
-          .controlSize(.small)
-          .disabled(isLoadingAuthURL)
-        case .notSubscribed:
-          Link("View pricing", destination: URL(string: "https://lalfred.ai/#pricing")!)
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
         }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.small)
+        .disabled(isLoadingAuthURL)
       }
     }
     .padding(10)
@@ -48,17 +40,6 @@ struct APIKeyAccessTipView: View {
 
 #Preview("Signed Out") {
   APIKeyAccessTipView(
-    tip: .signedOut,
-    isLoadingAuthURL: false,
-    onContinueWithGoogle: {}
-  )
-  .padding()
-  .frame(width: 420)
-}
-
-#Preview("Not Subscribed") {
-  APIKeyAccessTipView(
-    tip: .notSubscribed,
     isLoadingAuthURL: false,
     onContinueWithGoogle: {}
   )

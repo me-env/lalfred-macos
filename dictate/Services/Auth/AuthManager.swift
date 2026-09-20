@@ -16,11 +16,14 @@ extension Notification.Name {
 final class AuthManager {
   static let shared = AuthManager()
   
+  private static let maxRefreshAttempts = 3
+  
   enum AuthError: LocalizedError {
     case invalidResponse
     case missingAuthorizationURL
     case missingAuthToken
     case profileRequestFailed(statusCode: Int, message: String)
+    case temporarilyUnavailable(String)
     
     var errorDescription: String? {
       switch self {
@@ -32,7 +35,16 @@ final class AuthManager {
         return "You must be signed in to load account details."
       case let .profileRequestFailed(statusCode, message):
         return "Failed to load account details (\(statusCode)): \(message)"
+      case let .temporarilyUnavailable(message):
+        return message
       }
+    }
+    
+    var isTransient: Bool {
+      if case .temporarilyUnavailable = self {
+        return true
+      }
+      return false
     }
   }
   
@@ -123,24 +135,15 @@ final class AuthManager {
     }
   }
   
-  func clearToken() {
+  func signOut() {
     tokenStore.remove()
-    userDefaults.set(false, forKey: AppDefaultsKey.isSignedIn)
-    NotificationCenter.default.post(name: .appAuthStateDidChange, object: nil)
-  }
-  
-  func signOutAndResetPreferences() {
-    clearToken()
     
-    if let bundleIdentifier = Bundle.main.bundleIdentifier {
-      userDefaults.removePersistentDomain(forName: bundleIdentifier)
-      logger.info("Cleared persisted preferences for bundle: \(bundleIdentifier, privacy: .public)")
-    } else {
-      logger.error("Unable to clear preferences: missing bundle identifier")
+    for key in AppDefaultsKey.accountScoped {
+      userDefaults.removeObject(forKey: key)
     }
     
-    userDefaults.set(false, forKey: AppDefaultsKey.isSignedIn)
-    logger.info("Completed sign out and local preference cleanup")
+    logger.info("Signed out: cleared the auth token and account-scoped values only")
+    NotificationCenter.default.post(name: .appAuthStateDidChange, object: nil)
   }
   
   func authToken() -> String? {
@@ -165,31 +168,66 @@ final class AuthManager {
       throw AuthError.missingAuthToken
     }
     
-    let profileEndpoint = accountProfileEndpoint()
-    
-    var request = URLRequest(url: profileEndpoint)
+    var attempt = 0
+    while true {
+      attempt += 1
+      
+      do {
+        persist(try await requestAccountProfile())
+        return
+      } catch let error as AuthError where error.isTransient && attempt < Self.maxRefreshAttempts {
+        let delay = pow(3.0, Double(attempt - 1))
+        logger.info("Account refresh attempt \(attempt) failed; retrying in \(delay, format: .fixed(precision: 0))s")
+        try await Task.sleep(for: .seconds(delay))
+      }
+    }
+  }
+  
+  private func requestAccountProfile() async throws -> AccountDetails {
+    var request = URLRequest(url: accountProfileEndpoint())
     request.httpMethod = "GET"
     request.setValue("application/json", forHTTPHeaderField: "Accept")
     applyAuthorizationHeader(to: &request)
     
-    let (data, response) = try await urlSession.data(for: request)
+    let data: Data
+    let response: URLResponse
+    do {
+      (data, response) = try await urlSession.data(for: request)
+    } catch let error as URLError {
+      throw AuthError.temporarilyUnavailable(error.localizedDescription)
+    }
+    
     guard let httpResponse = response as? HTTPURLResponse else {
       throw AuthError.invalidResponse
     }
     
-    guard (200..<300).contains(httpResponse.statusCode) else {
-      let message = parseServerMessage(from: data) ?? "Unknown server error"
-      throw AuthError.profileRequestFailed(statusCode: httpResponse.statusCode, message: message)
+    switch httpResponse.statusCode {
+    case 200..<300:
+      break
+    case 408, 429, 500...599:
+      throw AuthError.temporarilyUnavailable(
+        "The server is unavailable (\(httpResponse.statusCode)): \(parseServerMessage(from: data) ?? "Unknown server error")"
+      )
+    default:
+      throw AuthError.profileRequestFailed(
+        statusCode: httpResponse.statusCode,
+        message: parseServerMessage(from: data) ?? "Unknown server error"
+      )
     }
     
-    let decoded = try JSONDecoder().decode(AccountProfileResponse.self, from: data)
-    let details = decoded.resolvedAccountDetails
-    
-    userDefaults.set(details.email, forKey: AppDefaultsKey.accountEmail)
-    userDefaults.set(details.firstName, forKey: AppDefaultsKey.accountFirstName)
-    userDefaults.set(details.lastName, forKey: AppDefaultsKey.accountLastName)
-    userDefaults.set(details.credits, forKey: AppDefaultsKey.accountCredits)
-    userDefaults.set(details.isSubscribed, forKey: AppDefaultsKey.accountIsSubscribed)
+    return try JSONDecoder().decode(AccountProfileResponse.self, from: data).resolvedAccountDetails
+  }
+  
+  private func persist(_ details: AccountDetails) {
+    if let email = details.email {
+      userDefaults.set(email, forKey: AppDefaultsKey.accountEmail)
+    }
+    if let firstName = details.firstName {
+      userDefaults.set(firstName, forKey: AppDefaultsKey.accountFirstName)
+    }
+    if let lastName = details.lastName {
+      userDefaults.set(lastName, forKey: AppDefaultsKey.accountLastName)
+    }
   }
   
   private func parseAuthorizationURL(from data: Data) -> URL? {
@@ -230,11 +268,9 @@ private struct OAuthLoginResponse: Decodable {
 }
 
 private struct AccountDetails {
-  let email: String
-  let firstName: String
-  let lastName: String
-  let credits: Int
-  let isSubscribed: Bool
+  let email: String?
+  let firstName: String?
+  let lastName: String?
 }
 
 private struct AccountProfileResponse: Decodable {
@@ -248,48 +284,31 @@ private struct AccountProfileResponse: Decodable {
   let last_name: String?
   let familyName: String?
   let family_name: String?
-  let credits: Int?
-  let creditBalance: Int?
-  let credit_balance: Int?
-  let isSubscribed: Bool?
-  let is_subscribed: Bool?
-  let subscriptionStatus: String?
-  let subscription_status: String?
   
   var resolvedAccountDetails: AccountDetails {
     let trimmedFullName = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     
-    let fallbackFirstName: String
-    let fallbackLastName: String
-    if trimmedFullName.isEmpty {
-      fallbackFirstName = ""
-      fallbackLastName = ""
-    } else {
+    var fallbackFirstName: String?
+    var fallbackLastName: String?
+    if !trimmedFullName.isEmpty {
       let parts = trimmedFullName.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
-      fallbackFirstName = parts.first.map(String.init) ?? ""
-      fallbackLastName = parts.count > 1 ? String(parts[1]) : ""
-    }
-    
-    let resolvedFirstName = firstName ?? first_name ?? givenName ?? given_name ?? fallbackFirstName
-    let resolvedLastName = lastName ?? last_name ?? familyName ?? family_name ?? fallbackLastName
-    let resolvedCredits = credits ?? creditBalance ?? credit_balance ?? 0
-    
-    let resolvedIsSubscribed: Bool
-    if let explicit = isSubscribed ?? is_subscribed {
-      resolvedIsSubscribed = explicit
-    } else if let status = subscriptionStatus ?? subscription_status {
-      resolvedIsSubscribed = status.lowercased() == "active"
-    } else {
-      resolvedIsSubscribed = false
+      fallbackFirstName = parts.first.map(String.init)
+      fallbackLastName = parts.count > 1 ? String(parts[1]) : nil
     }
     
     return AccountDetails(
-      email: email ?? "",
-      firstName: resolvedFirstName,
-      lastName: resolvedLastName,
-      credits: resolvedCredits,
-      isSubscribed: resolvedIsSubscribed
+      email: Self.nonEmpty(email),
+      firstName: Self.nonEmpty(firstName ?? first_name ?? givenName ?? given_name) ?? fallbackFirstName,
+      lastName: Self.nonEmpty(lastName ?? last_name ?? familyName ?? family_name) ?? fallbackLastName
     )
+  }
+  
+  private static func nonEmpty(_ value: String?) -> String? {
+    guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+          !trimmed.isEmpty else {
+      return nil
+    }
+    return trimmed
   }
 }
 
