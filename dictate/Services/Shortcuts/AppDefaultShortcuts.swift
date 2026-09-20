@@ -3,7 +3,7 @@ import Carbon.HIToolbox
 enum AppDefaultShortcuts {
   static let toggleRecording = Shortcut(
     keyCode: KeyCode.from(character: " ") ?? UInt16(kVK_Space),
-    modifiers: [.command, .shift]
+    modifiers: [.option]
   )
 
   static let holdToSpeak = Shortcut(
