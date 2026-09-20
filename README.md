@@ -36,8 +36,8 @@ themselves in place via Sparkle.
 Requires Xcode 15+.
 
 ```sh
-git clone git@github.com:me-env/lalfred-ios.git
-cd lalfred-ios
+git clone git@github.com:me-env/lalfred-macos.git
+cd lalfred-macos
 open dictate.xcodeproj
 ```
 
