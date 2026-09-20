@@ -62,4 +62,4 @@ dictate/
 
 ## License
 
-MIT
+GPLv3 — see [LICENSE](LICENSE).
