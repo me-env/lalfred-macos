@@ -1,52 +1,63 @@
-# Dictate
+# L'Alfred
 
-A lightweight macOS app that lets you dictate text into any application using a global keyboard shortcut and the [ElevenLabs](https://elevenlabs.io) speech-to-text API.
+Just dictation, done right.
+
+A native macOS app that turns speech into text in any application. Press a
+global hotkey, talk, and the transcription is pasted into whatever field you
+were in. Transcription runs on the [ElevenLabs Scribe](https://elevenlabs.io/speech-to-text)
+API with your own key — there is no proxy in between.
 
 ## Features
 
-- **Global hotkey** — trigger recording from anywhere on your Mac (default: `⌃⌥Space`)
-- **Customisable shortcut** — click the shortcut badge in the app to record a new key combination
-- **Auto-paste** — transcribed text is pasted directly into the focused field of any app
-- **Secure key storage** — your ElevenLabs API key is stored in the macOS Keychain
+- **Global hotkey** — start and stop recording from any app (default: `⌃⌥Space`)
+- **Auto-paste** — text lands in the focused field, no clipboard juggling
+- **Bring your own key** — your ElevenLabs key is stored in the macOS Keychain
+- **Custom dictionary** — key terms, names and jargon that should transcribe correctly
+- **Snippets** — rewrite recognised phrases into canonical text
+
+## Install
+
+Download the latest signed build:
+
+```
+https://api.dictate.lalfred.ai/releases/download/latest
+```
+
+Builds are signed with a Developer ID, notarized by Apple, and update
+themselves in place via Sparkle.
 
 ## Requirements
 
 - macOS 14 Sonoma or later
-- Xcode 15+
 - An [ElevenLabs API key](https://elevenlabs.io)
 
-## Getting started
+## Build from source
 
-1. Clone the repo and open `dictate.xcodeproj` in Xcode.
-2. Build and run the app (`⌘R`).
-3. On first launch, grant the two required permissions in the **Permissions** section:
-   - **Microphone** — for capturing audio.
-   - **Accessibility** — for registering the global hotkey and pasting into other apps.
-4. Paste your ElevenLabs API key into the **11L API Key** field and press Return.
-5. Press the hotkey from any app to start recording. Press it again to stop and insert the transcription.
+Requires Xcode 15+.
 
-## Project structure
+```sh
+git clone git@github.com:me-env/lalfred-ios.git
+cd lalfred-ios
+open dictate.xcodeproj
+```
+
+Build and run with `⌘R`. On first launch grant the two permissions the app
+asks for:
+
+- **Microphone** — to capture audio
+- **Accessibility** — to register the global hotkey and paste into other apps
+
+Then paste your ElevenLabs API key into the API key field and press Return.
+
+## Layout
 
 ```
 dictate/
-├── dictateApp.swift              # App entry point & runtime coordinator
-├── ContentView.swift             # Tab-based main UI (Home / Models)
-├── APIKeyInput.swift             # API key field (persisted to Keychain)
-├── views/
-│   ├── ShortcutInput.swift       # Hotkey recorder UI
-│   └── PermissionsInput.swift    # Microphone & Accessibility permission UI
-├── utils/
-│   ├── GlobalHotKeyMonitor.swift # Carbon hot-key registration
-│   ├── AccessibilityPermissionService.swift
-│   ├── ShortcutDefaultsStore.swift
-│   ├── APIKeyDefaultsStore.swift
-│   ├── UserDefaultsCodableStore.swift
-│   ├── ShortcutModifiers+SwiftUI.swift
-│   ├── Shortcut+Carbon.swift
-│   ├── ShortcutNotifications.swift
-│   └── KeyCode.swift
-└── types/
-    └── Shortcut.swift            # Shortcut model
+├── App/          # Entry point, hotkey monitors, dictation state machine
+├── Providers/    # ElevenLabs Scribe client
+├── Services/     # Feature modules (transcription, snippets, dictionary, auth, …)
+├── Updater/      # Sparkle integration
+└── Utils/
 ```
 
 ## License
