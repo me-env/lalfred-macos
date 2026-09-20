@@ -11,7 +11,7 @@ enum APIKeyProvider: String, CaseIterable, Identifiable {
   }
 
   var key: String {
-    return providerToName[self] ?? "Unknown"
+    return providerToKey[self] ?? "Unknown"
   }
 }
 

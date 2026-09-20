@@ -29,13 +29,7 @@ struct AccountTabView: View {
         LoggedOutCard(model: model)
       }
 
-      BringYourOwnKeySection(
-        manager: apiKeyManager,
-        isLoadingAuthURL: model.isLoadingAuthURL,
-        onContinueWithGoogle: {
-          await model.startGoogleOAuth()
-        }
-      )
+      BringYourOwnKeySection(manager: apiKeyManager)
     }
     .padding([.bottom, .horizontal])
     .task(id: isSignedIn) {

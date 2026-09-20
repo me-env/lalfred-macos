@@ -2,17 +2,6 @@ import SwiftUI
 
 struct BringYourOwnKeySection: View {
   @Bindable var manager: APIKeyViewModel
-  let isLoadingAuthURL: Bool
-  let onContinueWithGoogle: () async -> Void
-
-  @AppStorage(AppDefaultsKey.isSignedIn) private var isSignedIn = false
-  @State private var showsSignInTip = false
-
-  private var caption: String {
-    isSignedIn
-      ? "Stored in secure keychain on this Mac."
-      : "Requires you to be signed in."
-  }
   
   var keysList: some View {
     VStack(spacing: 0) {
@@ -20,7 +9,7 @@ struct BringYourOwnKeySection: View {
         APIKeyProviderRow(
           provider: provider,
           keySuffix: manager.keySuffix(for: provider),
-          onEdit: { beginEditingIfAllowed(provider) },
+          onEdit: { manager.beginEditing(provider) },
           onDelete: { manager.delete(provider) }
         )
 
@@ -33,22 +22,9 @@ struct BringYourOwnKeySection: View {
   }
 
   var body: some View {
-    SectionBoxWithTitle("Bring your own keys", caption: caption) {
-      VStack(alignment: .leading, spacing: 10) {
-        if showsSignInTip {
-          APIKeyAccessTipView(
-            isLoadingAuthURL: isLoadingAuthURL,
-            onContinueWithGoogle: onContinueWithGoogle
-          )
-        }
-        keysList
-          .id(manager.refreshToken)
-      }
-    }
-    .onChange(of: isSignedIn) { _, signedIn in
-      if signedIn {
-        showsSignInTip = false
-      }
+    SectionBoxWithTitle("Bring your own keys", caption: "Stored in secure keychain on this Mac.") {
+      keysList
+        .id(manager.refreshToken)
     }
     .sheet(item: $manager.editingProvider) { provider in
       APIKeyEditorSheet(
@@ -58,24 +34,10 @@ struct BringYourOwnKeySection: View {
       )
     }
   }
-
-  private func beginEditingIfAllowed(_ provider: APIKeyProvider) {
-    guard isSignedIn else {
-      showsSignInTip = true
-      return
-    }
-
-    showsSignInTip = false
-    manager.beginEditing(provider)
-  }
 }
 
 #Preview {
-  BringYourOwnKeySection(
-    manager: APIKeyViewModel(),
-    isLoadingAuthURL: false,
-    onContinueWithGoogle: {}
-  )
+  BringYourOwnKeySection(manager: APIKeyViewModel())
   .padding()
   .frame(width: 560)
 }
