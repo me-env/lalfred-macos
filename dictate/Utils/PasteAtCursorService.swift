@@ -67,11 +67,13 @@ struct PasteAtCursorService {
       return false
     }
 
-    logger.info("[PasteAtCursorService] Posting Cmd+V events (command on keyDown only)")
+    logger.info("[PasteAtCursorService] Posting Cmd+V events")
     vDown.flags = .maskCommand
     vDown.post(tap: .cghidEventTap)
 
-    vUp.flags = []
+    // Cmd stays held on key-up, as on real hardware. Clearing it made Raycast
+    // resolve a different shortcut.
+    vUp.flags = .maskCommand
     vUp.post(tap: .cghidEventTap)
 
     logger.info("[PasteAtCursorService] Cmd+V events posted")
