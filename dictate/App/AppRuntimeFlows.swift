@@ -20,8 +20,11 @@ struct ListeningFlowHandler {
       let transcription = Task { try await runTransformationPipeline(audio: audio) }
       _ = sessionState.transitionToListening()
       activateListeningHotKeys()
-      indicator.showListening()
-      SoundEffectPlayer.shared.playStart()
+      if recordingService.isInputReady {
+        indicator.showListening()
+      } else {
+        indicator.showPreparing()
+      }
       return transcription
     } catch {
       indicator.showStatus(message: errorMessage(error), autoHideAfter: 2.2)

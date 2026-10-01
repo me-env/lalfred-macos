@@ -25,7 +25,7 @@ enum IndicatorPanelLayout {
 
   static func indicatorSize(for content: IndicatorBubbleContent) -> CGSize {
     switch content {
-    case .listening:
+    case .preparing, .listening:
       return IndicatorPanelMetrics.compactBubbleSize
     case .status(let message):
       return statusSize(for: message)

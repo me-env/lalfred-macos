@@ -32,6 +32,10 @@ final class IndicatorBubblePanelController {
   var isVisible: Bool { panel.isVisible }
   var bubbleContent: IndicatorBubbleContent { viewModel.bubbleContent }
 
+  func showPreparing() {
+    viewModel.bubbleContent = .preparing
+  }
+
   func showListening() {
     viewModel.bubbleContent = .listening(level: 0)
   }

@@ -15,6 +15,11 @@ final class IndicatorPanelController {
 
   // MARK: - Public API
 
+  func showPreparing() {
+    indicatorController.showPreparing()
+    showIndicator(autoHideAfter: nil)
+  }
+
   func showListening() {
     indicatorController.showListening()
     showIndicator(autoHideAfter: nil)

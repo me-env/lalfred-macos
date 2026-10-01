@@ -33,6 +33,8 @@ struct SpeechIndicatorView: View {
   @ViewBuilder
   private var contentView: some View {
     switch content {
+    case .preparing:
+      PreparingWaveView()
     case .listening(let level):
       ListeningWaveView(level: level)
     case .status(let message):
@@ -64,7 +66,7 @@ struct SpeechIndicatorView: View {
 
   private var prefersExpandedTextLayout: Bool {
     switch content {
-    case .listening:
+    case .preparing, .listening:
       return false
     case .status(let message):
       return statusImage(for: message) == nil && !isProcessingStatus(message)
@@ -94,6 +96,8 @@ struct SpeechIndicatorView: View {
   
   private var contentBounceKey: String {
     switch content {
+    case .preparing:
+      return "preparing"
     case .listening:
       return "listening"
     case .status(let message):

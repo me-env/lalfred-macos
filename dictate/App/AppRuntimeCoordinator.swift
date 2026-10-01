@@ -12,6 +12,7 @@ final class AppRuntimeCoordinator {
 
   private var sessionState = DictationSessionStateMachine()
   private var pendingTranscription: Task<String, Error>?
+  private var hasPlayedStartSound = false
 
   private var toggleRecordingMonitor: UnifiedShortcutMonitor?
   private var holdToSpeakMonitor: UnifiedShortcutMonitor?
@@ -67,6 +68,16 @@ final class AppRuntimeCoordinator {
     recordingService.onAudioLevelUpdate = { [weak self] level in
       guard let self, self.sessionState.isListening else { return }
       self.indicator.updateListeningLevel(CGFloat(level))
+    }
+
+    recordingService.onInputReadinessChange = { [weak self] isReady in
+      guard let self, self.sessionState.isListening else { return }
+      if isReady {
+        self.indicator.showListening()
+        self.playStartSoundOnce()
+      } else {
+        self.indicator.showPreparing()
+      }
     }
   }
 
@@ -247,12 +258,27 @@ final class AppRuntimeCoordinator {
   }
 
   private func beginListening() {
+    hasPlayedStartSound = false
     let transcription = listeningFlow.beginListening(
       sessionState: &sessionState,
       errorMessage: Self.errorMessage(for:)
     )
     if let transcription {
       pendingTranscription = transcription
+      // Otherwise it plays once the mic is live: during a headset switch the sound fails to play
+      // and blocks the main thread, which kept the indicator from appearing.
+      if recordingService.isInputReady {
+        playStartSoundOnce()
+      }
+    }
+  }
+
+  /// `NSSound.play()` can block the main thread, so it waits for the indicator to be drawn first.
+  private func playStartSoundOnce() {
+    guard !hasPlayedStartSound else { return }
+    hasPlayedStartSound = true
+    DispatchQueue.main.async {
+      SoundEffectPlayer.shared.playStart()
     }
   }
 }

@@ -3,13 +3,13 @@ import CoreGraphics
 
 protocol AudioRecordingServicing: AnyObject {
     var onAudioLevelUpdate: ((Float) -> Void)? { get set }
+    /// Called when the microphone becomes ready, or stops being ready while the capture restarts.
+    var onInputReadinessChange: ((Bool) -> Void)? { get set }
+    /// False while the input device is still switching on, e.g. a Bluetooth headset changing profile.
+    var isInputReady: Bool { get }
     func startRecording() throws -> AsyncThrowingStream<Data, Error>
     func stopRecording() async throws -> Data
     func cancelRecording()
-}
-
-protocol TranscribingPipeline {
-    func runTransformationPipeline(audio: AsyncThrowingStream<Data, Error>) async throws -> String
 }
 
 protocol PastingAtCursor {
@@ -18,6 +18,7 @@ protocol PastingAtCursor {
 
 @MainActor
 protocol IndicatorPresenting: AnyObject {
+    func showPreparing()
     func showListening()
     func updateListeningLevel(_ level: CGFloat)
     func showStatus(message: String, autoHideAfter delay: TimeInterval?)
@@ -26,5 +27,6 @@ protocol IndicatorPresenting: AnyObject {
 
 extension AudioRecordingService: AudioRecordingServicing {}
 extension ScribeClient: STTProvider {}
+extension ScribeRealtimeClient: STTProvider {}
 extension PasteAtCursorService: PastingAtCursor {}
 extension IndicatorPanelController: IndicatorPresenting {}

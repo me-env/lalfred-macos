@@ -23,5 +23,16 @@ func runTransformationPipeline(recordedAudio: Data) async throws -> String {
 }
 
 private func makeDefaultAudioTranscriber() -> STTProvider {
-  ScribeClient()
+  let settings = TranscriptionSettings.load()
+
+  switch settings.provider {
+  case .scribeV2:
+    return ScribeClient(languageCode: settings.languageCode, transcriptEdit: settings.transcriptEdit)
+  case .scribeV2Realtime:
+    return ScribeRealtimeClient(options: .init(
+      languageCode: settings.languageCode,
+      secondaryLanguages: settings.realtimeSecondaryLanguages,
+      transcriptEdit: settings.transcriptEdit
+    ))
+  }
 }

@@ -1,10 +1,12 @@
 import Foundation
 
 
+
 enum ScribeError: LocalizedError {
   case missingAPIKey
   case invalidResponse
   case requestFailed(statusCode: Int, message: String)
+  case realtimeFailed(type: String, message: String)
 
   var errorDescription: String? {
     switch self {
@@ -14,20 +16,27 @@ enum ScribeError: LocalizedError {
       return "Unexpected API response"
     case let .requestFailed(statusCode, message):
       return "Scribe request failed (\(statusCode)): \(message)"
+    case let .realtimeFailed(type, message):
+      return "Scribe realtime error (\(type)): \(message)"
     }
   }
 }
 
-
 struct ScribeClient {
+  private let languageCode: String?
+  private let transcriptEdit: String?
   private let apiKeyStore: KeychainStore
   private let session: URLSession
   private let directEndpoint: URL = URL(string: "https://api.elevenlabs.io/v1/speech-to-text")!
 
   init(
+    languageCode: String? = nil,
+    transcriptEdit: String? = nil,
     apiKeyStore: KeychainStore = KeychainStore(key: AppDefaultsKey.apiKeyElevenLabs),
     session: URLSession = .shared
   ) {
+    self.languageCode = languageCode
+    self.transcriptEdit = transcriptEdit
     self.apiKeyStore = apiKeyStore
     self.session = session
   }
@@ -99,6 +108,10 @@ struct ScribeClient {
 
   private func parseTranscript(from data: Data) throws -> String {
     let decoded = try JSONDecoder().decode(TranscriptionResponse.self, from: data)
+    // A failed edit comes back with kind "error"; the original transcript is still usable.
+    if let edited = decoded.editedTranscript, edited.kind == "transcript", let editedText = edited.text {
+      return editedText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
     return decoded.text.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
@@ -124,6 +137,14 @@ struct ScribeClient {
       appendField("keyterms", value: keyterm, boundary: boundary, lineBreak: lineBreak, body: &body)
     }
 
+    if let languageCode {
+      appendField("language_code", value: languageCode, boundary: boundary, lineBreak: lineBreak, body: &body)
+    }
+
+    if let transcriptEdit {
+      appendField("transcript_edit", value: transcriptEdit, boundary: boundary, lineBreak: lineBreak, body: &body)
+    }
+
     body.append("--\(boundary)\(lineBreak)")
     body.append("Content-Disposition: form-data; name=\"file\"; filename=\"audio.pcm\"\(lineBreak)")
     body.append("Content-Type: application/octet-stream\(lineBreak)\(lineBreak)")
@@ -145,7 +166,18 @@ struct ScribeClient {
 }
 
 private struct TranscriptionResponse: Decodable {
+  struct EditedTranscript: Decodable {
+    let kind: String
+    let text: String?
+  }
+
   let text: String
+  let editedTranscript: EditedTranscript?
+
+  enum CodingKeys: String, CodingKey {
+    case text
+    case editedTranscript = "edited_transcript"
+  }
 }
 
 private struct ServerErrorResponse: Decodable {

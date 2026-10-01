@@ -1,5 +1,13 @@
 import SwiftUI
 
+#Preview("Preparing") {
+  SpeechIndicatorView(
+    content: .preparing,
+    shouldAnimateAppearance: false
+  )
+  .padding()
+}
+
 #Preview("Listening (Low)") {
   SpeechIndicatorView(
     content: .listening(level: 0.2),
