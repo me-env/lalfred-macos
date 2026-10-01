@@ -8,11 +8,14 @@ final class AppRuntimeCoordinator {
   private let indicator: IndicatorPresenting
   private let pasteService: PastingAtCursor
   private let recordingService: AudioRecordingServicing
+  private let lastRecording = LastRecordingStore()
 
   private var sessionState = DictationSessionStateMachine()
+  private var pendingTranscription: Task<String, Error>?
 
   private var toggleRecordingMonitor: UnifiedShortcutMonitor?
   private var holdToSpeakMonitor: UnifiedShortcutMonitor?
+  private var retryLastRecordingMonitor: UnifiedShortcutMonitor?
   private var escapeHotKeyMonitor: CarbonHotKeyMonitor?
 
   private var shortcutCaptureObserver: NSObjectProtocol?
@@ -34,6 +37,7 @@ final class AppRuntimeCoordinator {
 
   private lazy var processingFlowHandler = ProcessingFlowHandler(
     recordingService: recordingService,
+    lastRecording: lastRecording,
     pasteService: pasteService,
     indicator: indicator,
     deactivateListeningHotKeys: { [weak self] in
@@ -88,6 +92,13 @@ final class AppRuntimeCoordinator {
     holdToSpeakMonitor = holdMonitor
     holdMonitor.activate()
 
+    let retryMonitor = UnifiedShortcutMonitor(
+      store: shortcuts.retryLastRecording,
+      onKeyDown: { [weak self] in self?.handleRetryLastRecordingPress() }
+    )
+    retryLastRecordingMonitor = retryMonitor
+    retryMonitor.activate()
+
     escapeHotKeyMonitor = CarbonHotKeyMonitor(
       shortcutProvider: { AppDefaultShortcuts.escape },
       onKeyDown: { [weak self] in self?.handleEscapePress() }
@@ -135,6 +146,9 @@ final class AppRuntimeCoordinator {
 
   private func handleEscapePress() {
     isHoldToSpeakActive = false
+    guard sessionState.isListening else { return }
+    pendingTranscription?.cancel()
+    pendingTranscription = nil
     listeningFlow.cancelListeningIfNeeded(sessionState: &sessionState)
   }
 
@@ -155,12 +169,14 @@ final class AppRuntimeCoordinator {
   private func deactivateAllHotKeysForShortcutCapture() {
     toggleRecordingMonitor?.deactivate()
     holdToSpeakMonitor?.deactivate()
+    retryLastRecordingMonitor?.deactivate()
     escapeHotKeyMonitor?.deactivate()
   }
 
   private func restoreHotKeysAfterShortcutCapture() {
     toggleRecordingMonitor?.activate()
     holdToSpeakMonitor?.activate()
+    retryLastRecordingMonitor?.activate()
     if sessionState.isListening {
       escapeHotKeyMonitor?.activate()
     } else {
@@ -183,6 +199,28 @@ final class AppRuntimeCoordinator {
     }
   }
 
+  private func handleRetryLastRecordingPress() {
+    guard !isDebouncedPress(), sessionState.state == .idle else { return }
+
+    guard let recordedAudio = lastRecording.audio else {
+      indicator.showStatus(message: "No recording to retry", autoHideAfter: 1.4)
+      return
+    }
+
+    Task {
+      await retryLastRecording(recordedAudio)
+    }
+  }
+
+  private func retryLastRecording(_ recordedAudio: Data) async {
+    guard sessionState.transitionToRetryProcessing() else { return }
+    defer { sessionState.transitionToIdle() }
+    await processingFlowHandler.performRetry(
+      recordedAudio: recordedAudio,
+      errorMessage: Self.errorMessage(for:)
+    )
+  }
+
   private func activateListeningHotKeys() {
     guard !isShortcutCaptureActive else { return }
     escapeHotKeyMonitor?.activate()
@@ -194,9 +232,12 @@ final class AppRuntimeCoordinator {
 
   private func finishListeningAndProcess() async {
     isHoldToSpeakActive = false
-    guard sessionState.transitionToProcessing() else { return }
+    guard let transcription = pendingTranscription,
+          sessionState.transitionToProcessing() else { return }
+    pendingTranscription = nil
     defer { sessionState.transitionToIdle() }
     await processingFlowHandler.performProcessing(
+      transcription: transcription,
       errorMessage: Self.errorMessage(for:)
     )
   }
@@ -206,9 +247,12 @@ final class AppRuntimeCoordinator {
   }
 
   private func beginListening() {
-    listeningFlow.beginListening(
+    let transcription = listeningFlow.beginListening(
       sessionState: &sessionState,
       errorMessage: Self.errorMessage(for:)
     )
+    if let transcription {
+      pendingTranscription = transcription
+    }
   }
 }

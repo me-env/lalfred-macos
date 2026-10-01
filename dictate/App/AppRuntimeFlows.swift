@@ -8,20 +8,24 @@ struct ListeningFlowHandler {
   let activateListeningHotKeys: () -> Void
   let deactivateListeningHotKeys: () -> Void
   
+  /// Starts recording and the transcription request, which receives audio while the user speaks.
   func beginListening(
     sessionState: inout DictationSessionStateMachine,
     errorMessage: (Error) -> String
-  ) {
-    guard sessionState.state == .idle else { return }
+  ) -> Task<String, Error>? {
+    guard sessionState.state == .idle else { return nil }
 
     do {
-      try recordingService.startRecording()
+      let audio = try recordingService.startRecording()
+      let transcription = Task { try await runTransformationPipeline(audio: audio) }
       _ = sessionState.transitionToListening()
       activateListeningHotKeys()
       indicator.showListening()
       SoundEffectPlayer.shared.playStart()
+      return transcription
     } catch {
       indicator.showStatus(message: errorMessage(error), autoHideAfter: 2.2)
+      return nil
     }
   }
   
@@ -38,11 +42,13 @@ struct ListeningFlowHandler {
 @MainActor
 struct ProcessingFlowHandler {
   let recordingService: AudioRecordingServicing
+  let lastRecording: LastRecordingStore
   let pasteService: PastingAtCursor
   let indicator: IndicatorPresenting
   let deactivateListeningHotKeys: () -> Void
   
   func performProcessing(
+    transcription: Task<String, Error>,
     errorMessage: (Error) -> String
   ) async {
     deactivateListeningHotKeys()
@@ -52,11 +58,32 @@ struct ProcessingFlowHandler {
     indicator.showStatus(message: "Processing", autoHideAfter: nil)
 
     do {
-      try await Task.sleep(for: .milliseconds(250))
-      let audioFileURL = try await recordingService.stopRecording()
-      defer { try? FileManager.default.removeItem(at: audioFileURL) }
-      
-      let transcript = try await runTransformationPipeline(at: audioFileURL)
+      let recordedAudio = try await recordingService.stopRecording()
+      lastRecording.save(recordedAudio)
+
+      let transcript: String
+      do {
+        transcript = try await transcription.value
+      } catch where TranscriptionRetryPolicy.isAutoRetryEnabled && TranscriptionRetryPolicy.isTransient(error) {
+        try await Task.sleep(for: TranscriptionRetryPolicy.autoRetryDelay)
+        transcript = try await runTransformationPipeline(recordedAudio: recordedAudio)
+      }
+      onTranscriptionPipelineResult(transcript)
+    } catch {
+      transcription.cancel()
+      indicator.showStatus(message: errorMessage(error), autoHideAfter: 2.5)
+    }
+  }
+
+  /// Transcribes the kept recording again and pastes the result at the current cursor.
+  func performRetry(
+    recordedAudio: Data,
+    errorMessage: (Error) -> String
+  ) async {
+    indicator.showStatus(message: "Processing", autoHideAfter: nil)
+
+    do {
+      let transcript = try await runTransformationPipeline(recordedAudio: recordedAudio)
       onTranscriptionPipelineResult(transcript)
     } catch {
       indicator.showStatus(message: errorMessage(error), autoHideAfter: 1.8)

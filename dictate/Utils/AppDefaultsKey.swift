@@ -8,6 +8,8 @@ enum AppDefaultsKey {
     static let savedWords = "savedWords"
     static let shortcutToggleRecording = "shortcut.toggleRecording"
     static let shortcutHoldToSpeak = "shortcut.holdToSpeak"
+    static let shortcutRetryLastRecording = "shortcut.retryLastRecording"
+    static let autoRetryFailedTranscription = "transcription.autoRetryFailed"
     static let showMenuBarExtra = "showMenuBarExtra"
     static let isSignedIn = "auth.isSignedIn"
     static let accountEmail = "auth.account.email"

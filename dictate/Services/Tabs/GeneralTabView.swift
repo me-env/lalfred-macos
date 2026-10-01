@@ -48,6 +48,12 @@ struct GeneralTabView: View {
           store: shortcuts.holdToSpeak,
           activeShortcutEditorID: $activeShortcutEditorID
         )
+        Divider()
+        ShortcutInput(
+          label: "Retry Last Recording",
+          store: shortcuts.retryLastRecording,
+          activeShortcutEditorID: $activeShortcutEditorID
+        )
       }
 
       experimentalSection

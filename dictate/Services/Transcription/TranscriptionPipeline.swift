@@ -1,17 +1,25 @@
 import Foundation
 
 
-func runTransformationPipeline(at fileURL: URL) async throws -> String {
+func runTransformationPipeline(audio: AsyncThrowingStream<Data, Error>) async throws -> String {
   let audioTranscriber: STTProvider = makeDefaultAudioTranscriber()
   let snippetProcessor: SnippetTranscriptProcessor = SnippetTranscriptProcessor()
   let keyTermsStore = KeyTermsStore()
 
   let transcript = try await audioTranscriber.transcribeAudio(
-    at: fileURL,
+    audio,
     keyterms: keyTermsStore.keyTermsForRequest()
   )
 
   return snippetProcessor.process(transcript: transcript)
+}
+
+func runTransformationPipeline(recordedAudio: Data) async throws -> String {
+  let audio = AsyncThrowingStream<Data, Error> { continuation in
+    continuation.yield(recordedAudio)
+    continuation.finish()
+  }
+  return try await runTransformationPipeline(audio: audio)
 }
 
 private func makeDefaultAudioTranscriber() -> STTProvider {

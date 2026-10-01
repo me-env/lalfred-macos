@@ -25,6 +25,13 @@ struct DictationSessionStateMachine {
     return true
   }
   
+  /// Retrying a previous recording goes straight from idle to processing.
+  mutating func transitionToRetryProcessing() -> Bool {
+    guard state == .idle else { return false }
+    state = .processing
+    return true
+  }
+  
   mutating func transitionToIdle() {
     state = .idle
   }

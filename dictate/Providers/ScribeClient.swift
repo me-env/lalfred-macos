@@ -32,20 +32,40 @@ struct ScribeClient {
     self.session = session
   }
 
-  func transcribeAudio(at fileURL: URL, keyterms: [String]) async throws -> String {
+  /// Streams `audio` (16 kHz mono s16le PCM) into the request body while it is being recorded.
+  /// The server still transcribes the complete recording with the batch model.
+  func transcribeAudio(_ audio: AsyncThrowingStream<Data, Error>, keyterms: [String]) async throws -> String {
     let boundary = "Boundary-\(UUID().uuidString)"
-    let body = try makeMultipartBody(
-      fileURL: fileURL,
-      boundary: boundary,
-      keyterms: keyterms
-    )
+    let body = StreamedRequestBody()
     var request = URLRequest(url: directEndpoint)
-    
+
     request.httpMethod = "POST"
+    request.networkServiceType = .responsiveData
     request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
     request.setValue(try loadAPIKey(), forHTTPHeaderField: "xi-api-key")
+    request.httpBodyStream = body.inputStream
 
-    let (data, response) = try await session.upload(for: request, from: body)
+    body.write(makeMultipartHead(boundary: boundary, keyterms: keyterms))
+
+    let feeder = Task {
+      do {
+        for try await chunk in audio {
+          body.write(chunk)
+        }
+        try Task.checkCancellation()
+        body.write(Data("\r\n--\(boundary)--\r\n".utf8))
+      } catch {
+        // Closing without the closing boundary makes the server reject the truncated request.
+      }
+      body.finish()
+    }
+    defer { feeder.cancel() }
+
+    let (data, response) = try await withTaskCancellationHandler {
+      try await session.data(for: request)
+    } onCancel: {
+      feeder.cancel()
+    }
     let httpResponse = try unwrapHTTPResponse(response)
 
     guard (200..<300).contains(httpResponse.statusCode) else {
@@ -90,15 +110,13 @@ struct ScribeClient {
     return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
-  private func makeMultipartBody(
-    fileURL: URL,
-    boundary: String,
-    keyterms: [String]
-  ) throws -> Data {
+  /// Everything before the audio bytes: the form fields and the file part header.
+  private func makeMultipartHead(boundary: String, keyterms: [String]) -> Data {
     var body = Data()
     let lineBreak = "\r\n"
 
     appendField("model_id", value: "scribe_v2", boundary: boundary, lineBreak: lineBreak, body: &body)
+    appendField("file_format", value: "pcm_s16le_16", boundary: boundary, lineBreak: lineBreak, body: &body)
     appendField("no_verbatim", value: "true", boundary: boundary, lineBreak: lineBreak, body: &body)
     appendField("tag_audio_events", value: "false", boundary: boundary, lineBreak: lineBreak, body: &body)
 
@@ -106,16 +124,9 @@ struct ScribeClient {
       appendField("keyterms", value: keyterm, boundary: boundary, lineBreak: lineBreak, body: &body)
     }
 
-    let filename = fileURL.lastPathComponent
-    let mimeType = mimeType(for: fileURL.pathExtension)
-    let fileData = try Data(contentsOf: fileURL)
-
     body.append("--\(boundary)\(lineBreak)")
-    body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\(lineBreak)")
-    body.append("Content-Type: \(mimeType)\(lineBreak)\(lineBreak)")
-    body.append(fileData)
-    body.append(lineBreak)
-    body.append("--\(boundary)--\(lineBreak)")
+    body.append("Content-Disposition: form-data; name=\"file\"; filename=\"audio.pcm\"\(lineBreak)")
+    body.append("Content-Type: application/octet-stream\(lineBreak)\(lineBreak)")
 
     return body
   }
@@ -131,19 +142,6 @@ struct ScribeClient {
     body.append("Content-Disposition: form-data; name=\"\(name)\"\(lineBreak)\(lineBreak)")
     body.append("\(value)\(lineBreak)")
   }
-
-  private func mimeType(for pathExtension: String) -> String {
-    switch pathExtension.lowercased() {
-    case "m4a":
-      return "audio/m4a"
-    case "wav":
-      return "audio/wav"
-    case "mp3":
-      return "audio/mpeg"
-    default:
-      return "application/octet-stream"
-    }
-  }
 }
 
 private struct TranscriptionResponse: Decodable {
@@ -152,6 +150,47 @@ private struct TranscriptionResponse: Decodable {
 
 private struct ServerErrorResponse: Decodable {
   let detail: String
+}
+
+/// Pipes bytes written from any thread into an `InputStream` that URLSession reads as the request body.
+private nonisolated final class StreamedRequestBody: @unchecked Sendable {
+  let inputStream: InputStream
+  private let outputStream: OutputStream
+  private let queue = DispatchQueue(label: "lalfred.scribe.request-body", qos: .userInitiated)
+
+  init(bufferSize: Int = 64 * 1024) {
+    var input: InputStream?
+    var output: OutputStream?
+    Stream.getBoundStreams(withBufferSize: bufferSize, inputStream: &input, outputStream: &output)
+    inputStream = input!
+    outputStream = output!
+    outputStream.open()
+  }
+
+  /// Enqueues `data`; writes block on a private queue until URLSession reads them.
+  func write(_ data: Data) {
+    queue.async { [outputStream] in
+      Self.writeAll(data, to: outputStream)
+    }
+  }
+
+  func finish() {
+    queue.async { [outputStream] in
+      outputStream.close()
+    }
+  }
+
+  private static func writeAll(_ data: Data, to stream: OutputStream) {
+    data.withUnsafeBytes { rawBuffer in
+      guard let base = rawBuffer.bindMemory(to: UInt8.self).baseAddress else { return }
+      var offset = 0
+      while offset < data.count {
+        let written = stream.write(base + offset, maxLength: data.count - offset)
+        guard written > 0 else { return }
+        offset += written
+      }
+    }
+  }
 }
 
 private extension Data {

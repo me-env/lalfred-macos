@@ -3,13 +3,13 @@ import CoreGraphics
 
 protocol AudioRecordingServicing: AnyObject {
     var onAudioLevelUpdate: ((Float) -> Void)? { get set }
-    func startRecording() throws
-    func stopRecording() async throws -> URL
+    func startRecording() throws -> AsyncThrowingStream<Data, Error>
+    func stopRecording() async throws -> Data
     func cancelRecording()
 }
 
 protocol TranscribingPipeline {
-    func runTransformationPipeline(at fileURL: URL) async throws -> String
+    func runTransformationPipeline(audio: AsyncThrowingStream<Data, Error>) async throws -> String
 }
 
 protocol PastingAtCursor {
