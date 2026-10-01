@@ -36,6 +36,21 @@ struct KeyTermsStore {
     return terms
   }
   
+  /// Replaces `term` in place. Returns nil, leaving the list unchanged, when `newTerm` is empty,
+  /// too long, or already in the list.
+  func rename(_ term: String, to newTerm: String) -> [String]? {
+    let trimmed = newTerm.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty, trimmed.count <= Self.maxTermLength else { return nil }
+
+    let terms = load()
+    let isDuplicate = terms.contains { $0 != term && $0.lowercased() == trimmed.lowercased() }
+    guard !isDuplicate else { return nil }
+
+    let renamed = terms.map { $0 == term ? trimmed : $0 }
+    store.save(renamed)
+    return renamed
+  }
+
   func sanitize(_ terms: [String]) -> [String] {
     var seen = Set<String>()
     

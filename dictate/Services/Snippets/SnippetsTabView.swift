@@ -113,6 +113,12 @@ struct SnippetsTabView: View {
         ForEach(snippets, id: \.self) { snippet in
           SnippetRow(
             snippet: snippet,
+            onEditKey: { key in
+              updateSnippet(snippet, key: key)
+            },
+            onEditValue: { value in
+              updateSnippet(snippet, value: value)
+            },
             onToggleFullMatch: { isEnabled in
               updateSnippetFullMatch(snippet, fullMatch: isEnabled)
             },
@@ -168,6 +174,26 @@ struct SnippetsTabView: View {
     var current = snippets
     current.removeAll(where: { $0 == snippet })
     saveSnippets(current)
+  }
+
+  /// Empty values (after whitespace normalization) are ignored, so the row keeps its text.
+  private func updateSnippet(_ snippet: Snippet, key: String? = nil, value: String? = nil) {
+    var current = snippets
+    guard let index = current.firstIndex(of: snippet) else {
+      return
+    }
+
+    if let key {
+      let normalizedKey = normalizeWhitespace(key)
+      guard !normalizedKey.isEmpty else { return }
+      current[index].key = normalizedKey
+    }
+    if let value {
+      let normalizedValue = normalizeWhitespace(value)
+      guard !normalizedValue.isEmpty else { return }
+      current[index].value = normalizedValue
+    }
+    saveSnippets(deduplicatedSnippets(from: current))
   }
 
   private func updateSnippetFullMatch(

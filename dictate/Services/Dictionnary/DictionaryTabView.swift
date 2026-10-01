@@ -125,9 +125,15 @@ struct DictionaryTabView: View {
     ScrollView {
       LazyVStack(spacing: 8) {
         ForEach(displayedWords, id: \.self) { word in
-          WordRow(word: word) {
-            removeWord(word)
-          }
+          WordRow(
+            word: word,
+            onRename: { newWord in
+              renameWord(word, to: newWord)
+            },
+            onRemove: {
+              removeWord(word)
+            }
+          )
         }
       }
       .padding(.vertical, 2)
@@ -147,17 +153,28 @@ struct DictionaryTabView: View {
   private func removeWord(_ word: String) {
     words = keyTermsStore.remove(word)
   }
+
+  private func renameWord(_ word: String, to newWord: String) {
+    if let renamed = keyTermsStore.rename(word, to: newWord) {
+      words = renamed
+    }
+  }
 }
 
 private struct WordRow: View {
   let word: String
+  let onRename: (String) -> Void
   let onRemove: () -> Void
   @State var hovered: Bool = false
   
   var body: some View {
     HStack(spacing: 10) {
-      Text(word)
-        .frame(maxWidth: .infinity, alignment: .leading)
+      InlineEditableText(
+        text: word,
+        helpText: "Click to edit",
+        onCommit: onRename
+      )
+      .frame(maxWidth: .infinity, alignment: .leading)
       
       RowDeleteButton(
         helpText: "Remove \(word)",
@@ -165,8 +182,8 @@ private struct WordRow: View {
         action: onRemove
       )
     }
-    .padding(.horizontal, 10)
-    .padding(.vertical, 8)
+    .padding(.horizontal, 6)
+    .padding(.vertical, 6)
     .background(
       RoundedRectangle(cornerRadius: 8, style: .continuous)
         .fill(.background)

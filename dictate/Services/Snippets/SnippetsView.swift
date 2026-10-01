@@ -37,10 +37,6 @@ struct FullSentenceMatchLabel: View {
 
 
 #Preview {
-  SnippetConfigurationMenu(
-    isVisible: false,
-    isFullMatch: false,
-    onToggleFullMatch: { _ in }
-  )
-  .padding()
+  FullSentenceMatchLabel()
+    .padding()
 }
