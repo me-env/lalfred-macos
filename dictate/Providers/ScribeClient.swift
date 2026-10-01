@@ -201,13 +201,13 @@ private nonisolated final class StreamedRequestBody: @unchecked Sendable {
 
   /// Enqueues `data`; writes block on a private queue until URLSession reads them.
   func write(_ data: Data) {
-    queue.async { [outputStream] in
+    queue.async { [self] in
       Self.writeAll(data, to: outputStream)
     }
   }
 
   func finish() {
-    queue.async { [outputStream] in
+    queue.async { [self] in
       outputStream.close()
     }
   }

@@ -34,6 +34,9 @@ enum IndicatorPanelLayout {
 
   private static func statusSize(for message: String) -> CGSize {
     let normalized = message.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    if normalized == "retrying" {
+      return IndicatorPanelMetrics.retryingBubbleSize
+    }
     if normalized == "processing" || normalized == "cancel" || normalized == "pasted" || normalized == "nospeech" {
       return IndicatorPanelMetrics.compactBubbleSize
     }

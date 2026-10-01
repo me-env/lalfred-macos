@@ -40,6 +40,8 @@ struct SpeechIndicatorView: View {
     case .status(let message):
       if isProcessingStatus(message) {
         ProcessingActivityView()
+      } else if isRetryingStatus(message) {
+        RetryingActivityView()
       } else if let statusImage = statusImage(for: message) {
         StatusImageView(statusImage: statusImage, message: message)
       } else {
@@ -69,7 +71,7 @@ struct SpeechIndicatorView: View {
     case .preparing, .listening:
       return false
     case .status(let message):
-      return statusImage(for: message) == nil && !isProcessingStatus(message)
+      return statusImage(for: message) == nil && !isProcessingStatus(message) && !isRetryingStatus(message)
     }
   }
 
@@ -88,6 +90,10 @@ struct SpeechIndicatorView: View {
 
   private func isProcessingStatus(_ message: String) -> Bool {
     normalizedStatusMessage(message) == "processing"
+  }
+
+  private func isRetryingStatus(_ message: String) -> Bool {
+    normalizedStatusMessage(message) == "retrying"
   }
 
   private func normalizedStatusMessage(_ message: String) -> String {

@@ -21,14 +21,15 @@ struct IndicatorBubbleView: View {
 }
 
 #Preview("Indicator Bubble - Listening") {
-  IndicatorBubbleView(viewModel: {
-    let vm = IndicatorViewModel()
-    vm.bubbleContent = .listening(level: 0.62)
-    vm.shouldAnimateAppearance = true
-    return vm
-  }())
-  .frame(width: 110, height: 45)
-  .padding()
+  Text("Hello world")
+//  IndicatorBubbleView(viewModel: {
+//    let vm = IndicatorViewModel()
+//    vm.bubbleContent = .listening(level: 0.62)
+//    vm.shouldAnimateAppearance = true
+//    return vm
+//  }())
+//  .frame(width: 110, height: 45)
+//  .padding()
 }
 
 #Preview("Indicator Bubble - Processing") {
@@ -39,4 +40,23 @@ struct IndicatorBubbleView: View {
   }())
   .frame(width: 110, height: 45)
   .padding()
+}
+
+#Preview("Indicator Bubble - Retrying") {
+  IndicatorBubbleView(viewModel: {
+    let vm = IndicatorViewModel()
+    vm.bubbleContent = .status(message: "Retrying")
+    return vm
+  }())
+  .frame(
+    width: IndicatorPanelMetrics.retryingBubbleSize.width,
+    height: IndicatorPanelMetrics.retryingBubbleSize.height
+  )
+  .padding()
+}
+
+#Preview("Hello world") {
+  HStack {
+    Text("Hello")
+  }
 }

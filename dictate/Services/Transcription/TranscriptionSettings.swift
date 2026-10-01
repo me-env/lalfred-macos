@@ -71,7 +71,7 @@ struct TranscriptionSettings {
 }
 
 /// ISO 639-1 codes offered in settings; Scribe accepts more, these are the common ones.
-enum TranscriptionLanguages {
+nonisolated enum TranscriptionLanguages {
   static let codes: [String] = [
     "af", "ar", "bg", "bn", "ca", "cs", "cy", "da", "de", "el", "en", "es", "et", "eu", "fa",
     "fi", "fr", "ga", "gl", "gu", "he", "hi", "hr", "hu", "id", "is", "it", "ja", "kn", "ko",

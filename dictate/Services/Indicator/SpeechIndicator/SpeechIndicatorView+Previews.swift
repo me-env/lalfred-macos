@@ -32,6 +32,14 @@ import SwiftUI
   .padding()
 }
 
+#Preview("Status: Retrying") {
+  SpeechIndicatorView(
+    content: .status(message: "Retrying"),
+    shouldAnimateAppearance: false
+  )
+  .padding()
+}
+
 #Preview("Status: Cancel") {
   SpeechIndicatorView(
     content: .status(message: "cancel"),

@@ -31,7 +31,7 @@ final class SoundEffectPlayer {
       queue: .main
     ) { [weak self] _ in
       // Drop cached sounds so the next play uses freshly-resolved resources.
-      Task { @MainActor in
+      MainActor.assumeIsolated {
         self?.cache.removeAll()
       }
     }
