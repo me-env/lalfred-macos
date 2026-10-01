@@ -5,8 +5,7 @@ enum IndicatorPanelMetrics {
   static let compactBubbleSize = CGSize(width: 55, height: 22.5)
   static let retryingBubbleSize = CGSize(width: 96, height: 22.5)
   static let expandedIndicatorScale: CGFloat = 1.3
-  static let indicatorResizeDuration: TimeInterval = 0.2
-  static let indicatorResizeOvershootFactor: CGFloat = 0.2
+  static let indicatorResizeDuration: TimeInterval = 0.24
 
   static let expandedTextBubbleMinWidth: CGFloat = 176
   static let expandedTextBubbleMaxWidth: CGFloat = 300

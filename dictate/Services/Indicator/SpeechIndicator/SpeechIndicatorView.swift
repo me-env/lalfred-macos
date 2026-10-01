@@ -113,9 +113,9 @@ struct SpeechIndicatorView: View {
   
   private func applyAppearanceAnimation(shouldAnimate: Bool) {
     if shouldAnimate {
-      scale = 0.84
+      scale = 0.94
       opacity = 0
-      withAnimation(.spring(response: 0.22, dampingFraction: 0.62, blendDuration: 0.04)) {
+      withAnimation(.spring(response: 0.26, dampingFraction: 0.9)) {
         scale = 1
         opacity = 1
       }
@@ -139,13 +139,13 @@ struct SpeechIndicatorView: View {
     }
 
     withAnimation(.easeOut(duration: 0.08)) {
-      contentScale = 0.94
+      contentScale = 0.97
     }
 
     contentBounceTask = Task { @MainActor in
       try? await Task.sleep(for: .milliseconds(75))
       guard !Task.isCancelled else { return }
-      withAnimation(.spring(response: 0.22, dampingFraction: 0.78, blendDuration: 0.04)) {
+      withAnimation(.spring(response: 0.24, dampingFraction: 0.92)) {
         contentScale = 1
       }
     }

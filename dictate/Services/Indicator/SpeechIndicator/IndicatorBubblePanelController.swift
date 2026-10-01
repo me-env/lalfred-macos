@@ -91,36 +91,14 @@ final class IndicatorBubblePanelController {
       return
     }
 
-    let current = panel.frame
-    let overshootFactor = IndicatorPanelMetrics.indicatorResizeOvershootFactor
-    let overshootFrame = NSRect(
-      x: targetFrame.origin.x + ((targetFrame.origin.x - current.origin.x) * overshootFactor),
-      y: targetFrame.origin.y + ((targetFrame.origin.y - current.origin.y) * overshootFactor),
-      width: targetFrame.size.width + ((targetFrame.size.width - current.size.width) * overshootFactor),
-      height: targetFrame.size.height + ((targetFrame.size.height - current.size.height) * overshootFactor)
-    )
-
-    let firstDuration = IndicatorPanelMetrics.indicatorResizeDuration * 0.62
-    let secondDuration = IndicatorPanelMetrics.indicatorResizeDuration * 0.38
-
+    // A single ease-out, without overshoot: large text bubbles grow a lot, so any overshoot
+    // turned into a visible bounce.
     setOverlayPanelFrame(
       panel,
-      to: overshootFrame,
+      to: targetFrame,
       animated: true,
-      duration: firstDuration,
-      timingFunction: CAMediaTimingFunction(name: .easeOut)
+      duration: IndicatorPanelMetrics.indicatorResizeDuration,
+      timingFunction: CAMediaTimingFunction(controlPoints: 0.2, 0.8, 0.2, 1)
     )
-
-    Task { @MainActor [weak self] in
-      try? await Task.sleep(for: .seconds(firstDuration))
-      guard let self else { return }
-      setOverlayPanelFrame(
-        self.panel,
-        to: targetFrame,
-        animated: true,
-        duration: secondDuration,
-        timingFunction: CAMediaTimingFunction(name: .easeInEaseOut)
-      )
-    }
   }
 }
