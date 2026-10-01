@@ -27,6 +27,7 @@ enum AppDefaultsKey {
     static let hasCompletedOnboarding = "ui.hasCompletedOnboarding"
 
     static let smartPasteFormatting = "experimental.smartPasteFormatting"
+    static let textInsertionMethod = "advanced.textInsertionMethod"
 
     static let apiEnvironment = "api.environment"
 

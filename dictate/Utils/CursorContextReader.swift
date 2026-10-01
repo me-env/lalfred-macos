@@ -131,8 +131,6 @@ func getLines(
 
 struct CursorContextReader: CursorContextReading {
   
-  private let lookbackLimit = 64
-  
   func printTree(from element: AXUIElement, depth: Int = 0) {
     AXAttr.printAttributes(in: element, prefix: String(repeating: " ", count: depth))
     
@@ -208,46 +206,13 @@ struct CursorContextReader: CursorContextReading {
       logger.info("[CursorContextReader] No focused element")
       return nil
     }
-    guard let cursorPos = AXAttr.cursorLocation(in: element) else {
-      logger.info("[CursorContextReader] Cursor position not found")
-      return nil
+
+    let resolution = CursorContextResolution.resolve(facts: CursorElementFacts(element: element)) {
+      $0.read(element)
     }
-    
-//    debugPrint(element: element)
-    
-    let totalElementsStd = finalElementNumberOfChars(in: element) ?? 0
-    let totalElementsManual = numberOfCharsManual(in: element)
-    let domClassList = AXAttr.stringArray(kAXDOMClassListAttribute, in: element) ?? []
-    
-    var context: RawCursorTextContext? = nil
-    
-    logger.debug("totalElementsStd=\(totalElementsStd) totalElementsManual=\(totalElementsManual)")
-    
-    if domClassList.contains("aislash-editor-input") {
-      /**
-       Ideas to detect cases like cursor : those with cursor pos = 0 (instead of nil for all cases)
-       or we always get data from the DOM. e.g. for outlook we use AXIntersectionWithSelectionRange for cursor pos in a line
-       */
-      logger.info("getRawContextFromAnalysis")
-      context = getRawContextFromAnalysis(in: element, naiveCursorPos: cursorPos)
-    } else {
-      logger.info("getNativeRawContext")
-      context = getNativeRawContext(element: element, cursorPos: cursorPos)
-    }
-    
-    guard let context else {
-      logger.error("Failed to resolve Raw context")
-      return .empty
-    }
-    
-    context.printContext()
-    let cursorContext = context.toCursorTextContext()
-    return cursorContext
-    
-    // TODO: review below starts to see if something interesting is in there
-//    TextMarkerSelectionStrategy.run(in: element, lookback: lookbackLimit)
-//    CFRangeLineByLineStrategy.run(in: element, cursorPos: cursorPos, lookback: lookbackLimit)
-//    TextMarkerLineByIndexStrategy.run(in: element, lookback: lookbackLimit)
-//    TextMarkerLineWalkStrategy.run(in: element, lookback: lookbackLimit)
+    logger.info(
+      "[CursorContextReader] rule=\(resolution.rule.name, privacy: .public) method=\(resolution.method?.rawValue ?? "none (paste unchanged)", privacy: .public)"
+    )
+    return resolution.context
   }
 }

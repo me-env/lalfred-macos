@@ -1,0 +1,238 @@
+{
+  "actions": [
+    "AXShowMenu"
+  ],
+  "ancestors": [
+    {
+      "domClassList": [],
+      "identifier": "_NS:8",
+      "role": "AXScrollArea",
+      "roleDescription": "scroll area"
+    },
+    {
+      "domClassList": [],
+      "identifier": "_NS:34",
+      "role": "AXWindow",
+      "roleDescription": "standard window",
+      "subrole": "AXStandardWindow",
+      "title": "Untitled"
+    },
+    {
+      "domClassList": [],
+      "role": "AXApplication",
+      "roleDescription": "application",
+      "title": "TextEdit"
+    }
+  ],
+  "app": {
+    "bundleIdentifier": "com.apple.TextEdit",
+    "name": "TextEdit",
+    "pid": 54183
+  },
+  "attributes": [
+    {
+      "name": "AXChildren",
+      "value": "[<AXUIElement 0xa69440000> {pid=54183}]"
+    },
+    {
+      "name": "AXChildrenInNavigationOrder",
+      "value": "[<AXUIElement 0xa69440000> {pid=54183}]"
+    },
+    {
+      "name": "AXDescription",
+      "value": "<unavailable: -25200>"
+    },
+    {
+      "name": "AXFocused",
+      "value": "1"
+    },
+    {
+      "name": "AXFrame",
+      "value": "CGRect(x: 213.0, y: 177.0, width: 586.0, height: 382.0)"
+    },
+    {
+      "name": "AXHelp",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXIdentifier",
+      "value": "First Text View"
+    },
+    {
+      "name": "AXInsertionPointLineNumber",
+      "value": "2"
+    },
+    {
+      "name": "AXNumberOfCharacters",
+      "value": "10"
+    },
+    {
+      "name": "AXParent",
+      "value": "<AXUIElement 0xa69440000> {pid=54183}"
+    },
+    {
+      "name": "AXPosition",
+      "value": "CGPoint(x: 213.0, y: 177.0)"
+    },
+    {
+      "name": "AXRole",
+      "value": "AXTextArea"
+    },
+    {
+      "name": "AXRoleDescription",
+      "value": "text entry area"
+    },
+    {
+      "name": "AXSelectedText",
+      "value": ""
+    },
+    {
+      "name": "AXSelectedTextRange",
+      "value": "CFRange(location: 10, length: 0)"
+    },
+    {
+      "name": "AXSelectedTextRanges",
+      "value": "[CFRange(location: 10, length: 0)]"
+    },
+    {
+      "name": "AXSharedCharacterRange",
+      "value": "CFRange(location: 0, length: 10)"
+    },
+    {
+      "name": "AXSharedTextUIElements",
+      "value": "[<AXUIElement 0xa69440000> {pid=54183}]"
+    },
+    {
+      "name": "AXSize",
+      "value": "CGSize(width: 586.0, height: 382.0)"
+    },
+    {
+      "name": "AXTextInputMarkedRange",
+      "value": "CFRange(location: 10, length: 0)"
+    },
+    {
+      "name": "AXTopLevelUIElement",
+      "value": "<AXUIElement 0xa69440000> {pid=54183}"
+    },
+    {
+      "name": "AXValue",
+      "value": "Hey\n\nthere"
+    },
+    {
+      "name": "AXVisibleCharacterRange",
+      "value": "CFRange(location: 0, length: 10)"
+    },
+    {
+      "name": "AXWindow",
+      "value": "<AXUIElement 0xa69440000> {pid=54183}"
+    }
+  ],
+  "capturedAt": "2026-10-01T17:42:28Z",
+  "element": {
+    "domClassList": [],
+    "identifier": "First Text View",
+    "numberOfCharacters": 10,
+    "role": "AXTextArea",
+    "roleDescription": "text entry area",
+    "selectedRange": {
+      "length": 0,
+      "location": 10
+    }
+  },
+  "expectedResult": " hello world",
+  "id": "5D5DC50B-0368-45C8-9EC6-638460308E96",
+  "note": "textedit case 10: after there (hey/empty/there)",
+  "parameterizedAttributes": [
+    "AXAttributedStringForRange",
+    "AXBoundsForRange",
+    "AXLineForIndex",
+    "AXRTFForRange",
+    "AXRangeForIndex",
+    "AXRangeForLine",
+    "AXRangeForPosition",
+    "AXReplaceRangeWithText",
+    "AXSharedTextElementForIndex",
+    "AXStringForRange",
+    "AXStyleRangeForIndex"
+  ],
+  "sampleText": "Hello world",
+  "strategies": [
+    {
+      "name": "AXValue + AXSelectedTextRange",
+      "summary": "Production default: full AXValue split at the selection start.",
+      "textAfterCursor": "",
+      "textBeforeCursor": "Hey\n\nthere"
+    },
+    {
+      "name": "Children tree walk",
+      "summary": "Production for Cursor's chat input: rebuilds lines from AXStaticText children.",
+      "textAfterCursor": "There\n",
+      "textBeforeCursor": ""
+    },
+    {
+      "name": "TextMarker selection",
+      "summary": "AXStringForTextMarkerRange(AXStartTextMarker..cursor). WebKit / Chromium."
+    },
+    {
+      "name": "CFRange line by line",
+      "summary": "AXLineForIndex + AXRangeForLine + AXStringForRange. Lines joined without \\n.",
+      "textBeforeCursor": "Hey\n\nthere"
+    },
+    {
+      "name": "TextMarker line by index",
+      "summary": "AXLineForTextMarker + AXTextMarkerRangeForLine. Lines joined without \\n."
+    },
+    {
+      "name": "TextMarker line walk",
+      "summary": "AXPreviousLineStartTextMarkerForTextMarker walk. Lines joined without \\n."
+    }
+  ],
+  "tree": {
+    "children": [
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "domClassList": [],
+                "id": "root.0.0.0",
+                "isTruncated": false,
+                "numberOfCharacters": 5,
+                "role": "AXStaticText",
+                "selectedRange": {
+                  "length": 0,
+                  "location": 0
+                },
+                "valuePreview": "There"
+              }
+            ],
+            "domClassList": [],
+            "id": "root.0.0",
+            "isTruncated": false,
+            "role": "AXList"
+          },
+          {
+            "domClassList": [],
+            "id": "root.0.1",
+            "isTruncated": false,
+            "role": "AXButton"
+          }
+        ],
+        "domClassList": [],
+        "id": "root.0",
+        "isTruncated": false,
+        "role": "AXGroup"
+      }
+    ],
+    "domClassList": [],
+    "id": "root",
+    "isTruncated": false,
+    "numberOfCharacters": 10,
+    "role": "AXTextArea",
+    "selectedRange": {
+      "length": 0,
+      "location": 10
+    },
+    "valuePreview": "Hey\n\nthere"
+  }
+}

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paste Context Testbed</title>
+<!--
+  Local page with the editors real websites are built on, to exercise L'Alfred's
+  "match surrounding text when pasting" without typing into live sites.
+  Open with: open -a Safari tools/paste-context-testbed.html  (or Dia / Arc)
+  Each editor loads independently; a failure shows inline instead of breaking the page.
+-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css">
+<style>
+  :root { color-scheme: light dark; --fg: #1d1d1f; --bg: #f5f5f7; --card: #fff; --border: #d2d2d7; --muted: #6e6e73; --err: #c4161c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg: #f5f5f7; --bg: #1d1d1f; --card: #2c2c2e; --border: #48484a; --muted: #98989d; --err: #ff6961; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px; font: 15px/1.5 -apple-system, system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+  main { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
+  h1 { font-size: 22px; margin: 0; }
+  section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  h2 { font-size: 14px; margin: 0 0 2px; }
+  p.hint { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
+  textarea, input, .box { width: 100%; min-height: 80px; padding: 8px; font: inherit; color: inherit; background: transparent; border: 1px solid var(--border); border-radius: 6px; }
+  input { min-height: 0; }
+  .box p { margin: 0; }
+  .error { color: var(--err); font-size: 12px; }
+  .ql-container, .ql-toolbar { border-color: var(--border) !important; }
+  .ql-editor { min-height: 80px; }
+  .cm-editor { border: 1px solid var(--border); border-radius: 6px; min-height: 80px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Paste Context Testbed</h1>
+
+  <section><h2>1. &lt;input type="text"&gt;</h2><p class="hint">Native single-line field.</p>
+    <input id="input" type="text" aria-label="testbed input"></section>
+
+  <section><h2>2. &lt;textarea&gt;</h2><p class="hint">Native multi-line field.</p>
+    <textarea id="textarea" aria-label="testbed textarea"></textarea></section>
+
+  <section><h2>3. contenteditable (div / br)</h2><p class="hint">Raw contenteditable, browser default line handling.</p>
+    <div id="ce-plain" class="box" contenteditable="true" aria-label="testbed contenteditable plain"></div></section>
+
+  <section><h2>4. contenteditable (&lt;p&gt; per paragraph)</h2><p class="hint">Like LinkedIn's message box: every line is its own &lt;p&gt;.</p>
+    <div id="ce-paragraphs" class="box" contenteditable="true" aria-label="testbed contenteditable paragraphs"><p><br></p></div></section>
+
+  <section><h2>5. Quill 2</h2><p class="hint">Used by LinkedIn posts, Slack-like apps, many CMSs.</p>
+    <div id="quill"></div><div class="error" id="quill-error"></div></section>
+
+  <section><h2>6. Tiptap 2 (ProseMirror)</h2><p class="hint">ProseMirror powers Notion-likes, Linear, GitLab, Atlassian, Substack.</p>
+    <div id="tiptap" class="box"></div><div class="error" id="tiptap-error"></div></section>
+
+  <section><h2>7. Lexical</h2><p class="hint">Meta's editor (Facebook, WhatsApp Web, Instagram).</p>
+    <div id="lexical" class="box" contenteditable="true"></div><div class="error" id="lexical-error"></div></section>
+
+  <section><h2>8. CodeMirror 6</h2><p class="hint">Code editors on the web (Replit, Observable, GitHub-like fields).</p>
+    <div id="codemirror"></div><div class="error" id="codemirror-error"></div></section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<script>
+  try {
+    new Quill('#quill', { theme: 'snow', placeholder: 'Quill editor' });
+  } catch (e) {
+    document.getElementById('quill-error').textContent = 'Quill failed to load: ' + e;
+  }
+</script>
+
+<script type="module">
+  const fail = (id, e) => { document.getElementById(id + '-error').textContent = id + ' failed to load: ' + e; };
+
+  (async () => {
+    try {
+      const { Editor } = await import('https://esm.sh/@tiptap/core@2');
+      const { default: StarterKit } = await import('https://esm.sh/@tiptap/starter-kit@2');
+      new Editor({ element: document.getElementById('tiptap'), extensions: [StarterKit] });
+    } catch (e) { fail('tiptap', e); }
+  })();
+
+  (async () => {
+    try {
+      const lexical = await import('https://esm.sh/lexical@0.17.1');
+      const { registerRichText } = await import('https://esm.sh/@lexical/rich-text@0.17.1?deps=lexical@0.17.1');
+      const editor = lexical.createEditor({ namespace: 'testbed', onError: (e) => fail('lexical', e) });
+      editor.setRootElement(document.getElementById('lexical'));
+      registerRichText(editor);
+      editor.update(() => {
+        const root = lexical.$getRoot();
+        if (root.getChildrenSize() === 0) root.append(lexical.$createParagraphNode());
+      });
+    } catch (e) { fail('lexical', e); }
+  })();
+
+  (async () => {
+    try {
+      const { EditorView, basicSetup } = await import('https://esm.sh/codemirror@6.0.1');
+      new EditorView({ doc: '', extensions: [basicSetup], parent: document.getElementById('codemirror') });
+    } catch (e) { fail('codemirror', e); }
+  })();
+</script>
+</body>
+</html>

@@ -99,7 +99,7 @@ enum AXAttr {
     print("\(prefix)cursor pos: \(String(describing: cursorPos))")
   }
 
-  private static func hasPrintableValue(_ ref: CFTypeRef?) -> Bool {
+  static func hasPrintableValue(_ ref: CFTypeRef?) -> Bool {
     guard let ref else { return false }
 
     if CFGetTypeID(ref) == AXValueGetTypeID() {
@@ -162,7 +162,7 @@ enum AXAttr {
     }
   }
 
-  private static func debugDescription(for ref: CFTypeRef?) -> String {
+  static func debugDescription(for ref: CFTypeRef?) -> String {
     guard let ref else { return "nil" }
 
     if CFGetTypeID(ref) == AXValueGetTypeID() {

@@ -46,37 +46,9 @@ struct PasteAtCursorService {
       }
     }
 
-    let pasteboard = NSPasteboard.general
-    pasteboard.clearContents()
-    let didWritePasteboard = pasteboard.setString(textToPaste, forType: .string)
-    logger.info("[PasteAtCursorService] Pasteboard write success: \(didWritePasteboard)")
-
-    guard didWritePasteboard else {
-      logger.error("[PasteAtCursorService] Aborting: failed to write pasteboard")
-      return false
-    }
-
-    guard let source = CGEventSource(stateID: .hidSystemState) else {
-      logger.error("[PasteAtCursorService] Aborting: failed to create CGEventSource")
-      return false
-    }
-
-    guard let vDown = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(9), keyDown: true),
-          let vUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(9), keyDown: false) else {
-      logger.error("[PasteAtCursorService] Aborting: failed to create keyboard CGEvents")
-      return false
-    }
-
-    logger.info("[PasteAtCursorService] Posting Cmd+V events")
-    vDown.flags = .maskCommand
-    vDown.post(tap: .cghidEventTap)
-
-    // Cmd stays held on key-up, as on real hardware. Clearing it made Raycast
-    // resolve a different shortcut.
-    vUp.flags = .maskCommand
-    vUp.post(tap: .cghidEventTap)
-
-    logger.info("[PasteAtCursorService] Cmd+V events posted")
-    return true
+    let method = TextInsertionMethod.current(in: userDefaults)
+    let didInsert = method.insert(textToPaste)
+    logger.info("[PasteAtCursorService] Inserted via \(method.rawValue, privacy: .public): \(didInsert)")
+    return didInsert
   }
 }

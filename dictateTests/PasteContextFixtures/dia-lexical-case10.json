@@ -1,0 +1,472 @@
+{
+  "actions" : [
+    "AXScrollToVisible",
+    "AXShowMenu"
+  ],
+  "ancestors" : [
+    {
+      "description" : "",
+      "domClassList" : [
+
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "main",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "subrole" : "AXLandmarkMain",
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXWebArea",
+      "roleDescription" : "HTML content",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : "Paste Context Testbed"
+    },
+    {
+      "domClassList" : [
+
+      ],
+      "role" : "AXScrollArea",
+      "roleDescription" : "scroll area"
+    },
+    {
+      "domClassList" : [
+
+      ],
+      "identifier" : "bigBrowserWindow_B1A30F24-E17A-4CFB-8BBE-75EB5BFABEF2",
+      "role" : "AXWindow",
+      "roleDescription" : "standard window",
+      "subrole" : "AXStandardWindow",
+      "title" : "Cyprien: Paste Context T…"
+    },
+    {
+      "domClassList" : [
+
+      ],
+      "role" : "AXApplication",
+      "roleDescription" : "application",
+      "title" : "Dia"
+    }
+  ],
+  "app" : {
+    "bundleIdentifier" : "company.thebrowser.dia",
+    "name" : "Dia",
+    "pid" : 76940
+  },
+  "attributes" : [
+    {
+      "name" : "AXBlockQuoteLevel",
+      "value" : "0"
+    },
+    {
+      "name" : "AXChildren",
+      "value" : "[<AXUIElement 0x9134249c0> {pid=76940}, <AXUIElement 0x9134246f0> {pid=76940}, <AXUIElement 0x9134248d0> {pid=76940}]"
+    },
+    {
+      "name" : "AXColumnHeaderUIElements",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXCustomActions",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXCustomContent",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXDOMClassList",
+      "value" : "[box]"
+    },
+    {
+      "name" : "AXDOMIdentifier",
+      "value" : "lexical"
+    },
+    {
+      "name" : "AXDescription",
+      "value" : ""
+    },
+    {
+      "name" : "AXEditableAncestor",
+      "value" : "<AXUIElement 0x9134248d0> {pid=76940}"
+    },
+    {
+      "name" : "AXElementBusy",
+      "value" : "0"
+    },
+    {
+      "name" : "AXEnabled",
+      "value" : "1"
+    },
+    {
+      "name" : "AXEndTextMarker",
+      "value" : "<AXTextMarker 0x91303c0a0 [0x1fc459308]>{length = 56, bytes = 0x02000000450000000000000000000000 ... 4539393700000000}"
+    },
+    {
+      "name" : "AXFocusableAncestor",
+      "value" : "<AXUIElement 0x9134248d0> {pid=76940}"
+    },
+    {
+      "name" : "AXFocused",
+      "value" : "1"
+    },
+    {
+      "name" : "AXFrame",
+      "value" : "CGRect(x: 687.0, y: 833.0, width: 730.0, height: 86.0)"
+    },
+    {
+      "name" : "AXHelp",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXHighestEditableAncestor",
+      "value" : "<AXUIElement 0x9134248d0> {pid=76940}"
+    },
+    {
+      "name" : "AXInsertionPointLineNumber",
+      "value" : "1"
+    },
+    {
+      "name" : "AXLinkedUIElements",
+      "value" : "[]"
+    },
+    {
+      "name" : "AXNumberOfCharacters",
+      "value" : "9"
+    },
+    {
+      "name" : "AXParent",
+      "value" : "<AXUIElement 0x9134248d0> {pid=76940}"
+    },
+    {
+      "name" : "AXPlaceholderValue",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXPosition",
+      "value" : "CGPoint(x: 687.0, y: 833.0)"
+    },
+    {
+      "name" : "AXRequired",
+      "value" : "0"
+    },
+    {
+      "name" : "AXRole",
+      "value" : "AXTextArea"
+    },
+    {
+      "name" : "AXRoleDescription",
+      "value" : "text entry area"
+    },
+    {
+      "name" : "AXRows",
+      "value" : "[]"
+    },
+    {
+      "name" : "AXSelected",
+      "value" : "0"
+    },
+    {
+      "name" : "AXSelectedRows",
+      "value" : "[]"
+    },
+    {
+      "name" : "AXSelectedText",
+      "value" : ""
+    },
+    {
+      "name" : "AXSelectedTextMarkerRange",
+      "value" : "<AXTextMarkerRange 0x912c075c0 [0x1fc459308]>{startMarker:<AXTextMarker 0x91303c0a0 [0x1fc459308]>{length = 56, bytes = 0x0200000086010000feffffff05000000 ... 4539393700000000} endMarker:<AXTextMarker 0x91303c0f0 [0x1fc459308]>{length = 56, bytes = 0x0200000086010000feffffff05000000 ... 4539393700000000}}"
+    },
+    {
+      "name" : "AXSelectedTextRange",
+      "value" : "CFRange(location: 9, length: 0)"
+    },
+    {
+      "name" : "AXSelectedTextRanges",
+      "value" : "[CFRange(location: 9, length: 0)]"
+    },
+    {
+      "name" : "AXSize",
+      "value" : "CGSize(width: 730.0, height: 86.0)"
+    },
+    {
+      "name" : "AXStartTextMarker",
+      "value" : "<AXTextMarker 0x91303c0f0 [0x1fc459308]>{length = 56, bytes = 0x02000000140000000000000000000000 ... 4539393700000000}"
+    },
+    {
+      "name" : "AXSubrole",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXTitle",
+      "value" : ""
+    },
+    {
+      "name" : "AXTitleUIElement",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXTopLevelUIElement",
+      "value" : "<AXUIElement 0x9134248d0> {pid=76940}"
+    },
+    {
+      "name" : "AXURL",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXValue",
+      "value" : "hey\nthere"
+    },
+    {
+      "name" : "AXValueAutofillAvailable",
+      "value" : "0"
+    },
+    {
+      "name" : "AXVisibleCharacterRange",
+      "value" : "CFRange(location: 0, length: 9)"
+    },
+    {
+      "name" : "AXVisited",
+      "value" : "0"
+    },
+    {
+      "name" : "AXWindow",
+      "value" : "<AXUIElement 0x9134248d0> {pid=76940}"
+    },
+    {
+      "name" : "ChromeAXNodeId",
+      "value" : "63"
+    }
+  ],
+  "capturedAt" : "2026-10-01T20:30:03Z",
+  "element" : {
+    "description" : "",
+    "domClassList" : [
+      "box"
+    ],
+    "domIdentifier" : "lexical",
+    "numberOfCharacters" : 9,
+    "role" : "AXTextArea",
+    "roleDescription" : "text entry area",
+    "selectedRange" : {
+      "length" : 0,
+      "location" : 9
+    },
+    "title" : ""
+  },
+  "expectedResult" : " hello world",
+  "id" : "0649336A-B072-43DB-B62B-0E6F3066F4D8",
+  "note" : "dia-lexical case 10: after there (hey/empty/there)",
+  "parameterizedAttributes" : [
+    "AXAttributedStringForRange",
+    "AXAttributedStringForTextMarkerRange",
+    "AXAttributedStringForTextMarkerRangeWithOptions",
+    "AXBoundsForRange",
+    "AXBoundsForTextMarkerRange",
+    "AXEndTextMarkerForBounds",
+    "AXIndexForChildUIElement",
+    "AXLeftLineTextMarkerRangeForTextMarker",
+    "AXLeftWordTextMarkerRangeForTextMarker",
+    "AXLengthForTextMarkerRange",
+    "AXLineForIndex",
+    "AXLineForTextMarker",
+    "AXLineTextMarkerRangeForTextMarker",
+    "AXNextLineEndTextMarkerForTextMarker",
+    "AXNextParagraphEndTextMarkerForTextMarker",
+    "AXNextSentenceEndTextMarkerForTextMarker",
+    "AXNextTextMarkerForTextMarker",
+    "AXNextWordEndTextMarkerForTextMarker",
+    "AXParagraphTextMarkerRangeForTextMarker",
+    "AXPreviousLineStartTextMarkerForTextMarker",
+    "AXPreviousParagraphStartTextMarkerForTextMarker",
+    "AXPreviousSentenceStartTextMarkerForTextMarker",
+    "AXPreviousTextMarkerForTextMarker",
+    "AXPreviousWordStartTextMarkerForTextMarker",
+    "AXRTFForRange",
+    "AXRangeForIndex",
+    "AXRangeForLine",
+    "AXRangeForPosition",
+    "AXReplaceRangeWithText",
+    "AXRightLineTextMarkerRangeForTextMarker",
+    "AXRightWordTextMarkerRangeForTextMarker",
+    "AXSelectTextWithCriteria",
+    "AXSentenceTextMarkerRangeForTextMarker",
+    "AXStartTextMarkerForBounds",
+    "AXStringForRange",
+    "AXStringForTextMarkerRange",
+    "AXStyleRangeForIndex",
+    "AXStyleTextMarkerRangeForTextMarker",
+    "AXTextMarkerForPosition",
+    "AXTextMarkerRangeForLine",
+    "AXTextMarkerRangeForUIElement",
+    "AXTextMarkerRangeForUnorderedTextMarkers",
+    "AXUIElementCountForSearchPredicate",
+    "AXUIElementForTextMarker",
+    "AXUIElementsForSearchPredicate"
+  ],
+  "sampleText" : "Hello world",
+  "strategies" : [
+    {
+      "name" : "AXValue + AXSelectedTextRange",
+      "summary" : "Full AXValue split at the selection start.",
+      "textAfterCursor" : "",
+      "textBeforeCursor" : "hey\nthere"
+    },
+    {
+      "name" : "Children tree walk",
+      "summary" : "Rebuilds lines from AXStaticText children, correcting Chromium's offsets. Slow on big documents.",
+      "textAfterCursor" : "",
+      "textBeforeCursor" : "hey\n\nthere"
+    },
+    {
+      "name" : "TextMarker paragraphs",
+      "summary" : "Reads the cursor's paragraph (and earlier ones while blank) via text markers. Fast at any size.",
+      "textBeforeCursor" : "there"
+    },
+    {
+      "name" : "TextMarker selection",
+      "summary" : "AXStringForTextMarkerRange(AXStartTextMarker..cursor). Can span the whole page.",
+      "textBeforeCursor" : "t\">Native single-line field.￼2. <textarea>Native multi-line field.￼3. contenteditable (div / br)Raw contenteditable, browser default line handling.\n4. contenteditable (<p> per paragraph)Like LinkedIn's message box: every line is its own <p>.\n5. Quill 2Used by LinkedIn posts, Slack-like apps, many CMSs.Normal￼￼￼￼￼￼￼￼￼￼￼￼Quill editor\n￼6. Tiptap 2 (ProseMirror)ProseMirror powers Notion-likes, Linear, GitLab, Atlassian, Substack.\n￼7. LexicalMeta's editor (Facebook, WhatsApp Web, Instagram).hey\nthere"
+    },
+    {
+      "name" : "CFRange line by line",
+      "summary" : "AXLineForIndex + AXRangeForLine + AXStringForRange. Lines joined without \\n.",
+      "textBeforeCursor" : "hey\nthere"
+    },
+    {
+      "name" : "TextMarker line by index",
+      "summary" : "AXLineForTextMarker + AXTextMarkerRangeForLine. Lines joined without \\n."
+    },
+    {
+      "name" : "TextMarker line walk",
+      "summary" : "AXPreviousLineStartTextMarkerForTextMarker walk. Lines joined without \\n.",
+      "textBeforeCursor" : "<input type=\"text\">Native single-line field.2. <textarea>Native multi-line field.3. contenteditable (div / br)Raw contenteditable, browser default line handling.\n4. contenteditable (<p> per paragraph)Like LinkedIn's message box: every line is its own <p>.\n5. Quill 2Used by LinkedIn posts, Slack-like apps, many CMSs.NormalQuill editor\n6. Tiptap 2 (ProseMirror)ProseMirror powers Notion-likes, Linear, GitLab, Atlassian, Substack.\n7. LexicalMeta's editor (Facebook, WhatsApp Web, Instagram).hey\nthere"
+    },
+    {
+      "name" : "Empty field",
+      "summary" : "Treats the field as empty (placeholder text exposed as value).",
+      "textAfterCursor" : "",
+      "textBeforeCursor" : ""
+    }
+  ],
+  "tree" : {
+    "children" : [
+      {
+        "children" : [
+          {
+            "domClassList" : [
+
+            ],
+            "id" : "root.0.0",
+            "isTruncated" : false,
+            "numberOfCharacters" : 0,
+            "role" : "AXStaticText",
+            "selectedRange" : {
+              "length" : 0,
+              "location" : 0
+            },
+            "valuePreview" : "hey"
+          }
+        ],
+        "domClassList" : [
+
+        ],
+        "id" : "root.0",
+        "isTruncated" : false,
+        "numberOfCharacters" : 0,
+        "role" : "AXGroup",
+        "selectedRange" : {
+          "length" : 0,
+          "location" : 0
+        },
+        "valuePreview" : ""
+      },
+      {
+        "domClassList" : [
+
+        ],
+        "id" : "root.1",
+        "isTruncated" : false,
+        "numberOfCharacters" : 0,
+        "role" : "AXGroup",
+        "selectedRange" : {
+          "length" : 0,
+          "location" : 0
+        },
+        "subrole" : "AXEmptyGroup",
+        "valuePreview" : ""
+      },
+      {
+        "children" : [
+          {
+            "domClassList" : [
+
+            ],
+            "id" : "root.2.0",
+            "isTruncated" : false,
+            "numberOfCharacters" : 0,
+            "role" : "AXStaticText",
+            "selectedRange" : {
+              "length" : 0,
+              "location" : 5
+            },
+            "valuePreview" : "there"
+          }
+        ],
+        "domClassList" : [
+
+        ],
+        "id" : "root.2",
+        "isTruncated" : false,
+        "numberOfCharacters" : 0,
+        "role" : "AXGroup",
+        "selectedRange" : {
+          "length" : 0,
+          "location" : 5
+        },
+        "valuePreview" : ""
+      }
+    ],
+    "domClassList" : [
+      "box"
+    ],
+    "id" : "root",
+    "isTruncated" : false,
+    "numberOfCharacters" : 9,
+    "role" : "AXTextArea",
+    "selectedRange" : {
+      "length" : 0,
+      "location" : 9
+    },
+    "valuePreview" : "hey\nthere"
+  }
+}

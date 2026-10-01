@@ -7,39 +7,19 @@ struct RawCursorTextContext: Equatable, Hashable {
   let text: String
   let cursorPosition: Int
   
-  func printContext() {
-    guard let cursorIndex = text.index(text.startIndex, offsetBy: cursorPosition, limitedBy: text.endIndex) else {
-      logger.error("Failed to get string index for (\(text)) \(cursorPosition)")
-      return
-    }
-    let res = text.prefix(upTo: cursorIndex) + "<CURSOR>" + text.suffix(from: cursorIndex)
-    logger.debug("Context: (\(res))")
+  /// Text up to the cursor. The cursor offset is in UTF-16 units (as AX reports it)
+  /// and is clamped, since some apps report offsets past the end of `AXValue`.
+  var textBeforeCursor: Substring {
+    let offset = min(max(cursorPosition, 0), text.utf16.count)
+    let index = String.Index(utf16Offset: offset, in: text)
+    return text[..<index]
   }
-  
-  func toCursorTextContext() -> CursorTextContext {
-    guard text.count > 0 else { return .empty }
-    
-    var previousNonWhitespaceCharacter: Character? = nil
-    var hasLineBreakBeforeCursor = false
-    
-    let index = String.Index(utf16Offset: cursorPosition, in: text)
-    let prefix = text[..<index]
-    logger.info("Prefix=\"\(prefix)\"")
 
-    for ch in prefix.reversed() {
-      if ch.isNewline {
-        hasLineBreakBeforeCursor = true
-      } else if !ch.isWhitespace {
-        previousNonWhitespaceCharacter = ch
-        break
-      }
-    }
-    
-    return CursorTextContext(
-      previousCharacter: prefix.last,
-      previousNonWhitespaceCharacter: previousNonWhitespaceCharacter,
-      hasLineBreakBeforeCursor: hasLineBreakBeforeCursor
-    )
+  /// Text after the cursor, see ``textBeforeCursor``.
+  var textAfterCursor: Substring {
+    let offset = min(max(cursorPosition, 0), text.utf16.count)
+    let index = String.Index(utf16Offset: offset, in: text)
+    return text[index...]
   }
 }
 
@@ -56,6 +36,27 @@ struct CursorTextContext: Equatable, Hashable {
     self.previousCharacter = previousCharacter
     self.previousNonWhitespaceCharacter = previousNonWhitespaceCharacter
     self.hasLineBreakBeforeCursor = hasLineBreakBeforeCursor
+  }
+
+  /// Derives the context from whatever text sits before the cursor.
+  init<S: StringProtocol>(textBeforeCursor prefix: S) {
+    var previousNonWhitespaceCharacter: Character? = nil
+    var hasLineBreakBeforeCursor = false
+
+    for ch in prefix.reversed() {
+      if ch.isNewline {
+        hasLineBreakBeforeCursor = true
+      } else if !ch.isWhitespace {
+        previousNonWhitespaceCharacter = ch
+        break
+      }
+    }
+
+    self.init(
+      previousCharacter: prefix.last,
+      previousNonWhitespaceCharacter: previousNonWhitespaceCharacter,
+      hasLineBreakBeforeCursor: hasLineBreakBeforeCursor
+    )
   }
 
   static let empty = CursorTextContext(

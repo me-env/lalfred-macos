@@ -1,0 +1,584 @@
+{
+  "actions" : [
+    "AXPress",
+    "AXScrollToVisible",
+    "AXShowMenu"
+  ],
+  "ancestors" : [
+    {
+      "description" : "",
+      "domClassList" : [
+        "aislash-editor-grid"
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+        "ai-input-full-input-box",
+        "full-input-box"
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+        "composer-input-blur-wrapper"
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+        "composer-bar",
+        "editor",
+        "empty"
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+        "split-view-view",
+        "visible"
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+        "split-view-container"
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+        "monaco-split-view2",
+        "vertical",
+        "separator-border"
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+        "monaco-grid-view"
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    }
+  ],
+  "app" : {
+    "bundleIdentifier" : "com.todesktop.230313mzl4w4u92",
+    "name" : "Cursor",
+    "pid" : 68710
+  },
+  "attributes" : [
+    {
+      "name" : "AXAccessKey",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXBlockQuoteLevel",
+      "value" : "0"
+    },
+    {
+      "name" : "AXChildren",
+      "value" : "[<AXUIElement 0xa6d4248a0> {pid=68710}, <AXUIElement 0xa6d424a50> {pid=68710}]"
+    },
+    {
+      "name" : "AXColumnHeaderUIElements",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXCustomContent",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXDOMClassList",
+      "value" : "[aislash-editor-input]"
+    },
+    {
+      "name" : "AXDOMIdentifier",
+      "value" : ""
+    },
+    {
+      "name" : "AXDescription",
+      "value" : ""
+    },
+    {
+      "name" : "AXEditableAncestor",
+      "value" : "<AXUIElement 0xa6d424a50> {pid=68710}"
+    },
+    {
+      "name" : "AXElementBusy",
+      "value" : "0"
+    },
+    {
+      "name" : "AXEnabled",
+      "value" : "1"
+    },
+    {
+      "name" : "AXEndTextMarker",
+      "value" : "<AXTextMarker 0xa6d05c0a0 [0x1fc459308]>{length = 56, bytes = 0x02000000aa0800000000000000000000 ... 3546413700aaaaaa}"
+    },
+    {
+      "name" : "AXFocusableAncestor",
+      "value" : "<AXUIElement 0xa6d424a50> {pid=68710}"
+    },
+    {
+      "name" : "AXFocused",
+      "value" : "1"
+    },
+    {
+      "name" : "AXFrame",
+      "value" : "CGRect(x: 27.0, y: 120.0, width: 663.0, height: 39.0)"
+    },
+    {
+      "name" : "AXHelp",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXHighestEditableAncestor",
+      "value" : "<AXUIElement 0xa6d424a50> {pid=68710}"
+    },
+    {
+      "name" : "AXInsertionPointLineNumber",
+      "value" : "0"
+    },
+    {
+      "name" : "AXInvalid",
+      "value" : "false"
+    },
+    {
+      "name" : "AXLanguage",
+      "value" : "en"
+    },
+    {
+      "name" : "AXLinkedUIElements",
+      "value" : "[]"
+    },
+    {
+      "name" : "AXNumberOfCharacters",
+      "value" : "9"
+    },
+    {
+      "name" : "AXOwns",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXParent",
+      "value" : "<AXUIElement 0xa6d424a50> {pid=68710}"
+    },
+    {
+      "name" : "AXPlaceholderValue",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXPosition",
+      "value" : "CGPoint(x: 27.0, y: 120.0)"
+    },
+    {
+      "name" : "AXRequired",
+      "value" : "0"
+    },
+    {
+      "name" : "AXRole",
+      "value" : "AXTextArea"
+    },
+    {
+      "name" : "AXRoleDescription",
+      "value" : "text entry area"
+    },
+    {
+      "name" : "AXRows",
+      "value" : "[]"
+    },
+    {
+      "name" : "AXSelected",
+      "value" : "0"
+    },
+    {
+      "name" : "AXSelectedRows",
+      "value" : "[]"
+    },
+    {
+      "name" : "AXSelectedText",
+      "value" : ""
+    },
+    {
+      "name" : "AXSelectedTextMarkerRange",
+      "value" : "<AXTextMarkerRange 0xa6cc075c0 [0x1fc459308]>{startMarker:<AXTextMarker 0xa6d05c0a0 [0x1fc459308]>{length = 56, bytes = 0x02000000d5170000feffffff03000000 ... 3546413700aaaaaa} endMarker:<AXTextMarker 0xa6d05c0f0 [0x1fc459308]>{length = 56, bytes = 0x02000000d5170000feffffff03000000 ... 3546413700aaaaaa}}"
+    },
+    {
+      "name" : "AXSelectedTextRange",
+      "value" : "CFRange(location: 3, length: 0)"
+    },
+    {
+      "name" : "AXSelectedTextRanges",
+      "value" : "[CFRange(location: 3, length: 0)]"
+    },
+    {
+      "name" : "AXSize",
+      "value" : "CGSize(width: 663.0, height: 39.0)"
+    },
+    {
+      "name" : "AXStartTextMarker",
+      "value" : "<AXTextMarker 0xa6d05c0f0 [0x1fc459308]>{length = 56, bytes = 0x02000000020000000000000000000000 ... 3546413700aaaaaa}"
+    },
+    {
+      "name" : "AXSubrole",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXTitle",
+      "value" : ""
+    },
+    {
+      "name" : "AXTitleUIElement",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXTopLevelUIElement",
+      "value" : "<AXUIElement 0xa6d424a50> {pid=68710}"
+    },
+    {
+      "name" : "AXURL",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXValue",
+      "value" : "hey\nthere"
+    },
+    {
+      "name" : "AXValueAutofillAvailable",
+      "value" : "0"
+    },
+    {
+      "name" : "AXVisibleCharacterRange",
+      "value" : "CFRange(location: 0, length: 9)"
+    },
+    {
+      "name" : "AXVisited",
+      "value" : "0"
+    },
+    {
+      "name" : "AXWindow",
+      "value" : "<AXUIElement 0xa6d424a50> {pid=68710}"
+    },
+    {
+      "name" : "ChromeAXNodeId",
+      "value" : "5135"
+    }
+  ],
+  "capturedAt" : "2026-10-01T20:35:25Z",
+  "element" : {
+    "description" : "",
+    "domClassList" : [
+      "aislash-editor-input"
+    ],
+    "domIdentifier" : "",
+    "numberOfCharacters" : 9,
+    "role" : "AXTextArea",
+    "roleDescription" : "text entry area",
+    "selectedRange" : {
+      "length" : 0,
+      "location" : 3
+    },
+    "title" : ""
+  },
+  "expectedResult" : " hello world",
+  "id" : "E194B36E-29BF-40CF-99DC-B5BE33F70BE3",
+  "note" : "cursor-chat case 9: end of line 1 (hey/there)",
+  "parameterizedAttributes" : [
+    "AXAttributedStringForRange",
+    "AXAttributedStringForTextMarkerRange",
+    "AXAttributedStringForTextMarkerRangeWithOptions",
+    "AXBoundsForRange",
+    "AXBoundsForTextMarkerRange",
+    "AXEndTextMarkerForBounds",
+    "AXIndexForChildUIElement",
+    "AXLeftLineTextMarkerRangeForTextMarker",
+    "AXLeftWordTextMarkerRangeForTextMarker",
+    "AXLengthForTextMarkerRange",
+    "AXLineForIndex",
+    "AXLineForTextMarker",
+    "AXLineTextMarkerRangeForTextMarker",
+    "AXNextLineEndTextMarkerForTextMarker",
+    "AXNextParagraphEndTextMarkerForTextMarker",
+    "AXNextSentenceEndTextMarkerForTextMarker",
+    "AXNextTextMarkerForTextMarker",
+    "AXNextWordEndTextMarkerForTextMarker",
+    "AXParagraphTextMarkerRangeForTextMarker",
+    "AXPreviousLineStartTextMarkerForTextMarker",
+    "AXPreviousParagraphStartTextMarkerForTextMarker",
+    "AXPreviousSentenceStartTextMarkerForTextMarker",
+    "AXPreviousTextMarkerForTextMarker",
+    "AXPreviousWordStartTextMarkerForTextMarker",
+    "AXRTFForRange",
+    "AXRangeForIndex",
+    "AXRangeForLine",
+    "AXRangeForPosition",
+    "AXReplaceRangeWithText",
+    "AXRightLineTextMarkerRangeForTextMarker",
+    "AXRightWordTextMarkerRangeForTextMarker",
+    "AXSelectTextWithCriteria",
+    "AXSentenceTextMarkerRangeForTextMarker",
+    "AXStartTextMarkerForBounds",
+    "AXStringForRange",
+    "AXStringForTextMarkerRange",
+    "AXStyleRangeForIndex",
+    "AXStyleTextMarkerRangeForTextMarker",
+    "AXTextMarkerForPosition",
+    "AXTextMarkerRangeForLine",
+    "AXTextMarkerRangeForUIElement",
+    "AXTextMarkerRangeForUnorderedTextMarkers",
+    "AXUIElementCountForSearchPredicate",
+    "AXUIElementForTextMarker",
+    "AXUIElementsForSearchPredicate"
+  ],
+  "sampleText" : "Hello world",
+  "strategies" : [
+    {
+      "name" : "AXValue + AXSelectedTextRange",
+      "summary" : "Full AXValue split at the selection start.",
+      "textAfterCursor" : "\nthere",
+      "textBeforeCursor" : "hey"
+    },
+    {
+      "name" : "Children tree walk",
+      "summary" : "Rebuilds lines from AXStaticText children, correcting Chromium's offsets. Slow on big documents.",
+      "textAfterCursor" : "\nthere",
+      "textBeforeCursor" : "hey"
+    },
+    {
+      "name" : "TextMarker paragraphs",
+      "summary" : "Reads the cursor's paragraph (and earlier ones while blank) via text markers. Fast at any size.",
+      "textBeforeCursor" : "hey"
+    },
+    {
+      "name" : "TextMarker selection",
+      "summary" : "AXStringForTextMarkerRange(AXStartTextMarker..cursor). Can span the whole page.",
+      "textBeforeCursor" : "￼￼￼￼￼￼SearchUpgrade to Pro￼￼￼￼￼￼New Agent￼￼hey"
+    },
+    {
+      "name" : "CFRange line by line",
+      "summary" : "AXLineForIndex + AXRangeForLine + AXStringForRange. Lines joined without \\n."
+    },
+    {
+      "name" : "TextMarker line by index",
+      "summary" : "AXLineForTextMarker + AXTextMarkerRangeForLine. Lines joined without \\n."
+    },
+    {
+      "name" : "TextMarker line walk",
+      "summary" : "AXPreviousLineStartTextMarkerForTextMarker walk. Lines joined without \\n.",
+      "textBeforeCursor" : "SearchUpgrade to ProNew Agenthey"
+    },
+    {
+      "name" : "Empty field",
+      "summary" : "Treats the field as empty (placeholder text exposed as value).",
+      "textAfterCursor" : "",
+      "textBeforeCursor" : ""
+    }
+  ],
+  "tree" : {
+    "children" : [
+      {
+        "children" : [
+          {
+            "domClassList" : [
+
+            ],
+            "id" : "root.0.0",
+            "isTruncated" : false,
+            "numberOfCharacters" : 0,
+            "role" : "AXStaticText",
+            "selectedRange" : {
+              "length" : 0,
+              "location" : 3
+            },
+            "valuePreview" : "hey"
+          }
+        ],
+        "domClassList" : [
+
+        ],
+        "id" : "root.0",
+        "isTruncated" : false,
+        "numberOfCharacters" : 0,
+        "role" : "AXGroup",
+        "selectedRange" : {
+          "length" : 0,
+          "location" : 3
+        },
+        "valuePreview" : ""
+      },
+      {
+        "children" : [
+          {
+            "domClassList" : [
+
+            ],
+            "id" : "root.1.0",
+            "isTruncated" : false,
+            "numberOfCharacters" : 0,
+            "role" : "AXStaticText",
+            "selectedRange" : {
+              "length" : 0,
+              "location" : 0
+            },
+            "valuePreview" : "there"
+          }
+        ],
+        "domClassList" : [
+
+        ],
+        "id" : "root.1",
+        "isTruncated" : false,
+        "numberOfCharacters" : 0,
+        "role" : "AXGroup",
+        "selectedRange" : {
+          "length" : 0,
+          "location" : 0
+        },
+        "valuePreview" : ""
+      }
+    ],
+    "domClassList" : [
+      "aislash-editor-input"
+    ],
+    "id" : "root",
+    "isTruncated" : false,
+    "numberOfCharacters" : 9,
+    "role" : "AXTextArea",
+    "selectedRange" : {
+      "length" : 0,
+      "location" : 3
+    },
+    "valuePreview" : "hey\nthere"
+  }
+}

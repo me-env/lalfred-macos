@@ -213,6 +213,14 @@ struct lalfredApp: App {
     .defaultLaunchBehavior(.suppressed)
     .handlesExternalEvents(matching: ["main"])
 
+    Window("Paste Context Inspector", id: PasteContextInspectorView.windowID) {
+      PasteContextInspectorView()
+    }
+    // Floats above other apps so you can click around in them and watch it update.
+    .windowLevel(.floating)
+    .defaultSize(width: 560, height: 760)
+    .restorationBehavior(.disabled)
+
     MenuBarExtra("L'Alfred", image: "MenuBarIcon", isInserted: $showMenuBarExtra) {
       StatusMenu()
         .environment(\.sparkleUpdater, updaterController.updater)

@@ -1,0 +1,273 @@
+{
+  "actions": [
+    "AXShowMenu"
+  ],
+  "ancestors": [
+    {
+      "domClassList": [],
+      "numberOfCharacters": 0,
+      "role": "AXGroup",
+      "roleDescription": "",
+      "selectedRange": {
+        "length": 0,
+        "location": 0
+      }
+    },
+    {
+      "domClassList": [],
+      "numberOfCharacters": 0,
+      "role": "AXGroup",
+      "roleDescription": "page",
+      "selectedRange": {
+        "length": 0,
+        "location": 0
+      }
+    },
+    {
+      "description": "word-scratch  -  Compatibility Mode",
+      "domClassList": [],
+      "numberOfCharacters": 0,
+      "role": "AXLayoutArea",
+      "roleDescription": "",
+      "selectedRange": {
+        "length": 0,
+        "location": 0
+      }
+    },
+    {
+      "domClassList": [],
+      "numberOfCharacters": 0,
+      "role": "AXScrollArea",
+      "roleDescription": "scroll area",
+      "selectedRange": {
+        "length": 0,
+        "location": 0
+      }
+    },
+    {
+      "domClassList": [],
+      "role": "AXGroup",
+      "roleDescription": "group"
+    },
+    {
+      "domClassList": [],
+      "identifier": "Document Pane",
+      "role": "AXSplitGroup",
+      "roleDescription": "split group"
+    },
+    {
+      "domClassList": [],
+      "role": "AXSplitGroup",
+      "roleDescription": "split group"
+    },
+    {
+      "domClassList": [],
+      "role": "AXGroup",
+      "roleDescription": "group",
+      "subrole": "AXHostingView"
+    },
+    {
+      "domClassList": [],
+      "role": "AXSplitGroup",
+      "roleDescription": "split group"
+    },
+    {
+      "domClassList": [],
+      "identifier": "_NS:13",
+      "role": "AXWindow",
+      "roleDescription": "standard window",
+      "subrole": "AXStandardWindow",
+      "title": "word-scratch  -  Compatibility Mode"
+    },
+    {
+      "domClassList": [],
+      "role": "AXApplication",
+      "roleDescription": "application",
+      "title": "Word"
+    }
+  ],
+  "app": {
+    "bundleIdentifier": "com.microsoft.Word",
+    "name": "Microsoft Word",
+    "pid": 69871
+  },
+  "attributes": [
+    {
+      "name": "AXChildren",
+      "value": "[]"
+    },
+    {
+      "name": "AXCustomContent",
+      "value": "<unavailable: -25200>"
+    },
+    {
+      "name": "AXDescription",
+      "value": "Page 1 content"
+    },
+    {
+      "name": "AXFocused",
+      "value": "1"
+    },
+    {
+      "name": "AXFrame",
+      "value": "CGRect(x: 359.0, y: 666.0, width: 612.0, height: 648.0)"
+    },
+    {
+      "name": "AXHandles",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXHelp",
+      "value": ""
+    },
+    {
+      "name": "AXInsertionPointLineNumber",
+      "value": "1"
+    },
+    {
+      "name": "AXLinkedUIElements",
+      "value": "[]"
+    },
+    {
+      "name": "AXNumberOfCharacters",
+      "value": "4"
+    },
+    {
+      "name": "AXParent",
+      "value": "<AXUIElement 0xaf488c000> {pid=69871}"
+    },
+    {
+      "name": "AXPosition",
+      "value": "CGPoint(x: 359.0, y: 666.0)"
+    },
+    {
+      "name": "AXRectInParentSpace",
+      "value": "CGRect(x: 0.0, y: 432.0, width: 612.0, height: 648.0)"
+    },
+    {
+      "name": "AXRole",
+      "value": "AXTextArea"
+    },
+    {
+      "name": "AXRoleDescription",
+      "value": "text entry area"
+    },
+    {
+      "name": "AXSelectedChildren",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXSelectedText",
+      "value": ""
+    },
+    {
+      "name": "AXSelectedTextRange",
+      "value": "CFRange(location: 4, length: 0)"
+    },
+    {
+      "name": "AXSelectedTextRanges",
+      "value": "[CFRange(location: 4, length: 0)]"
+    },
+    {
+      "name": "AXSharedCharacterRange",
+      "value": "CFRange(location: 0, length: 4)"
+    },
+    {
+      "name": "AXSharedTextUIElements",
+      "value": "[<AXUIElement 0xaf488c000> {pid=69871}]"
+    },
+    {
+      "name": "AXSize",
+      "value": "CGSize(width: 612.0, height: 648.0)"
+    },
+    {
+      "name": "AXTopLevelUIElement",
+      "value": "<AXUIElement 0xaf488c000> {pid=69871}"
+    },
+    {
+      "name": "AXValue",
+      "value": "hey\n"
+    },
+    {
+      "name": "AXVisibleCharacterRange",
+      "value": "CFRange(location: 0, length: 4)"
+    },
+    {
+      "name": "AXVisibleChildren",
+      "value": "[]"
+    },
+    {
+      "name": "AXWindow",
+      "value": "<AXUIElement 0xaf488c000> {pid=69871}"
+    }
+  ],
+  "capturedAt": "2026-10-01T18:18:28Z",
+  "element": {
+    "description": "Page 1 content",
+    "domClassList": [],
+    "numberOfCharacters": 4,
+    "role": "AXTextArea",
+    "roleDescription": "text entry area",
+    "selectedRange": {
+      "length": 0,
+      "location": 4
+    }
+  },
+  "expectedResult": "Hello world",
+  "id": "200801BE-3486-4DF7-A0AF-36BAC28EFEF7",
+  "note": "word case 7: start of empty line 2",
+  "parameterizedAttributes": [
+    "AXAttributedStringForRange",
+    "AXBoundsForRange",
+    "AXLineForIndex",
+    "AXRangeForIndex",
+    "AXRangeForLine",
+    "AXRangeForPosition",
+    "AXReplaceRangeWithText",
+    "AXStringForRange"
+  ],
+  "sampleText": "Hello world",
+  "strategies": [
+    {
+      "name": "AXValue + AXSelectedTextRange",
+      "summary": "Production default: full AXValue split at the selection start.",
+      "textAfterCursor": "",
+      "textBeforeCursor": "hey\n"
+    },
+    {
+      "name": "Children tree walk",
+      "summary": "Production for Cursor's chat input: rebuilds lines from AXStaticText children.",
+      "textAfterCursor": "",
+      "textBeforeCursor": ""
+    },
+    {
+      "name": "TextMarker selection",
+      "summary": "AXStringForTextMarkerRange(AXStartTextMarker..cursor). WebKit / Chromium."
+    },
+    {
+      "name": "CFRange line by line",
+      "summary": "AXLineForIndex + AXRangeForLine + AXStringForRange. Lines joined without \\n.",
+      "textBeforeCursor": "hey\n"
+    },
+    {
+      "name": "TextMarker line by index",
+      "summary": "AXLineForTextMarker + AXTextMarkerRangeForLine. Lines joined without \\n."
+    },
+    {
+      "name": "TextMarker line walk",
+      "summary": "AXPreviousLineStartTextMarkerForTextMarker walk. Lines joined without \\n."
+    }
+  ],
+  "tree": {
+    "domClassList": [],
+    "id": "root",
+    "isTruncated": false,
+    "numberOfCharacters": 4,
+    "role": "AXTextArea",
+    "selectedRange": {
+      "length": 0,
+      "location": 4
+    },
+    "valuePreview": "hey\n"
+  }
+}

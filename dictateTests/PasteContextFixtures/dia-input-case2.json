@@ -1,0 +1,407 @@
+{
+  "actions" : [
+    "AXScrollToVisible",
+    "AXShowMenu"
+  ],
+  "ancestors" : [
+    {
+      "description" : "",
+      "domClassList" : [
+
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "group",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXGroup",
+      "roleDescription" : "main",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "subrole" : "AXLandmarkMain",
+      "title" : ""
+    },
+    {
+      "description" : "",
+      "domClassList" : [
+
+      ],
+      "domIdentifier" : "",
+      "numberOfCharacters" : 0,
+      "role" : "AXWebArea",
+      "roleDescription" : "HTML content",
+      "selectedRange" : {
+        "length" : 0,
+        "location" : 0
+      },
+      "title" : "Paste Context Testbed"
+    },
+    {
+      "domClassList" : [
+
+      ],
+      "role" : "AXScrollArea",
+      "roleDescription" : "scroll area"
+    },
+    {
+      "domClassList" : [
+
+      ],
+      "identifier" : "bigBrowserWindow_B1A30F24-E17A-4CFB-8BBE-75EB5BFABEF2",
+      "role" : "AXWindow",
+      "roleDescription" : "standard window",
+      "subrole" : "AXStandardWindow",
+      "title" : "Cyprien: Paste Context T…"
+    },
+    {
+      "domClassList" : [
+
+      ],
+      "role" : "AXApplication",
+      "roleDescription" : "application",
+      "title" : "Dia"
+    }
+  ],
+  "app" : {
+    "bundleIdentifier" : "company.thebrowser.dia",
+    "name" : "Dia",
+    "pid" : 76940
+  },
+  "attributes" : [
+    {
+      "name" : "AXAccessKey",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXBlockQuoteLevel",
+      "value" : "0"
+    },
+    {
+      "name" : "AXChildren",
+      "value" : "[]"
+    },
+    {
+      "name" : "AXColumnHeaderUIElements",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXCustomActions",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXCustomContent",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXDOMClassList",
+      "value" : "[]"
+    },
+    {
+      "name" : "AXDOMIdentifier",
+      "value" : "input"
+    },
+    {
+      "name" : "AXDescription",
+      "value" : "testbed input"
+    },
+    {
+      "name" : "AXEditableAncestor",
+      "value" : "<AXUIElement 0xb7d424720> {pid=76940}"
+    },
+    {
+      "name" : "AXElementBusy",
+      "value" : "0"
+    },
+    {
+      "name" : "AXEnabled",
+      "value" : "1"
+    },
+    {
+      "name" : "AXEndTextMarker",
+      "value" : "<AXTextMarker 0xb7d48c050 [0x1fc459308]>{length = 56, bytes = 0x02000000450000000000000000000000 ... 4539393700000000}"
+    },
+    {
+      "name" : "AXFocusableAncestor",
+      "value" : "<AXUIElement 0xb7d424720> {pid=76940}"
+    },
+    {
+      "name" : "AXFocused",
+      "value" : "1"
+    },
+    {
+      "name" : "AXFrame",
+      "value" : "CGRect(x: 687.0, y: 213.0, width: 730.0, height: 41.0)"
+    },
+    {
+      "name" : "AXHelp",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXHighestEditableAncestor",
+      "value" : "<AXUIElement 0xb7d424720> {pid=76940}"
+    },
+    {
+      "name" : "AXInsertionPointLineNumber",
+      "value" : "0"
+    },
+    {
+      "name" : "AXInvalid",
+      "value" : "false"
+    },
+    {
+      "name" : "AXLinkedUIElements",
+      "value" : "[]"
+    },
+    {
+      "name" : "AXNumberOfCharacters",
+      "value" : "3"
+    },
+    {
+      "name" : "AXOwns",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXParent",
+      "value" : "<AXUIElement 0xb7d424720> {pid=76940}"
+    },
+    {
+      "name" : "AXPlaceholderValue",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXPosition",
+      "value" : "CGPoint(x: 687.0, y: 213.0)"
+    },
+    {
+      "name" : "AXRequired",
+      "value" : "0"
+    },
+    {
+      "name" : "AXRole",
+      "value" : "AXTextField"
+    },
+    {
+      "name" : "AXRoleDescription",
+      "value" : "text field"
+    },
+    {
+      "name" : "AXRows",
+      "value" : "[]"
+    },
+    {
+      "name" : "AXSelected",
+      "value" : "0"
+    },
+    {
+      "name" : "AXSelectedRows",
+      "value" : "[]"
+    },
+    {
+      "name" : "AXSelectedText",
+      "value" : ""
+    },
+    {
+      "name" : "AXSelectedTextMarkerRange",
+      "value" : "<AXTextMarkerRange 0xb7cc075c0 [0x1fc459308]>{startMarker:<AXTextMarker 0xb7d48c050 [0x1fc459308]>{length = 56, bytes = 0x0200000022000000feffffff03000000 ... 4539393700000000} endMarker:<AXTextMarker 0xb7d48c0f0 [0x1fc459308]>{length = 56, bytes = 0x0200000022000000feffffff03000000 ... 4539393700000000}}"
+    },
+    {
+      "name" : "AXSelectedTextRange",
+      "value" : "CFRange(location: 3, length: 0)"
+    },
+    {
+      "name" : "AXSelectedTextRanges",
+      "value" : "[CFRange(location: 3, length: 0)]"
+    },
+    {
+      "name" : "AXSize",
+      "value" : "CGSize(width: 730.0, height: 41.0)"
+    },
+    {
+      "name" : "AXStartTextMarker",
+      "value" : "<AXTextMarker 0xb7d48c0f0 [0x1fc459308]>{length = 56, bytes = 0x02000000140000000000000000000000 ... 4539393700000000}"
+    },
+    {
+      "name" : "AXSubrole",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXTitle",
+      "value" : "testbed input"
+    },
+    {
+      "name" : "AXTitleUIElement",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXTopLevelUIElement",
+      "value" : "<AXUIElement 0xb7d424720> {pid=76940}"
+    },
+    {
+      "name" : "AXURL",
+      "value" : "<unavailable: -25212>"
+    },
+    {
+      "name" : "AXValue",
+      "value" : "hey"
+    },
+    {
+      "name" : "AXValueAutofillAvailable",
+      "value" : "0"
+    },
+    {
+      "name" : "AXVisibleCharacterRange",
+      "value" : "CFRange(location: 0, length: 3)"
+    },
+    {
+      "name" : "AXVisited",
+      "value" : "0"
+    },
+    {
+      "name" : "AXWindow",
+      "value" : "<AXUIElement 0xb7d424720> {pid=76940}"
+    },
+    {
+      "name" : "ChromeAXNodeId",
+      "value" : "34"
+    }
+  ],
+  "capturedAt" : "2026-10-01T20:26:08Z",
+  "element" : {
+    "description" : "testbed input",
+    "domClassList" : [
+
+    ],
+    "domIdentifier" : "input",
+    "numberOfCharacters" : 3,
+    "role" : "AXTextField",
+    "roleDescription" : "text field",
+    "selectedRange" : {
+      "length" : 0,
+      "location" : 3
+    },
+    "title" : "testbed input"
+  },
+  "expectedResult" : " hello world",
+  "id" : "6F7E3D16-ED96-40B5-8951-C2631DFA1B44",
+  "note" : "dia-input case 2: after hey",
+  "parameterizedAttributes" : [
+    "AXAttributedStringForRange",
+    "AXAttributedStringForTextMarkerRange",
+    "AXAttributedStringForTextMarkerRangeWithOptions",
+    "AXBoundsForRange",
+    "AXBoundsForTextMarkerRange",
+    "AXEndTextMarkerForBounds",
+    "AXIndexForChildUIElement",
+    "AXLeftLineTextMarkerRangeForTextMarker",
+    "AXLeftWordTextMarkerRangeForTextMarker",
+    "AXLengthForTextMarkerRange",
+    "AXLineForIndex",
+    "AXLineForTextMarker",
+    "AXLineTextMarkerRangeForTextMarker",
+    "AXNextLineEndTextMarkerForTextMarker",
+    "AXNextParagraphEndTextMarkerForTextMarker",
+    "AXNextSentenceEndTextMarkerForTextMarker",
+    "AXNextTextMarkerForTextMarker",
+    "AXNextWordEndTextMarkerForTextMarker",
+    "AXParagraphTextMarkerRangeForTextMarker",
+    "AXPreviousLineStartTextMarkerForTextMarker",
+    "AXPreviousParagraphStartTextMarkerForTextMarker",
+    "AXPreviousSentenceStartTextMarkerForTextMarker",
+    "AXPreviousTextMarkerForTextMarker",
+    "AXPreviousWordStartTextMarkerForTextMarker",
+    "AXRTFForRange",
+    "AXRangeForIndex",
+    "AXRangeForLine",
+    "AXRangeForPosition",
+    "AXReplaceRangeWithText",
+    "AXRightLineTextMarkerRangeForTextMarker",
+    "AXRightWordTextMarkerRangeForTextMarker",
+    "AXSelectTextWithCriteria",
+    "AXSentenceTextMarkerRangeForTextMarker",
+    "AXStartTextMarkerForBounds",
+    "AXStringForRange",
+    "AXStringForTextMarkerRange",
+    "AXStyleRangeForIndex",
+    "AXStyleTextMarkerRangeForTextMarker",
+    "AXTextMarkerForPosition",
+    "AXTextMarkerRangeForLine",
+    "AXTextMarkerRangeForUIElement",
+    "AXTextMarkerRangeForUnorderedTextMarkers",
+    "AXUIElementCountForSearchPredicate",
+    "AXUIElementForTextMarker",
+    "AXUIElementsForSearchPredicate"
+  ],
+  "sampleText" : "Hello world",
+  "strategies" : [
+    {
+      "name" : "AXValue + AXSelectedTextRange",
+      "summary" : "Full AXValue split at the selection start.",
+      "textAfterCursor" : "",
+      "textBeforeCursor" : "hey"
+    },
+    {
+      "name" : "Children tree walk",
+      "summary" : "Rebuilds lines from AXStaticText children, correcting Chromium's offsets. Slow on big documents.",
+      "textAfterCursor" : "",
+      "textBeforeCursor" : ""
+    },
+    {
+      "name" : "TextMarker paragraphs",
+      "summary" : "Reads the cursor's paragraph (and earlier ones while blank) via text markers. Fast at any size.",
+      "textBeforeCursor" : "hey"
+    },
+    {
+      "name" : "TextMarker selection",
+      "summary" : "AXStringForTextMarkerRange(AXStartTextMarker..cursor). Can span the whole page.",
+      "textBeforeCursor" : "Paste Context Testbed1. <input type=\"text\">Native single-line field.hey"
+    },
+    {
+      "name" : "CFRange line by line",
+      "summary" : "AXLineForIndex + AXRangeForLine + AXStringForRange. Lines joined without \\n.",
+      "textBeforeCursor" : "hey"
+    },
+    {
+      "name" : "TextMarker line by index",
+      "summary" : "AXLineForTextMarker + AXTextMarkerRangeForLine. Lines joined without \\n."
+    },
+    {
+      "name" : "TextMarker line walk",
+      "summary" : "AXPreviousLineStartTextMarkerForTextMarker walk. Lines joined without \\n.",
+      "textBeforeCursor" : "Paste Context Testbed1. <input type=\"text\">Native single-line field.hey"
+    },
+    {
+      "name" : "Empty field",
+      "summary" : "Treats the field as empty (placeholder text exposed as value).",
+      "textAfterCursor" : "",
+      "textBeforeCursor" : ""
+    }
+  ],
+  "tree" : {
+    "domClassList" : [
+
+    ],
+    "id" : "root",
+    "isTruncated" : false,
+    "numberOfCharacters" : 3,
+    "role" : "AXTextField",
+    "selectedRange" : {
+      "length" : 0,
+      "location" : 3
+    },
+    "valuePreview" : "hey"
+  }
+}

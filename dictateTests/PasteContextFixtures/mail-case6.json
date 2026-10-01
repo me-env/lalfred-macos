@@ -1,0 +1,318 @@
+{
+  "actions": [
+    "AXScrollToVisible",
+    "AXShowMenu"
+  ],
+  "ancestors": [
+    {
+      "description": "",
+      "domClassList": [],
+      "domIdentifier": "",
+      "placeholder": "",
+      "role": "AXScrollArea",
+      "roleDescription": "scroll area",
+      "title": ""
+    },
+    {
+      "domClassList": [],
+      "role": "AXGroup",
+      "roleDescription": "group"
+    },
+    {
+      "domClassList": [],
+      "role": "AXGroup",
+      "roleDescription": "group"
+    },
+    {
+      "domClassList": [],
+      "identifier": "_NS:41",
+      "role": "AXWindow",
+      "roleDescription": "standard window",
+      "subrole": "AXStandardWindow",
+      "title": "axlab test - do not send"
+    },
+    {
+      "domClassList": [],
+      "role": "AXApplication",
+      "roleDescription": "application",
+      "title": "Mail"
+    }
+  ],
+  "app": {
+    "bundleIdentifier": "com.apple.mail",
+    "name": "Mail",
+    "pid": 47176
+  },
+  "attributes": [
+    {
+      "name": "AXBlockQuoteLevel",
+      "value": "0"
+    },
+    {
+      "name": "AXCaretBrowsingEnabled",
+      "value": "0"
+    },
+    {
+      "name": "AXChildren",
+      "value": "[<AXUIElement 0x82a894000> {pid=72954}]"
+    },
+    {
+      "name": "AXChildrenInNavigationOrder",
+      "value": "[<AXUIElement 0x82a894000> {pid=72954}]"
+    },
+    {
+      "name": "AXCustomContent",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXDOMClassList",
+      "value": "[]"
+    },
+    {
+      "name": "AXDOMIdentifier",
+      "value": ""
+    },
+    {
+      "name": "AXDescription",
+      "value": ""
+    },
+    {
+      "name": "AXElementBusy",
+      "value": "0"
+    },
+    {
+      "name": "AXEnabled",
+      "value": "1"
+    },
+    {
+      "name": "AXEndTextMarker",
+      "value": "<AXTextMarker 0x82ac1c080 [0x1fc459308]>{length = 28, bytes = 0x380000009a0100000400000000000000 ... 0400000000010000}"
+    },
+    {
+      "name": "AXFocused",
+      "value": "1"
+    },
+    {
+      "name": "AXFrame",
+      "value": "CGRect(x: 87.0, y: 242.0, width: 960.0, height: 838.0)"
+    },
+    {
+      "name": "AXHelp",
+      "value": ""
+    },
+    {
+      "name": "AXIdentifier",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXLanguage",
+      "value": ""
+    },
+    {
+      "name": "AXLayoutCount",
+      "value": "37"
+    },
+    {
+      "name": "AXLinkUIElements",
+      "value": "[]"
+    },
+    {
+      "name": "AXLinkedUIElements",
+      "value": "[]"
+    },
+    {
+      "name": "AXLoaded",
+      "value": "1"
+    },
+    {
+      "name": "AXLoadingProgress",
+      "value": "1"
+    },
+    {
+      "name": "AXParent",
+      "value": "<AXUIElement 0x82a894000> {pid=72954}"
+    },
+    {
+      "name": "AXPerformsOwnTextStitching",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXPosition",
+      "value": "CGPoint(x: 87.0, y: 242.0)"
+    },
+    {
+      "name": "AXPreventKeyboardDOMEventDispatch",
+      "value": "0"
+    },
+    {
+      "name": "AXRelativeFrame",
+      "value": "CGRect(x: 0.0, y: 242.0, width: 960.0, height: 838.0)"
+    },
+    {
+      "name": "AXRole",
+      "value": "AXWebArea"
+    },
+    {
+      "name": "AXRoleDescription",
+      "value": "HTML content"
+    },
+    {
+      "name": "AXSelected",
+      "value": "0"
+    },
+    {
+      "name": "AXSelectedTextMarkerRange",
+      "value": "<AXTextMarkerRange 0x82b444000 [0x1fc459308]>{startMarker:<AXTextMarker 0x82ac1c080 [0x1fc459308]>{length = 28, bytes = 0x380000009a0100000400000000000000 ... 0400000000010000} endMarker:<AXTextMarker 0x82ac1c0c0 [0x1fc459308]>{length = 28, bytes = 0x380000009a0100000400000000000000 ... 0400000000010000}}"
+    },
+    {
+      "name": "AXSize",
+      "value": "CGSize(width: 960.0, height: 838.0)"
+    },
+    {
+      "name": "AXStartTextMarker",
+      "value": "<AXTextMarker 0x82ac1c0c0 [0x1fc459308]>{length = 28, bytes = 0x380000009a0100000000000000000000 ... 0000000000010000}"
+    },
+    {
+      "name": "AXTextInputMarkedRange",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXTextInputMarkedTextMarkerRange",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXTitle",
+      "value": ""
+    },
+    {
+      "name": "AXTopLevelUIElement",
+      "value": "<AXUIElement 0x82a894000> {pid=47176}"
+    },
+    {
+      "name": "AXURL",
+      "value": "about:blank"
+    },
+    {
+      "name": "AXValue",
+      "value": ""
+    },
+    {
+      "name": "AXVisibleCharacterRange",
+      "value": "CFRange(location: 9223372036854775807, length: 0)"
+    },
+    {
+      "name": "AXVisited",
+      "value": "0"
+    },
+    {
+      "name": "AXWindow",
+      "value": "<AXUIElement 0x82a894000> {pid=47176}"
+    },
+    {
+      "name": "_AXPrimaryScreenHeight",
+      "value": "1080"
+    }
+  ],
+  "capturedAt": "2026-10-01T18:22:37Z",
+  "element": {
+    "description": "",
+    "domClassList": [],
+    "domIdentifier": "",
+    "placeholder": "",
+    "role": "AXWebArea",
+    "roleDescription": "HTML content",
+    "title": ""
+  },
+  "expectedResult": " hello world",
+  "id": "94C0EF0E-8073-4DEC-8684-E37C209B45B8",
+  "note": "mail case 6: after hey,",
+  "parameterizedAttributes": [
+    "AXAttributedStringForTextMarkerRange",
+    "AXAttributedStringForTextMarkerRangeWithOptions",
+    "AXBoundsForRange",
+    "AXBoundsForTextMarkerRange",
+    "AXEndTextMarkerForBounds",
+    "AXIndexForTextMarker",
+    "AXLeftLineTextMarkerRangeForTextMarker",
+    "AXLeftWordTextMarkerRangeForTextMarker",
+    "AXLengthForTextMarkerRange",
+    "AXLineForTextMarker",
+    "AXLineTextMarkerRangeForTextMarker",
+    "AXNextLineEndTextMarkerForTextMarker",
+    "AXNextParagraphEndTextMarkerForTextMarker",
+    "AXNextSentenceEndTextMarkerForTextMarker",
+    "AXNextTextMarkerForTextMarker",
+    "AXNextWordEndTextMarkerForTextMarker",
+    "AXParagraphTextMarkerRangeForTextMarker",
+    "AXPreviousLineStartTextMarkerForTextMarker",
+    "AXPreviousParagraphStartTextMarkerForTextMarker",
+    "AXPreviousSentenceStartTextMarkerForTextMarker",
+    "AXPreviousTextMarkerForTextMarker",
+    "AXPreviousWordStartTextMarkerForTextMarker",
+    "AXReplaceRangeWithText",
+    "AXRightLineTextMarkerRangeForTextMarker",
+    "AXRightWordTextMarkerRangeForTextMarker",
+    "AXSearchTextWithCriteria",
+    "AXSelectTextWithCriteria",
+    "AXSentenceTextMarkerRangeForTextMarker",
+    "AXStartTextMarkerForBounds",
+    "AXStringForRange",
+    "AXStringForTextMarkerRange",
+    "AXStyleTextMarkerRangeForTextMarker",
+    "AXTextMarkerForIndex",
+    "AXTextMarkerForPosition",
+    "AXTextMarkerIsValid",
+    "AXTextMarkerRangeForLine",
+    "AXTextMarkerRangeForTextMarkers",
+    "AXTextMarkerRangeForUIElement",
+    "AXTextMarkerRangeForUnorderedTextMarkers",
+    "AXTextOperation",
+    "AXUIElementForTextMarker",
+    "AXUIElementsForSearchPredicate"
+  ],
+  "sampleText": "Hello world",
+  "strategies": [
+    {
+      "name": "AXValue + AXSelectedTextRange",
+      "summary": "Production default: full AXValue split at the selection start."
+    },
+    {
+      "name": "Children tree walk",
+      "summary": "Production for Cursor's chat input: rebuilds lines from AXStaticText children."
+    },
+    {
+      "name": "TextMarker selection",
+      "summary": "AXStringForTextMarkerRange(AXStartTextMarker..cursor). WebKit / Chromium.",
+      "textBeforeCursor": "Hey,"
+    },
+    {
+      "name": "CFRange line by line",
+      "summary": "AXLineForIndex + AXRangeForLine + AXStringForRange. Lines joined without \\n."
+    },
+    {
+      "name": "TextMarker line by index",
+      "summary": "AXLineForTextMarker + AXTextMarkerRangeForLine. Lines joined without \\n."
+    },
+    {
+      "name": "TextMarker line walk",
+      "summary": "AXPreviousLineStartTextMarkerForTextMarker walk. Lines joined without \\n.",
+      "textBeforeCursor": "Hey,"
+    }
+  ],
+  "tree": {
+    "children": [
+      {
+        "domClassList": [],
+        "id": "root.0",
+        "isTruncated": false,
+        "role": "AXStaticText",
+        "valuePreview": "Hey,"
+      }
+    ],
+    "domClassList": [],
+    "id": "root",
+    "isTruncated": false,
+    "role": "AXWebArea",
+    "valuePreview": ""
+  }
+}

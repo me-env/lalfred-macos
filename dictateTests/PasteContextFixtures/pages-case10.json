@@ -1,0 +1,235 @@
+{
+  "actions": [
+    "AXShowMenu",
+    "TPAccessibilityHideHeaderFooter",
+    "TPAccessibilityPageFormatAction",
+    "TSAccessibilityAddCommentAction",
+    "kAXBookmarkActionName"
+  ],
+  "ancestors": [
+    {
+      "description": "page 1, summary: hey\n\nthere",
+      "domClassList": [],
+      "role": "AXPage",
+      "roleDescription": "page"
+    },
+    {
+      "description": "Document",
+      "domClassList": [],
+      "role": "AXLayoutArea",
+      "roleDescription": "layout area"
+    },
+    {
+      "domClassList": [],
+      "identifier": "_NS:21",
+      "role": "AXScrollArea",
+      "roleDescription": "scroll area"
+    },
+    {
+      "domClassList": [],
+      "identifier": "_NS:393",
+      "role": "AXSplitGroup",
+      "roleDescription": "split group"
+    },
+    {
+      "domClassList": [],
+      "identifier": "_NS:277",
+      "role": "AXWindow",
+      "roleDescription": "standard window",
+      "subrole": "AXStandardWindow",
+      "title": "pages-scratch 2"
+    },
+    {
+      "domClassList": [],
+      "role": "AXApplication",
+      "roleDescription": "application",
+      "title": "Pages"
+    }
+  ],
+  "app": {
+    "bundleIdentifier": "com.apple.iWork.Pages",
+    "name": "Pages",
+    "pid": 70231
+  },
+  "attributes": [
+    {
+      "name": "AXChildren",
+      "value": "[]"
+    },
+    {
+      "name": "AXCustomRotors",
+      "value": "[[AXRotorLabel: Headings, AXRotorType: 0], [AXRotorLabel: Highlights, AXRotorType: 0], [AXRotorLabel: Comments, AXRotorType: 0], [AXRotorLabel: Tracked Changes, AXRotorType: 0], [AXRotorLabel: Bookmarks, AXRotorType: 0]]"
+    },
+    {
+      "name": "AXDescription",
+      "value": "Body"
+    },
+    {
+      "name": "AXEnabled",
+      "value": "1"
+    },
+    {
+      "name": "AXFocused",
+      "value": "1"
+    },
+    {
+      "name": "AXFrame",
+      "value": "CGRect(x: 557.0, y: 234.0, width: 585.0, height: 710.0)"
+    },
+    {
+      "name": "AXHandles",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXHelp",
+      "value": "Format text quickly by VoiceOver jumping to the formatter"
+    },
+    {
+      "name": "AXInsertionPointLineNumber",
+      "value": "2"
+    },
+    {
+      "name": "AXLinkedUIElements",
+      "value": "[<AXUIElement 0xaeb020900> {pid=70231}]"
+    },
+    {
+      "name": "AXNextContentSibling",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXNumberOfCharacters",
+      "value": "10"
+    },
+    {
+      "name": "AXParent",
+      "value": "<AXUIElement 0xaeb020900> {pid=70231}"
+    },
+    {
+      "name": "AXPosition",
+      "value": "CGPoint(x: 557.0, y: 234.0)"
+    },
+    {
+      "name": "AXPreviousContentSibling",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXRole",
+      "value": "AXTextArea"
+    },
+    {
+      "name": "AXRoleDescription",
+      "value": "text entry area"
+    },
+    {
+      "name": "AXSelectedText",
+      "value": ""
+    },
+    {
+      "name": "AXSelectedTextRange",
+      "value": "CFRange(location: 10, length: 0)"
+    },
+    {
+      "name": "AXSelectedTextRanges",
+      "value": "[CFRange(location: 10, length: 0)]"
+    },
+    {
+      "name": "AXSharedCharacterRange",
+      "value": "CFRange(location: 0, length: 10)"
+    },
+    {
+      "name": "AXSharedTextUIElements",
+      "value": "[<AXUIElement 0xaeb020900> {pid=70231}]"
+    },
+    {
+      "name": "AXSize",
+      "value": "CGSize(width: 585.0, height: 710.0)"
+    },
+    {
+      "name": "AXSubrole",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXTopLevelUIElement",
+      "value": "<AXUIElement 0xaeb020900> {pid=70231}"
+    },
+    {
+      "name": "AXValue",
+      "value": "hey\n\nthere"
+    },
+    {
+      "name": "AXVisibleCharacterRange",
+      "value": "CFRange(location: 0, length: 10)"
+    },
+    {
+      "name": "AXWindow",
+      "value": "<AXUIElement 0xaeb020900> {pid=70231}"
+    }
+  ],
+  "capturedAt": "2026-10-01T18:20:48Z",
+  "element": {
+    "description": "Body",
+    "domClassList": [],
+    "numberOfCharacters": 10,
+    "role": "AXTextArea",
+    "roleDescription": "text entry area",
+    "selectedRange": {
+      "length": 0,
+      "location": 10
+    }
+  },
+  "expectedResult": " hello world",
+  "id": "95870356-EAA0-475B-8DE2-14396435502D",
+  "note": "pages case 10: after there (hey/empty/there)",
+  "parameterizedAttributes": [
+    "AXAttributedStringForRange",
+    "AXBoundsForRange",
+    "AXLineForIndex",
+    "AXRangeForLine",
+    "AXReplaceRangeWithText",
+    "AXStringForRange"
+  ],
+  "sampleText": "Hello world",
+  "strategies": [
+    {
+      "name": "AXValue + AXSelectedTextRange",
+      "summary": "Production default: full AXValue split at the selection start.",
+      "textAfterCursor": "",
+      "textBeforeCursor": "hey\n\nthere"
+    },
+    {
+      "name": "Children tree walk",
+      "summary": "Production for Cursor's chat input: rebuilds lines from AXStaticText children.",
+      "textAfterCursor": "",
+      "textBeforeCursor": ""
+    },
+    {
+      "name": "TextMarker selection",
+      "summary": "AXStringForTextMarkerRange(AXStartTextMarker..cursor). WebKit / Chromium."
+    },
+    {
+      "name": "CFRange line by line",
+      "summary": "AXLineForIndex + AXRangeForLine + AXStringForRange. Lines joined without \\n.",
+      "textBeforeCursor": "hey\n\nthere"
+    },
+    {
+      "name": "TextMarker line by index",
+      "summary": "AXLineForTextMarker + AXTextMarkerRangeForLine. Lines joined without \\n."
+    },
+    {
+      "name": "TextMarker line walk",
+      "summary": "AXPreviousLineStartTextMarkerForTextMarker walk. Lines joined without \\n."
+    }
+  ],
+  "tree": {
+    "domClassList": [],
+    "id": "root",
+    "isTruncated": false,
+    "numberOfCharacters": 10,
+    "role": "AXTextArea",
+    "selectedRange": {
+      "length": 0,
+      "location": 10
+    },
+    "valuePreview": "hey\n\nthere"
+  }
+}

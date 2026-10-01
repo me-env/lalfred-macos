@@ -124,6 +124,37 @@ enum AXMarker {
     )
   }
 
+  // MARK: - Paragraph / character navigation
+
+  /// `AXParagraphTextMarkerRangeForTextMarker(marker)` — the range of the paragraph
+  /// (text between hard line breaks) that contains the marker.
+  static func paragraphRange(for marker: AnyObject, in element: AXUIElement) -> AnyObject? {
+    copyParameterized(
+      element,
+      "AXParagraphTextMarkerRangeForTextMarker",
+      parameter: marker as CFTypeRef
+    )
+  }
+
+  /// `AXPreviousTextMarkerForTextMarker(marker)` — the marker one character back.
+  static func previous(before marker: AnyObject, in element: AXUIElement) -> AnyObject? {
+    copyParameterized(
+      element,
+      "AXPreviousTextMarkerForTextMarker",
+      parameter: marker as CFTypeRef
+    )
+  }
+
+  /// `AXUIElementForTextMarker(marker)` — the element that holds the marker's text.
+  static func owner(of marker: AnyObject, in element: AXUIElement) -> AXUIElement? {
+    guard let ref = copyParameterized(
+      element,
+      "AXUIElementForTextMarker",
+      parameter: marker as CFTypeRef
+    ) else { return nil }
+    return (ref as! AXUIElement)
+  }
+
   // MARK: - String reading
 
   /// `AXStringForTextMarkerRange(range)` — text content of a marker range.

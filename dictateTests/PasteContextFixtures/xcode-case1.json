@@ -1,0 +1,257 @@
+{
+  "actions": [
+    "AXShowMenu",
+    "Name:Jump to Definition\nTarget:0x76aa76910\nSelector:jumpToDefinition"
+  ],
+  "ancestors": [
+    {
+      "domClassList": [],
+      "role": "AXScrollArea",
+      "roleDescription": "scroll area"
+    },
+    {
+      "domClassList": [],
+      "role": "AXSplitGroup",
+      "roleDescription": "split group"
+    },
+    {
+      "description": "xcode-scratch.txt",
+      "domClassList": [],
+      "identifier": "editor context",
+      "role": "AXGroup",
+      "roleDescription": "group"
+    },
+    {
+      "description": "xcode-scratch.txt",
+      "domClassList": [],
+      "role": "AXGroup",
+      "roleDescription": "group"
+    },
+    {
+      "domClassList": [],
+      "role": "AXSplitGroup",
+      "roleDescription": "split group"
+    },
+    {
+      "description": "editor area",
+      "domClassList": [],
+      "role": "AXGroup",
+      "roleDescription": "group"
+    },
+    {
+      "description": "/var/folders/zl/2zxfpsys4p5fg15xbhl5fl_m0000gn/C/com.apple.DeveloperTools/27.0-27A266a/Xcode/FilesWorkspaces/E70B3B5E-4799-40F0-909C-A7BF7DF96CC4/Files.xcfilescontainer",
+      "domClassList": [],
+      "identifier": "Workspace window tab content",
+      "role": "AXSplitGroup",
+      "roleDescription": "split group",
+      "title": "Files.xcfilescontainer"
+    },
+    {
+      "domClassList": [],
+      "identifier": "Xcode.WorkspaceWindow",
+      "role": "AXWindow",
+      "roleDescription": "standard window",
+      "subrole": "AXStandardWindow",
+      "title": "xcode-scratch.txt"
+    },
+    {
+      "domClassList": [],
+      "role": "AXApplication",
+      "roleDescription": "application",
+      "title": "Xcode"
+    }
+  ],
+  "app": {
+    "bundleIdentifier": "com.apple.dt.Xcode",
+    "name": "Xcode",
+    "pid": 11279
+  },
+  "attributes": [
+    {
+      "name": "AXChildren",
+      "value": "[]"
+    },
+    {
+      "name": "AXChildrenInNavigationOrder",
+      "value": "[]"
+    },
+    {
+      "name": "AXCustomActions",
+      "value": "<unavailable: -25200>"
+    },
+    {
+      "name": "AXCustomContent",
+      "value": "{length = 734, bytes = 0x62706c69 73743030 d4010203 04050607 ... 00000000 0000021c }"
+    },
+    {
+      "name": "AXCustomRotors",
+      "value": "[[AXRotorLabel: Errors, AXRotorType: 0], [AXRotorLabel: Methods and functions in Current File, AXRotorType: 0], [AXRotorLabel: Warnings in Current File, AXRotorType: 0], [AXRotorLabel: Breakpoints in Current File, AXRotorType: 0], [AXRotorLabel: Marks in Current File, AXRotorType: 0], [AXRotorLabel: Expanded Macros in Current File, AXRotorType: 0], [AXRotorLabel: Preprocessor Directives in Current… (423 chars)"
+    },
+    {
+      "name": "AXDescription",
+      "value": "Source Editor"
+    },
+    {
+      "name": "AXFocused",
+      "value": "1"
+    },
+    {
+      "name": "AXFrame",
+      "value": "CGRect(x: 29.0, y: 144.0, width: 800.0, height: 362.0)"
+    },
+    {
+      "name": "AXHelp",
+      "value": "<unavailable: -25212>"
+    },
+    {
+      "name": "AXInsertionPointLineNumber",
+      "value": "0"
+    },
+    {
+      "name": "AXLinkedUIElements",
+      "value": "[]"
+    },
+    {
+      "name": "AXNumberOfCharacters",
+      "value": "1"
+    },
+    {
+      "name": "AXParent",
+      "value": "<AXUIElement 0x97c8b0000> {pid=11279}"
+    },
+    {
+      "name": "AXPosition",
+      "value": "CGPoint(x: 29.0, y: 144.0)"
+    },
+    {
+      "name": "AXRole",
+      "value": "AXTextArea"
+    },
+    {
+      "name": "AXRoleDescription",
+      "value": "text entry area"
+    },
+    {
+      "name": "AXSecondaryEditingRanges",
+      "value": "[]"
+    },
+    {
+      "name": "AXSelectedText",
+      "value": "\n"
+    },
+    {
+      "name": "AXSelectedTextRange",
+      "value": "CFRange(location: 0, length: 1)"
+    },
+    {
+      "name": "AXSelectedTextRanges",
+      "value": "[CFRange(location: 0, length: 1)]"
+    },
+    {
+      "name": "AXSharedCharacterRange",
+      "value": "CFRange(location: 0, length: 1)"
+    },
+    {
+      "name": "AXSharedTextUIElements",
+      "value": "[<AXUIElement 0x97c8b0000> {pid=11279}]"
+    },
+    {
+      "name": "AXSize",
+      "value": "CGSize(width: 800.0, height: 362.0)"
+    },
+    {
+      "name": "AXTextualContext",
+      "value": "AXTextualContextSourceCode"
+    },
+    {
+      "name": "AXTopLevelUIElement",
+      "value": "<AXUIElement 0x97c8b0000> {pid=11279}"
+    },
+    {
+      "name": "AXValue",
+      "value": "\n"
+    },
+    {
+      "name": "AXVimMode",
+      "value": "Visual"
+    },
+    {
+      "name": "AXVisibleCharacterRange",
+      "value": "CFRange(location: 0, length: 1)"
+    },
+    {
+      "name": "AXWindow",
+      "value": "<AXUIElement 0x97c8b0000> {pid=11279}"
+    }
+  ],
+  "capturedAt": "2026-10-01T18:16:57Z",
+  "element": {
+    "description": "Source Editor",
+    "domClassList": [],
+    "numberOfCharacters": 1,
+    "role": "AXTextArea",
+    "roleDescription": "text entry area",
+    "selectedRange": {
+      "length": 1,
+      "location": 0
+    }
+  },
+  "expectedResult": "Hello world",
+  "id": "4C4FA9A7-BB74-4900-9FBE-239AFEB16F6D",
+  "note": "xcode case 1: empty field",
+  "parameterizedAttributes": [
+    "AXAttributedStringForRange",
+    "AXBoundsForRange",
+    "AXLineForIndex",
+    "AXLineRangeForIndex",
+    "AXNextLineRangeForIndex",
+    "AXPreviousLineRangeForIndex",
+    "AXRangeForLine",
+    "AXReplaceRangeWithText",
+    "AXStringForRange"
+  ],
+  "sampleText": "Hello world",
+  "strategies": [
+    {
+      "name": "AXValue + AXSelectedTextRange",
+      "summary": "Production default: full AXValue split at the selection start.",
+      "textAfterCursor": "\n",
+      "textBeforeCursor": ""
+    },
+    {
+      "name": "Children tree walk",
+      "summary": "Production for Cursor's chat input: rebuilds lines from AXStaticText children.",
+      "textAfterCursor": "",
+      "textBeforeCursor": ""
+    },
+    {
+      "name": "TextMarker selection",
+      "summary": "AXStringForTextMarkerRange(AXStartTextMarker..cursor). WebKit / Chromium."
+    },
+    {
+      "name": "CFRange line by line",
+      "summary": "AXLineForIndex + AXRangeForLine + AXStringForRange. Lines joined without \\n.",
+      "textBeforeCursor": ""
+    },
+    {
+      "name": "TextMarker line by index",
+      "summary": "AXLineForTextMarker + AXTextMarkerRangeForLine. Lines joined without \\n."
+    },
+    {
+      "name": "TextMarker line walk",
+      "summary": "AXPreviousLineStartTextMarkerForTextMarker walk. Lines joined without \\n."
+    }
+  ],
+  "tree": {
+    "domClassList": [],
+    "id": "root",
+    "isTruncated": false,
+    "numberOfCharacters": 1,
+    "role": "AXTextArea",
+    "selectedRange": {
+      "length": 1,
+      "location": 0
+    },
+    "valuePreview": "\n"
+  }
+}
