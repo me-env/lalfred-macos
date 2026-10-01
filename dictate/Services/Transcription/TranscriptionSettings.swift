@@ -4,6 +4,8 @@ import Foundation
 enum TranscriptionProvider: String, CaseIterable, Identifiable {
   case scribeV2 = "scribe_v2"
   case scribeV2Realtime = "scribe_v2_realtime"
+  case voxtral = "voxtral_mini"
+  case voxtralRealtime = "voxtral_mini_realtime"
 
   static let defaultProvider: TranscriptionProvider = .scribeV2
 
@@ -15,24 +17,50 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
       return "Scribe v2"
     case .scribeV2Realtime:
       return "Scribe v2 Realtime"
+    case .voxtral:
+      return "Voxtral"
+    case .voxtralRealtime:
+      return "Voxtral Realtime"
     }
   }
 
-  var languageCodeKey: String {
+  /// Nil when the provider always detects the language itself.
+  var languageCodeKey: String? {
     switch self {
     case .scribeV2:
       return AppDefaultsKey.languageCodeScribeV2
     case .scribeV2Realtime:
       return AppDefaultsKey.realtimeLanguageCode
+    case .voxtral:
+      return AppDefaultsKey.languageCodeVoxtral
+    case .voxtralRealtime:
+      return nil
     }
   }
 
-  var transcriptEditKey: String {
+  /// Nil when the provider has no transcript edit.
+  var transcriptEditKey: String? {
     switch self {
     case .scribeV2:
       return AppDefaultsKey.transcriptEditScribeV2
     case .scribeV2Realtime:
       return AppDefaultsKey.transcriptEditScribeV2Realtime
+    case .voxtral, .voxtralRealtime:
+      return nil
+    }
+  }
+
+  var supportsSecondaryLanguages: Bool {
+    self == .scribeV2Realtime
+  }
+
+  /// Codes offered in the main language picker.
+  var languageCodes: [String] {
+    switch self {
+    case .scribeV2, .scribeV2Realtime:
+      return TranscriptionLanguages.codes
+    case .voxtral, .voxtralRealtime:
+      return TranscriptionLanguages.voxtralCodes
     }
   }
 }
@@ -52,11 +80,11 @@ struct TranscriptionSettings {
     let provider = userDefaults.string(forKey: AppDefaultsKey.transcriptionProvider)
       .flatMap(TranscriptionProvider.init(rawValue:)) ?? .defaultProvider
 
-    let transcriptEdit = (userDefaults.string(forKey: provider.transcriptEditKey) ?? "")
+    let transcriptEdit = (provider.transcriptEditKey.flatMap(userDefaults.string(forKey:)) ?? "")
       .trimmingCharacters(in: .whitespacesAndNewlines)
       .prefix(transcriptEditMaxLength)
 
-    let languageCode = userDefaults.string(forKey: provider.languageCodeKey) ?? ""
+    let languageCode = provider.languageCodeKey.flatMap(userDefaults.string(forKey:)) ?? ""
     let secondaryLanguages = TranscriptionLanguages.decode(
       userDefaults.string(forKey: AppDefaultsKey.realtimeSecondaryLanguages) ?? ""
     )
@@ -77,6 +105,11 @@ nonisolated enum TranscriptionLanguages {
     "fi", "fr", "ga", "gl", "gu", "he", "hi", "hr", "hu", "id", "is", "it", "ja", "kn", "ko",
     "lt", "lv", "ml", "mr", "ms", "nl", "no", "pa", "pl", "pt", "ro", "ru", "sk", "sl", "sr",
     "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh",
+  ].sorted { displayName(for: $0).localizedCompare(displayName(for: $1)) == .orderedAscending }
+
+  /// The languages Voxtral Mini Transcribe supports.
+  static let voxtralCodes: [String] = [
+    "ar", "de", "en", "es", "fr", "hi", "it", "ja", "ko", "nl", "pt", "ru", "zh",
   ].sorted { displayName(for: $0).localizedCompare(displayName(for: $1)) == .orderedAscending }
 
   static func displayName(for code: String) -> String {

@@ -33,6 +33,6 @@ struct LoggedOutCard: View {
   }
 
   private var introMessage: String {
-    "Sign in to use L'Alfred with your own ElevenLabs API key."
+    "Sign in to use L'Alfred with your own ElevenLabs or Mistral AI API key."
   }
 }

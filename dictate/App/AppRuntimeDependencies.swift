@@ -28,5 +28,7 @@ protocol IndicatorPresenting: AnyObject {
 extension AudioRecordingService: AudioRecordingServicing {}
 extension ScribeClient: STTProvider {}
 extension ScribeRealtimeClient: STTProvider {}
+extension VoxtralClient: STTProvider {}
+extension VoxtralRealtimeClient: STTProvider {}
 extension PasteAtCursorService: PastingAtCursor {}
 extension IndicatorPanelController: IndicatorPresenting {}

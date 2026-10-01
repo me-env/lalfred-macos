@@ -34,5 +34,9 @@ private func makeDefaultAudioTranscriber() -> STTProvider {
       secondaryLanguages: settings.realtimeSecondaryLanguages,
       transcriptEdit: settings.transcriptEdit
     ))
+  case .voxtral:
+    return VoxtralClient(languageCode: settings.languageCode)
+  case .voxtralRealtime:
+    return VoxtralRealtimeClient()
   }
 }

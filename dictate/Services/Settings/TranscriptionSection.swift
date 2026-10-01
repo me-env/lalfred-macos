@@ -7,32 +7,44 @@ struct TranscriptionSection: View {
   @AppStorage(AppDefaultsKey.languageCodeScribeV2) private var scribeV2LanguageCode = ""
   @AppStorage(AppDefaultsKey.realtimeLanguageCode) private var realtimeLanguageCode = ""
   @AppStorage(AppDefaultsKey.realtimeSecondaryLanguages) private var rawSecondaryLanguages = ""
+  @AppStorage(AppDefaultsKey.languageCodeVoxtral) private var voxtralLanguageCode = ""
 
   private var provider: TranscriptionProvider {
     TranscriptionProvider(rawValue: rawProvider) ?? .defaultProvider
   }
 
   var body: some View {
-    SectionBoxWithTitle(
-      "Transcription",
-      caption: "Transcript edit applies your instruction to each transcript (up to 2000 characters). It adds 30% to the transcription cost."
-    ) {
+    SectionBoxWithTitle("Transcription", caption: caption) {
       VStack(alignment: .leading, spacing: 10) {
         Picker("Provider", selection: $rawProvider) {
           ForEach(TranscriptionProvider.allCases) { provider in
             Text(provider.displayName).tag(provider.rawValue)
           }
         }
-        .pickerStyle(.segmented)
 
-        mainLanguagePicker
+        if provider.languageCodeKey != nil {
+          mainLanguagePicker
+        }
 
-        if provider == .scribeV2Realtime {
+        if provider.supportsSecondaryLanguages {
           secondaryLanguagesMenu
         }
 
-        transcriptEditField
+        if provider.transcriptEditKey != nil {
+          transcriptEditField
+        }
       }
+    }
+  }
+
+  private var caption: String {
+    switch provider {
+    case .scribeV2, .scribeV2Realtime:
+      return "Transcript edit applies your instruction to each transcript (up to 2000 characters). It adds 30% to the transcription cost."
+    case .voxtral:
+      return "Uses your Mistral AI key. Up to 100 dictionary words guide the spelling of names and terms."
+    case .voxtralRealtime:
+      return "Uses your Mistral AI key. The language is detected automatically and dictionary words are not used."
     }
   }
 
@@ -40,14 +52,21 @@ struct TranscriptionSection: View {
     Picker("Main language", selection: languageCodeBinding) {
       Text("Auto").tag("")
       Divider()
-      ForEach(TranscriptionLanguages.codes, id: \.self) { code in
+      ForEach(provider.languageCodes, id: \.self) { code in
         Text(TranscriptionLanguages.displayName(for: code)).tag(code)
       }
     }
   }
 
   private var languageCodeBinding: Binding<String> {
-    provider == .scribeV2 ? $scribeV2LanguageCode : $realtimeLanguageCode
+    switch provider {
+    case .scribeV2:
+      return $scribeV2LanguageCode
+    case .voxtral:
+      return $voxtralLanguageCode
+    case .scribeV2Realtime, .voxtralRealtime:
+      return $realtimeLanguageCode
+    }
   }
 
   private var secondaryLanguagesMenu: some View {

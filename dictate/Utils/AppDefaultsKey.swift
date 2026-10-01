@@ -2,6 +2,7 @@ import Foundation
 
 enum AppDefaultsKey {
     static let apiKeyElevenLabs = "apiKey.11l"
+    static let apiKeyMistral = "apiKey.mistral"
     static let authToken = "auth.token"
     static let launchAtLogin = "launchAtLogin"
     static let savedSnippets = "savedSnippets"
@@ -16,6 +17,7 @@ enum AppDefaultsKey {
     static let languageCodeScribeV2 = "transcription.scribeV2.languageCode"
     static let realtimeLanguageCode = "transcription.scribeV2Realtime.languageCode"
     static let realtimeSecondaryLanguages = "transcription.scribeV2Realtime.secondaryLanguages"
+    static let languageCodeVoxtral = "transcription.voxtral.languageCode"
     static let showMenuBarExtra = "showMenuBarExtra"
     static let isSignedIn = "auth.isSignedIn"
     static let accountEmail = "auth.account.email"

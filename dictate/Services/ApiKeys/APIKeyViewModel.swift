@@ -3,6 +3,7 @@ import Observation
 
 enum APIKeyProvider: String, CaseIterable, Identifiable {
   case elevenLabs
+  case mistral
 
   var id: String { rawValue }
 
@@ -16,11 +17,13 @@ enum APIKeyProvider: String, CaseIterable, Identifiable {
 }
 
 let providerToName: [APIKeyProvider: String] = [
-  .elevenLabs: "ElevenLabs"
+  .elevenLabs: "ElevenLabs",
+  .mistral: "Mistral AI",
 ]
 
 let providerToKey: [APIKeyProvider: String] = [
-  .elevenLabs: AppDefaultsKey.apiKeyElevenLabs
+  .elevenLabs: AppDefaultsKey.apiKeyElevenLabs,
+  .mistral: AppDefaultsKey.apiKeyMistral,
 ]
 
 
