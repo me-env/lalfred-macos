@@ -4,14 +4,17 @@ Just dictation, done right.
 
 A native macOS app that turns speech into text in any application. Press a
 global hotkey, talk, and the transcription is pasted into whatever field you
-were in. Transcription runs on the [ElevenLabs Scribe](https://elevenlabs.io/speech-to-text)
-API with your own key — there is no proxy in between.
+were in. Transcription runs on [ElevenLabs Scribe](https://elevenlabs.io/speech-to-text)
+or [Mistral AI Voxtral](https://mistral.ai/news/voxtral), with your own API key —
+there is no proxy in between.
 
 ## Features
 
 - **Global hotkey** — start and stop recording from any app (default: `⌃⌥Space`)
 - **Auto-paste** — text lands in the focused field, no clipboard juggling
-- **Bring your own key** — your ElevenLabs key is stored in the macOS Keychain
+- **Choice of provider** — ElevenLabs Scribe v2 or Mistral AI Voxtral, each as a
+  batch or a realtime model
+- **Bring your own key** — your ElevenLabs and Mistral AI keys are stored in the macOS Keychain
 - **Custom dictionary** — key terms, names and jargon that should transcribe correctly
 - **Snippets** — rewrite recognised phrases into canonical text
 
@@ -29,7 +32,9 @@ themselves in place via Sparkle.
 ## Requirements
 
 - macOS 14 Sonoma or later
-- An [ElevenLabs API key](https://elevenlabs.io)
+- An API key for at least one provider:
+  - [ElevenLabs](https://elevenlabs.io) for Scribe v2 and Scribe v2 Realtime
+  - [Mistral AI](https://console.mistral.ai) for Voxtral and Voxtral Realtime
 
 ## Build from source
 
@@ -47,14 +52,15 @@ asks for:
 - **Microphone** — to capture audio
 - **Accessibility** — to register the global hotkey and paste into other apps
 
-Then paste your ElevenLabs API key into the API key field and press Return.
+Then paste your ElevenLabs or Mistral AI API key into its field and press Return,
+and pick the matching provider in the Transcription settings.
 
 ## Layout
 
 ```
 dictate/
 ├── App/          # Entry point, hotkey monitors, dictation state machine
-├── Providers/    # ElevenLabs Scribe client
+├── Providers/    # ElevenLabs Scribe and Mistral AI Voxtral clients
 ├── Services/     # Feature modules (transcription, snippets, dictionary, auth, …)
 ├── Updater/      # Sparkle integration
 └── Utils/
