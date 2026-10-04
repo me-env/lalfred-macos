@@ -69,6 +69,7 @@ private struct DeveloperResetSection: View {
 
   private func eraseAllLocalData() {
     Keychain().deleteAll()
+    APIKeyHealth.shared.checkAll()
 
     let defaults = UserDefaults.standard
     guard let bundleIdentifier = Bundle.main.bundleIdentifier,

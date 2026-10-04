@@ -78,6 +78,7 @@ final class APIKeyViewModel {
 
     keychain.set(trimmed, key: provider.key)
     refreshToken = UUID()
+    APIKeyHealth.shared.check(provider)
 
     editingProvider = nil
   }
@@ -85,5 +86,6 @@ final class APIKeyViewModel {
   func delete(_ provider: APIKeyProvider) {
     keychain.delete(provider.key)
     refreshToken = UUID()
+    APIKeyHealth.shared.check(provider)
   }
 }

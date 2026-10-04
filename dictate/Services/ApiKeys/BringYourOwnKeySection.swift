@@ -28,7 +28,7 @@ struct BringYourOwnKeySection: View {
     }
     .sheet(item: $manager.editingProvider) { provider in
       APIKeyEditorSheet(
-        providerName: provider.displayName,
+        provider: provider,
         onCancel: { manager.cancelEditing() },
         onSave: { apiKey in manager.save(apiKey, for: provider) }
       )

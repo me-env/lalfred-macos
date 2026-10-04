@@ -39,6 +39,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   /// the menu bar. When the user still needs the Settings window (onboarding
   /// in progress or a post-onboarding permission regression) we surface it.
   func applicationDidFinishLaunching(_ notification: Notification) {
+    APIKeyHealth.shared.checkAll()
+
     Task { @MainActor in
       guard shouldTheAppBeForeground else {
         logger.info("launch: foreground not needed, staying in menu bar")

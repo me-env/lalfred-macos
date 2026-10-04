@@ -47,7 +47,18 @@ struct TabsView: View {
   }
 
   private func showsWarning(for tab: Tabs) -> Bool {
-    tab == .dictionary && hasIgnoredWords
+    switch tab {
+    case .dictionary:
+      return hasIgnoredWords
+    case .account:
+      return APIKeyHealth.shared.hasProblem
+    default:
+      return false
+    }
+  }
+
+  private func warningHelp(for tab: Tabs) -> String {
+    tab == .account ? "An API key was rejected by its provider" : "Some words are ignored by the selected model"
   }
 
   var body: some View {
@@ -63,7 +74,7 @@ struct TabsView: View {
                 Circle()
                   .fill(.orange)
                   .frame(width: 6, height: 6)
-                  .help("Some words are ignored by the selected model")
+                  .help(warningHelp(for: tab))
               }
             }
           } icon: {

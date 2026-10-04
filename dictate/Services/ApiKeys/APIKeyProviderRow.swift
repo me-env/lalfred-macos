@@ -12,8 +12,7 @@ struct APIKeyProviderRow: View {
 
   var body: some View {
     HStack(spacing: 12) {
-      Image(systemName: hasKey ? "checkmark.circle.fill" : "xmark.circle.fill")
-        .foregroundStyle(hasKey ? .green : .secondary)
+      statusIcon
         .frame(width: 18)
 
       VStack(alignment: .leading, spacing: 2) {
@@ -37,6 +36,28 @@ struct APIKeyProviderRow: View {
           onDelete()
         }
         .buttonStyle(.bordered)
+      }
+    }
+  }
+
+  /// A key that couldn't be checked (offline, server error) keeps the plain "set" checkmark.
+  @ViewBuilder
+  private var statusIcon: some View {
+    if !hasKey {
+      Image(systemName: "xmark.circle.fill")
+        .foregroundStyle(.secondary)
+    } else {
+      switch APIKeyHealth.shared.state(for: provider) {
+      case .idle, .checking:
+        ProgressView()
+          .controlSize(.small)
+      case .done(.invalid):
+        Image(systemName: "xmark.circle.fill")
+          .foregroundStyle(.red)
+          .help("Key rejected by \(provider.displayName)")
+      case .done(.valid), .done(.unknown):
+        Image(systemName: "checkmark.circle.fill")
+          .foregroundStyle(.green)
       }
     }
   }
