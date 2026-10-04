@@ -8,6 +8,7 @@ struct TranscriptionSection: View {
   @AppStorage(AppDefaultsKey.realtimeLanguageCode) private var realtimeLanguageCode = ""
   @AppStorage(AppDefaultsKey.realtimeSecondaryLanguages) private var rawSecondaryLanguages = ""
   @AppStorage(AppDefaultsKey.languageCodeVoxtral) private var voxtralLanguageCode = ""
+  @State private var isAPIKeyMissing = false
 
   private var provider: TranscriptionProvider {
     TranscriptionProvider(rawValue: rawProvider) ?? .defaultProvider
@@ -16,10 +17,14 @@ struct TranscriptionSection: View {
   var body: some View {
     SectionBoxWithTitle("Transcription", caption: caption) {
       VStack(alignment: .leading, spacing: 10) {
-        Picker("Provider", selection: $rawProvider) {
+        Picker("Model", selection: $rawProvider) {
           ForEach(TranscriptionProvider.allCases) { provider in
             Text(provider.displayName).tag(provider.rawValue)
           }
+        }
+
+        if isAPIKeyMissing {
+          missingAPIKeyMessage
         }
 
         if provider.languageCodeKey != nil {
@@ -35,6 +40,12 @@ struct TranscriptionSection: View {
         }
       }
     }
+    .task(id: provider.apiKeyProvider.key) {
+      let key = provider.apiKeyProvider.key
+      let isMissing = await Task.detached { !Keychain().contains(key) }.value
+      guard !Task.isCancelled else { return }
+      isAPIKeyMissing = isMissing
+    }
   }
 
   private var caption: String {
@@ -46,6 +57,15 @@ struct TranscriptionSection: View {
     case .voxtralRealtime:
       return "Uses your Mistral AI key. The language is detected automatically and dictionary words are not used."
     }
+  }
+
+  private var missingAPIKeyMessage: some View {
+    Label(
+      "No \(provider.apiKeyProvider.displayName) API key. Add one in Account → Bring your own keys.",
+      systemImage: "exclamationmark.triangle"
+    )
+    .foregroundStyle(.orange)
+    .font(.callout)
   }
 
   private var mainLanguagePicker: some View {

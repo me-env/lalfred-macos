@@ -11,7 +11,7 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
 
   var id: String { rawValue }
 
-  var displayName: String {
+  nonisolated var displayName: String {
     switch self {
     case .scribeV2:
       return "Scribe v2"
@@ -21,6 +21,16 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
       return "Voxtral"
     case .voxtralRealtime:
       return "Voxtral Realtime"
+    }
+  }
+
+  /// The service whose API key this model needs.
+  var apiKeyProvider: APIKeyProvider {
+    switch self {
+    case .scribeV2, .scribeV2Realtime:
+      return .elevenLabs
+    case .voxtral, .voxtralRealtime:
+      return .mistral
     }
   }
 
@@ -51,7 +61,7 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
   }
 
   /// Why this provider doesn't receive a dictionary term; nil when the term is sent.
-  func ignoredKeytermReason(_ term: String) -> String? {
+  nonisolated func ignoredKeytermReason(_ term: String) -> String? {
     switch self {
     case .scribeV2, .scribeV2Realtime:
       return nil

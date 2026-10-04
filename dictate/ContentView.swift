@@ -2,10 +2,16 @@ import SwiftUI
 import AppKit
 
 
+private struct IgnoredWordsInput: Equatable {
+  let wordsData: Data
+  let rawProvider: String
+}
+
 struct TabsView: View {
   @State private var currentTab: Tabs
   @AppStorage(AppDefaultsKey.savedWords) private var savedWordsData = Data()
   @AppStorage(AppDefaultsKey.transcriptionProvider) private var rawProvider = TranscriptionProvider.defaultProvider.rawValue
+  @State private var hasIgnoredWords = false
 
   init(initialTab: Tabs = .home) {
     _currentTab = State(initialValue: initialTab)
@@ -28,11 +34,16 @@ struct TabsView: View {
       )
   }
   
-  /// True when the selected provider skips at least one dictionary word.
-  private var hasIgnoredWords: Bool {
+  /// Whether the selected provider skips at least one dictionary word, computed off the main thread.
+  private func updateHasIgnoredWords() async {
     let provider = TranscriptionProvider(rawValue: rawProvider) ?? .defaultProvider
-    let words = (try? JSONDecoder().decode([String].self, from: savedWordsData)) ?? []
-    return words.contains { provider.ignoredKeytermReason($0) != nil }
+    let wordsData = savedWordsData
+    let hasIgnored = await Task.detached {
+      let words = (try? JSONDecoder().decode([String].self, from: wordsData)) ?? []
+      return words.contains { provider.ignoredKeytermReason($0) != nil }
+    }.value
+    guard !Task.isCancelled else { return }
+    hasIgnoredWords = hasIgnored
   }
 
   private func showsWarning(for tab: Tabs) -> Bool {
@@ -52,7 +63,7 @@ struct TabsView: View {
                 Circle()
                   .fill(.orange)
                   .frame(width: 6, height: 6)
-                  .help("Some words are ignored by the selected provider")
+                  .help("Some words are ignored by the selected model")
               }
             }
           } icon: {
@@ -81,6 +92,9 @@ struct TabsView: View {
           selectedTabView
         }
       }
+    }
+    .task(id: IgnoredWordsInput(wordsData: savedWordsData, rawProvider: rawProvider)) {
+      await updateHasIgnoredWords()
     }
     .navigationTitle("")
     .toolbar {

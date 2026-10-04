@@ -9,10 +9,6 @@ struct LoggedOutCard: View {
         Text("Sign in to your account")
           .font(.title3.weight(.semibold))
 
-        Text(introMessage)
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-
         Button(model.isLoadingAuthURL ? "Opening Google..." : "Continue with Google") {
           Task {
             await model.startGoogleOAuth()
@@ -30,9 +26,5 @@ struct LoggedOutCard: View {
       Spacer()
     }
     .accountCardBackground()
-  }
-
-  private var introMessage: String {
-    "Sign in to use L'Alfred with your own ElevenLabs or Mistral AI API key."
   }
 }

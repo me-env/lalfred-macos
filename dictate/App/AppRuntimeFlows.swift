@@ -66,14 +66,22 @@ struct ProcessingFlowHandler {
 
       let transcript: String
       do {
-        transcript = try await transcription.value
-      } catch where TranscriptionRetryPolicy.isAutoRetryEnabled && TranscriptionRetryPolicy.isTransient(error) {
+        // Awaiting a task's value doesn't forward cancellation to it, so cancel the request explicitly.
+        transcript = try await withTaskCancellationHandler {
+          try await transcription.value
+        } onCancel: {
+          transcription.cancel()
+        }
+      } catch where !Task.isCancelled && TranscriptionRetryPolicy.isAutoRetryEnabled && TranscriptionRetryPolicy.isTransient(error) {
         try await Task.sleep(for: TranscriptionRetryPolicy.autoRetryDelay)
         transcript = try await runTransformationPipeline(recordedAudio: recordedAudio)
       }
+      try Task.checkCancellation()
       onTranscriptionPipelineResult(transcript)
     } catch {
       transcription.cancel()
+      // A cancelled processing already shows its own status.
+      guard !Task.isCancelled else { return }
       indicator.showStatus(message: errorMessage(error), autoHideAfter: 2.5)
     }
   }
@@ -87,8 +95,10 @@ struct ProcessingFlowHandler {
 
     do {
       let transcript = try await runTransformationPipeline(recordedAudio: recordedAudio)
+      try Task.checkCancellation()
       onTranscriptionPipelineResult(transcript)
     } catch {
+      guard !Task.isCancelled else { return }
       indicator.showStatus(message: errorMessage(error), autoHideAfter: 1.8)
     }
   }

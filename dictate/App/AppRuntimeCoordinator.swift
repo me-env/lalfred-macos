@@ -12,6 +12,10 @@ final class AppRuntimeCoordinator {
 
   private var sessionState = DictationSessionStateMachine()
   private var pendingTranscription: Task<String, Error>?
+  private var processingTask: Task<Void, Never>?
+  private var processingStartDate: Date = .distantPast
+  /// Presses sooner than this after processing starts are ignored, so a double press doesn't throw away the dictation.
+  private let minimumProcessingCancelDelay: TimeInterval = 0.5
   private var hasPlayedStartSound = false
 
   private var toggleRecordingMonitor: UnifiedShortcutMonitor?
@@ -137,11 +141,9 @@ final class AppRuntimeCoordinator {
     case .idle:
       beginListening()
     case .listening:
-      Task {
-        await finishListeningAndProcess()
-      }
+      startProcessing { await self.finishListeningAndProcess() }
     case .processing:
-      return
+      cancelProcessingIfAllowed()
     }
   }
 
@@ -196,6 +198,10 @@ final class AppRuntimeCoordinator {
   }
 
   private func handleHoldToSpeakPress() {
+    if sessionState.state == .processing {
+      cancelProcessingIfAllowed()
+      return
+    }
     guard sessionState.state == .idle else { return }
     beginListening()
     isHoldToSpeakActive = sessionState.state == .listening
@@ -205,9 +211,7 @@ final class AppRuntimeCoordinator {
     guard isHoldToSpeakActive else { return }
     isHoldToSpeakActive = false
     guard sessionState.state == .listening else { return }
-    Task {
-      await finishListeningAndProcess()
-    }
+    startProcessing { await self.finishListeningAndProcess() }
   }
 
   private func handleRetryLastRecordingPress() {
@@ -218,9 +222,21 @@ final class AppRuntimeCoordinator {
       return
     }
 
-    Task {
-      await retryLastRecording(recordedAudio)
-    }
+    startProcessing { await self.retryLastRecording(recordedAudio) }
+  }
+
+  private func startProcessing(_ work: @escaping () async -> Void) {
+    processingStartDate = Date()
+    processingTask = Task { await work() }
+  }
+
+  /// Cancels the current processing, unless it started less than `minimumProcessingCancelDelay` ago.
+  private func cancelProcessingIfAllowed() {
+    guard let processingTask,
+          Date().timeIntervalSince(processingStartDate) >= minimumProcessingCancelDelay else { return }
+    processingTask.cancel()
+    self.processingTask = nil
+    indicator.showStatus(message: "cancel", autoHideAfter: 1.0)
   }
 
   private func retryLastRecording(_ recordedAudio: Data) async {

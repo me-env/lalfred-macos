@@ -5,7 +5,7 @@ import Security
 import os
 
 
-private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "APIKeyDefaultsStore")
+private nonisolated let logger = Logger(subsystem: "fr.lalfred.dictate", category: "APIKeyDefaultsStore")
 
 
 struct KeychainStore {
@@ -37,7 +37,7 @@ struct KeychainStore {
 }
 
 
-struct Keychain {
+nonisolated struct Keychain {
   let service: String = "fr.lalfred.dictate"
 
   func set(_ value: String, key: String) {
@@ -77,6 +77,21 @@ struct Keychain {
     return str
   }
   
+  /// Checks that an item exists without fetching and decrypting its value.
+  func contains(_ key: String) -> Bool {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service,
+      kSecAttrAccount as String: key,
+      kSecMatchLimit as String: kSecMatchLimitOne
+    ]
+    let status = SecItemCopyMatching(query as CFDictionary, nil)
+    if status != errSecSuccess && status != errSecItemNotFound {
+      logger.error("Keychain contains failed for \(key): \(status)")
+    }
+    return status == errSecSuccess
+  }
+
   func deleteAll() {
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
