@@ -104,6 +104,7 @@ struct ScribeClient {
     form.appendField("file_format", value: "pcm_s16le_16")
     form.appendField("no_verbatim", value: "true")
     form.appendField("tag_audio_events", value: "false")
+    form.appendField("temperature", value: "0")
 
     keyterms.forEach { keyterm in
       form.appendField("keyterms", value: keyterm)

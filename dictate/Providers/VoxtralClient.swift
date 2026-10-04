@@ -60,6 +60,7 @@ struct VoxtralClient {
     var form = MultipartFormData()
 
     form.appendField("model", value: "voxtral-mini-latest")
+    form.appendField("temperature", value: "0")
 
     // Sent as repeated fields, like the official SDK does.
     keyterms.forEach { keyterm in
