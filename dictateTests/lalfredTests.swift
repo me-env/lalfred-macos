@@ -4,6 +4,14 @@ import Testing
 
 
 struct lalfredTests {
+  @Test func voxtralIgnoresKeytermsWithWhitespaceOrCommas() {
+    #expect(TranscriptionProvider.voxtral.ignoredKeytermReason("Kubernetes") == nil)
+    #expect(TranscriptionProvider.voxtral.ignoredKeytermReason("A: U:") != nil)
+    #expect(TranscriptionProvider.voxtral.ignoredKeytermReason("foo,bar") != nil)
+    #expect(TranscriptionProvider.scribeV2.ignoredKeytermReason("A: U:") == nil)
+    #expect(TranscriptionProvider.voxtralRealtime.ignoredKeytermReason("Kubernetes") != nil)
+  }
+
   @Test func snippetWithPlainEmailKeyMatchesHyphenatedEmailTranscript() {
     let userDefaults = makeIsolatedUserDefaults()
     saveSnippets(

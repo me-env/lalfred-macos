@@ -5,6 +5,7 @@ struct DictionaryTabView: View {
   @State private var words: [String]
   @State private var newWord: String = ""
   @FocusState private var isSearchFocused: Bool
+  @AppStorage(AppDefaultsKey.transcriptionProvider) private var rawProvider = TranscriptionProvider.defaultProvider.rawValue
 
   private let keyTermsStore: KeyTermsStore
 
@@ -13,6 +14,10 @@ struct DictionaryTabView: View {
     _words = State(initialValue: keyTermsStore.load())
   }
   
+  private var provider: TranscriptionProvider {
+    TranscriptionProvider(rawValue: rawProvider) ?? .defaultProvider
+  }
+
   private var sanitizedInput: String {
     newWord.trimmingCharacters(in: .whitespacesAndNewlines)
   }
@@ -127,6 +132,7 @@ struct DictionaryTabView: View {
         ForEach(displayedWords, id: \.self) { word in
           WordRow(
             word: word,
+            ignoredReason: provider.ignoredKeytermReason(word),
             onRename: { newWord in
               renameWord(word, to: newWord)
             },
@@ -163,6 +169,7 @@ struct DictionaryTabView: View {
 
 private struct WordRow: View {
   let word: String
+  let ignoredReason: String?
   let onRename: (String) -> Void
   let onRemove: () -> Void
   @State var hovered: Bool = false
@@ -175,6 +182,10 @@ private struct WordRow: View {
         onCommit: onRename
       )
       .frame(maxWidth: .infinity, alignment: .leading)
+
+      if let ignoredReason {
+        IgnoredWordWarning(reason: ignoredReason)
+      }
       
       RowDeleteButton(
         helpText: "Remove \(word)",
@@ -196,6 +207,28 @@ private struct WordRow: View {
     .animation(.bouncy, value: hovered)
     .contextMenu {
       RowDeleteMenuButton(title: "Remove", action: onRemove)
+    }
+  }
+}
+
+private struct IgnoredWordWarning: View {
+  let reason: String
+  @State private var isReasonPresented = false
+
+  var body: some View {
+    Button {
+      isReasonPresented = true
+    } label: {
+      Image(systemName: "exclamationmark.triangle")
+        .foregroundStyle(.orange)
+    }
+    .buttonStyle(.borderless)
+    .help(reason)
+    .popover(isPresented: $isReasonPresented, arrowEdge: .bottom) {
+      Text(reason)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(width: 260, alignment: .leading)
+        .padding(12)
     }
   }
 }

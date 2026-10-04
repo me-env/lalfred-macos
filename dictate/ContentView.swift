@@ -4,6 +4,8 @@ import AppKit
 
 struct TabsView: View {
   @State private var currentTab: Tabs
+  @AppStorage(AppDefaultsKey.savedWords) private var savedWordsData = Data()
+  @AppStorage(AppDefaultsKey.transcriptionProvider) private var rawProvider = TranscriptionProvider.defaultProvider.rawValue
 
   init(initialTab: Tabs = .home) {
     _currentTab = State(initialValue: initialTab)
@@ -26,13 +28,33 @@ struct TabsView: View {
       )
   }
   
+  /// True when the selected provider skips at least one dictionary word.
+  private var hasIgnoredWords: Bool {
+    let provider = TranscriptionProvider(rawValue: rawProvider) ?? .defaultProvider
+    let words = (try? JSONDecoder().decode([String].self, from: savedWordsData)) ?? []
+    return words.contains { provider.ignoredKeytermReason($0) != nil }
+  }
+
+  private func showsWarning(for tab: Tabs) -> Bool {
+    tab == .dictionary && hasIgnoredWords
+  }
+
   var body: some View {
     NavigationSplitView {
       VStack(alignment: .leading, spacing: 4) {
         ForEach(Tabs.allCases, id: \.self) { tab in
           Label {
-            Text(tab.title)
-              .foregroundStyle(currentTab == tab ? Color.primary : .secondary)
+            HStack(spacing: 6) {
+              Text(tab.title)
+                .foregroundStyle(currentTab == tab ? Color.primary : .secondary)
+
+              if showsWarning(for: tab) {
+                Circle()
+                  .fill(.orange)
+                  .frame(width: 6, height: 6)
+                  .help("Some words are ignored by the selected provider")
+              }
+            }
           } icon: {
             tabIcon(tab: tab)
           }

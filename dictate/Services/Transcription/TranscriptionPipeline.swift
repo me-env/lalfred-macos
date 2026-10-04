@@ -2,13 +2,15 @@ import Foundation
 
 
 func runTransformationPipeline(audio: AsyncThrowingStream<Data, Error>) async throws -> String {
-  let audioTranscriber: STTProvider = makeDefaultAudioTranscriber()
+  let settings = TranscriptionSettings.load()
+  let audioTranscriber: STTProvider = makeAudioTranscriber(settings: settings)
   let snippetProcessor: SnippetTranscriptProcessor = SnippetTranscriptProcessor()
   let keyTermsStore = KeyTermsStore()
 
   let transcript = try await audioTranscriber.transcribeAudio(
     audio,
     keyterms: keyTermsStore.keyTermsForRequest()
+      .filter { settings.provider.ignoredKeytermReason($0) == nil }
   )
 
   return snippetProcessor.process(transcript: transcript)
@@ -22,9 +24,7 @@ func runTransformationPipeline(recordedAudio: Data) async throws -> String {
   return try await runTransformationPipeline(audio: audio)
 }
 
-private func makeDefaultAudioTranscriber() -> STTProvider {
-  let settings = TranscriptionSettings.load()
-
+private func makeAudioTranscriber(settings: TranscriptionSettings) -> STTProvider {
   switch settings.provider {
   case .scribeV2:
     return ScribeClient(languageCode: settings.languageCode, transcriptEdit: settings.transcriptEdit)

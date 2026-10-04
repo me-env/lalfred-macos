@@ -50,6 +50,19 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
     }
   }
 
+  /// Why this provider doesn't receive a dictionary term; nil when the term is sent.
+  func ignoredKeytermReason(_ term: String) -> String? {
+    switch self {
+    case .scribeV2, .scribeV2Realtime:
+      return nil
+    case .voxtral:
+      let hasSeparator = term.contains { $0.isWhitespace || $0 == "," }
+      return hasSeparator ? "Ignored by \(displayName): only single words without commas are supported." : nil
+    case .voxtralRealtime:
+      return "Ignored by \(displayName): dictionary words aren't supported."
+    }
+  }
+
   var supportsSecondaryLanguages: Bool {
     self == .scribeV2Realtime
   }
