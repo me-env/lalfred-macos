@@ -9,60 +9,36 @@ struct ScribeRealtimeClient {
     var transcriptEdit: String?
   }
 
-  /// One second of 16 kHz s16le audio, the chunk size the API docs use.
-  private static let maxChunkBytes = 32_000
-  private static let sampleRate = 16_000
+  private static let apiKeyProvider = TranscriptionProvider.scribeV2Realtime.apiKeyProvider
+  /// Error events worth retrying; the others come from the request itself.
+  private static let transientErrorTypes: Set<String> = ["rate_limited", "queue_overflow", "resource_exhausted", "transcriber_error"]
 
   private let options: Options
-  private let apiKeyStore: KeychainStore
   private let session: URLSession
   private let endpoint: URL = URL(string: "wss://api.elevenlabs.io/v1/speech-to-text/realtime")!
 
   init(
     options: Options,
-    apiKeyStore: KeychainStore = KeychainStore(key: AppDefaultsKey.apiKeyElevenLabs),
     session: URLSession = .shared
   ) {
     self.options = options
-    self.apiKeyStore = apiKeyStore
     self.session = session
   }
 
   /// Expects 16 kHz mono s16le PCM, like the batch client.
   func transcribeAudio(_ audio: AsyncThrowingStream<Data, Error>, keyterms: [String]) async throws -> String {
     var request = URLRequest(url: makeURL(keyterms: keyterms))
-    request.setValue(try loadAPIKey(), forHTTPHeaderField: "xi-api-key")
+    request.setValue(try Self.apiKeyProvider.loadAPIKey(), forHTTPHeaderField: "xi-api-key")
 
     let webSocket = session.webSocketTask(with: request)
     let waitsForEdit = options.transcriptEdit != nil
-    webSocket.resume()
 
-    return try await withTaskCancellationHandler {
-      try await withThrowingTaskGroup(of: String?.self) { group in
-        group.addTask {
-          try await Self.send(audio, to: webSocket)
-          return nil
-        }
-        group.addTask {
-          try await Self.receiveTranscript(from: webSocket, waitsForEdit: waitsForEdit)
-        }
-
-        // Closing the socket unblocks whichever side is still waiting, so the group can return.
-        do {
-          while let result = try await group.next() {
-            guard let transcript = result else { continue }
-            webSocket.cancel(with: .normalClosure, reason: nil)
-            return transcript.trimmingCharacters(in: .whitespacesAndNewlines)
-          }
-          throw ScribeError.invalidResponse
-        } catch {
-          webSocket.cancel(with: .goingAway, reason: nil)
-          throw error
-        }
-      }
-    } onCancel: {
-      webSocket.cancel(with: .goingAway, reason: nil)
-    }
+    return try await RealtimeWebSocket.transcribe(
+      on: webSocket,
+      provider: Self.apiKeyProvider,
+      send: { try await Self.send(audio, to: webSocket) },
+      receive: { try await Self.receiveTranscript(from: webSocket, waitsForEdit: waitsForEdit) }
+    )
   }
 
   private func makeURL(keyterms: [String]) -> URL {
@@ -90,31 +66,11 @@ struct ScribeRealtimeClient {
     return components.url!
   }
 
-  private func loadAPIKey() throws -> String {
-    guard let rawKey = apiKeyStore.load() else {
-      throw ScribeError.missingAPIKey
-    }
-
-    let key = rawKey.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !key.isEmpty else {
-      throw ScribeError.missingAPIKey
-    }
-
-    return key
-  }
-
   private static func send(_ audio: AsyncThrowingStream<Data, Error>, to webSocket: URLSessionWebSocketTask) async throws {
-    for try await chunk in audio {
-      var start = chunk.startIndex
-      while start < chunk.endIndex {
-        let end = min(start + maxChunkBytes, chunk.endIndex)
-        try await webSocket.send(.string(encode(InputAudioChunk(audio: chunk[start..<end], commit: false))))
-        start = end
-      }
+    try await RealtimeWebSocket.sendAudio(audio, over: webSocket) { chunk in
+      try RealtimeWebSocket.encodeJSON(InputAudioChunk(audio: chunk, commit: false))
     }
-
-    try Task.checkCancellation()
-    try await webSocket.send(.string(encode(InputAudioChunk(audio: Data(), commit: true))))
+    try await webSocket.send(.string(RealtimeWebSocket.encodeJSON(InputAudioChunk(audio: Data(), commit: true))))
   }
 
   /// Returns the committed transcript, or its edited version when a transcript edit was requested.
@@ -147,26 +103,19 @@ struct ScribeRealtimeClient {
       default:
         // Partial transcripts, session info and warnings carry no `error`.
         if let error = event.error {
-          throw ScribeError.realtimeFailed(type: event.messageType, message: error)
+          throw TranscriptionError.realtimeFailed(
+            apiKeyProvider,
+            code: event.messageType,
+            message: error,
+            isTransient: transientErrorTypes.contains(event.messageType)
+          )
         }
       }
     }
   }
 
-  private static func encode(_ chunk: InputAudioChunk) throws -> String {
-    String(decoding: try JSONEncoder().encode(chunk), as: UTF8.self)
-  }
-
   private static func decode(_ message: URLSessionWebSocketTask.Message) -> RealtimeEvent? {
-    let data: Data
-    switch message {
-    case .string(let text):
-      data = Data(text.utf8)
-    case .data(let binary):
-      data = binary
-    @unknown default:
-      return nil
-    }
+    guard let data = RealtimeWebSocket.data(of: message) else { return nil }
 
     let decoder = JSONDecoder()
     decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -178,7 +127,7 @@ private struct InputAudioChunk: Encodable {
   let messageType = "input_audio_chunk"
   let audioBase64: String
   let commit: Bool
-  let sampleRate = 16_000
+  let sampleRate = TranscriptionAudio.sampleRate
 
   init(audio: Data, commit: Bool) {
     self.audioBase64 = audio.base64EncodedString()

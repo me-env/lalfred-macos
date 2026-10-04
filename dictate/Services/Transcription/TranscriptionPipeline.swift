@@ -7,13 +7,13 @@ func runTransformationPipeline(audio: AsyncThrowingStream<Data, Error>) async th
   let snippetProcessor: SnippetTranscriptProcessor = SnippetTranscriptProcessor()
   let keyTermsStore = KeyTermsStore()
 
-  let transcript = try await audioTranscriber.transcribeAudio(
-    audio,
-    keyterms: keyTermsStore.keyTermsForRequest()
-      .filter { settings.provider.ignoredKeytermReason($0) == nil }
-  )
+  let keyterms = keyTermsStore.keyTermsForRequest()
+    .filter { settings.provider.ignoredKeytermReason($0) == nil }
+    .suffix(settings.provider.maxKeyterms)
 
-  return snippetProcessor.process(transcript: transcript)
+  let transcript = try await audioTranscriber.transcribeAudio(audio, keyterms: Array(keyterms))
+
+  return snippetProcessor.process(transcript: transcript.trimmingCharacters(in: .whitespacesAndNewlines))
 }
 
 func runTransformationPipeline(recordedAudio: Data) async throws -> String {

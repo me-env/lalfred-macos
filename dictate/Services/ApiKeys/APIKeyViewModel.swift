@@ -7,24 +7,33 @@ enum APIKeyProvider: String, CaseIterable, Identifiable {
 
   var id: String { rawValue }
 
-  var displayName: String {
-    return providerToName[self] ?? "Unknown"
+  nonisolated var displayName: String {
+    switch self {
+    case .elevenLabs:
+      return "ElevenLabs"
+    case .mistral:
+      return "Mistral AI"
+    }
   }
 
   var key: String {
-    return providerToKey[self] ?? "Unknown"
+    switch self {
+    case .elevenLabs:
+      return AppDefaultsKey.apiKeyElevenLabs
+    case .mistral:
+      return AppDefaultsKey.apiKeyMistral
+    }
+  }
+
+  /// The saved API key, trimmed; throws when none is saved.
+  func loadAPIKey() throws -> String {
+    let apiKey = (KeychainStore(key: key).load() ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !apiKey.isEmpty else {
+      throw TranscriptionError.missingAPIKey(self)
+    }
+    return apiKey
   }
 }
-
-let providerToName: [APIKeyProvider: String] = [
-  .elevenLabs: "ElevenLabs",
-  .mistral: "Mistral AI",
-]
-
-let providerToKey: [APIKeyProvider: String] = [
-  .elevenLabs: AppDefaultsKey.apiKeyElevenLabs,
-  .mistral: AppDefaultsKey.apiKeyMistral,
-]
 
 
 @MainActor

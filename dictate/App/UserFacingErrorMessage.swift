@@ -32,7 +32,7 @@ enum UserFacingErrorMessage {
     case .cannotFindHost,
          .dnsLookupFailed,
          .cannotConnectToHost:
-      return "Can't reach Lalfred server"
+      return "Can't reach the transcription service"
     case .secureConnectionFailed,
          .serverCertificateUntrusted,
          .serverCertificateHasBadDate,

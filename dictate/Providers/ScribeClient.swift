@@ -1,167 +1,124 @@
 import Foundation
 
 
-
-enum ScribeError: LocalizedError {
-  case missingAPIKey
-  case invalidResponse
-  case requestFailed(statusCode: Int, message: String)
-  case realtimeFailed(type: String, message: String)
-
-  var errorDescription: String? {
-    switch self {
-    case .missingAPIKey:
-      return "Missing ElevenLabs API key"
-    case .invalidResponse:
-      return "Unexpected API response"
-    case let .requestFailed(statusCode, message):
-      return "Scribe request failed (\(statusCode)): \(message)"
-    case let .realtimeFailed(type, message):
-      return "Scribe realtime error (\(type)): \(message)"
-    }
-  }
-}
-
 struct ScribeClient {
+  private static let apiKeyProvider = TranscriptionProvider.scribeV2.apiKeyProvider
+
   private let languageCode: String?
   private let transcriptEdit: String?
-  private let apiKeyStore: KeychainStore
   private let session: URLSession
   private let directEndpoint: URL = URL(string: "https://api.elevenlabs.io/v1/speech-to-text")!
 
   init(
     languageCode: String? = nil,
     transcriptEdit: String? = nil,
-    apiKeyStore: KeychainStore = KeychainStore(key: AppDefaultsKey.apiKeyElevenLabs),
     session: URLSession = .shared
   ) {
     self.languageCode = languageCode
     self.transcriptEdit = transcriptEdit
-    self.apiKeyStore = apiKeyStore
     self.session = session
   }
 
   /// Streams `audio` (16 kHz mono s16le PCM) into the request body while it is being recorded.
   /// The server still transcribes the complete recording with the batch model.
   func transcribeAudio(_ audio: AsyncThrowingStream<Data, Error>, keyterms: [String]) async throws -> String {
-    let boundary = "Boundary-\(UUID().uuidString)"
+    let form = makeForm(keyterms: keyterms)
     let body = StreamedRequestBody()
     var request = URLRequest(url: directEndpoint)
 
     request.httpMethod = "POST"
     request.networkServiceType = .responsiveData
-    request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-    request.setValue(try loadAPIKey(), forHTTPHeaderField: "xi-api-key")
+    request.setValue(form.contentType, forHTTPHeaderField: "Content-Type")
+    request.setValue(try Self.apiKeyProvider.loadAPIKey(), forHTTPHeaderField: "xi-api-key")
     request.httpBodyStream = body.inputStream
 
-    body.write(makeMultipartHead(boundary: boundary, keyterms: keyterms))
+    body.write(form.head)
 
-    let feeder = Task {
+    // Returns the recording's error so it can be reported instead of the server's reply to the truncated upload.
+    let feeder = Task { () -> Error? in
+      defer { body.finish() }
       do {
         for try await chunk in audio {
           body.write(chunk)
         }
         try Task.checkCancellation()
-        body.write(Data("\r\n--\(boundary)--\r\n".utf8))
+        body.write(form.tail)
+        return nil
       } catch {
         // Closing without the closing boundary makes the server reject the truncated request.
+        return error
       }
-      body.finish()
     }
     defer { feeder.cancel() }
 
-    let (data, response) = try await withTaskCancellationHandler {
-      try await session.data(for: request)
-    } onCancel: {
-      feeder.cancel()
+    let data: Data
+    let response: URLResponse
+    do {
+      (data, response) = try await withTaskCancellationHandler {
+        try await session.data(for: request)
+      } onCancel: {
+        feeder.cancel()
+      }
+    } catch {
+      throw await recordingError(from: feeder) ?? error
     }
-    let httpResponse = try unwrapHTTPResponse(response)
+
+    guard let httpResponse = response as? HTTPURLResponse else {
+      throw TranscriptionError.invalidResponse(Self.apiKeyProvider)
+    }
 
     guard (200..<300).contains(httpResponse.statusCode) else {
-      let message = parseServerMessage(from: data) ?? "Unknown server error"
-      throw ScribeError.requestFailed(statusCode: httpResponse.statusCode, message: message)
+      throw await recordingError(from: feeder) ?? TranscriptionError.requestFailed(
+        Self.apiKeyProvider,
+        statusCode: httpResponse.statusCode,
+        message: ServerErrorMessage.parse(data)
+      )
     }
 
     return try parseTranscript(from: data)
   }
 
-  private func loadAPIKey() throws -> String {
-    guard let rawKey = apiKeyStore.load() else {
-      throw ScribeError.missingAPIKey
-    }
-
-    let key = rawKey.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !key.isEmpty else {
-      throw ScribeError.missingAPIKey
-    }
-
-    return key
-  }
-
-  private func unwrapHTTPResponse(_ response: URLResponse) throws -> HTTPURLResponse {
-    guard let httpResponse = response as? HTTPURLResponse else {
-      throw ScribeError.invalidResponse
-    }
-
-    return httpResponse
+  /// The recording's own failure, if it had one; a feeder cancelled because the request ended first doesn't count.
+  private func recordingError(from feeder: Task<Error?, Never>) async -> Error? {
+    feeder.cancel()
+    guard let error = await feeder.value, !(error is CancellationError) else { return nil }
+    return error
   }
 
   private func parseTranscript(from data: Data) throws -> String {
-    let decoded = try JSONDecoder().decode(TranscriptionResponse.self, from: data)
+    guard let decoded = try? JSONDecoder().decode(TranscriptionResponse.self, from: data) else {
+      throw TranscriptionError.invalidResponse(Self.apiKeyProvider)
+    }
     // A failed edit comes back with kind "error"; the original transcript is still usable.
     if let edited = decoded.editedTranscript, edited.kind == "transcript", let editedText = edited.text {
-      return editedText.trimmingCharacters(in: .whitespacesAndNewlines)
+      return editedText
     }
-    return decoded.text.trimmingCharacters(in: .whitespacesAndNewlines)
-  }
-
-  private func parseServerMessage(from data: Data) -> String? {
-    if let response = try? JSONDecoder().decode(ServerErrorResponse.self, from: data) {
-      return response.detail
-    }
-
-    return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+    return decoded.text
   }
 
   /// Everything before the audio bytes: the form fields and the file part header.
-  private func makeMultipartHead(boundary: String, keyterms: [String]) -> Data {
-    var body = Data()
-    let lineBreak = "\r\n"
+  private func makeForm(keyterms: [String]) -> MultipartFormData {
+    var form = MultipartFormData()
 
-    appendField("model_id", value: "scribe_v2", boundary: boundary, lineBreak: lineBreak, body: &body)
-    appendField("file_format", value: "pcm_s16le_16", boundary: boundary, lineBreak: lineBreak, body: &body)
-    appendField("no_verbatim", value: "true", boundary: boundary, lineBreak: lineBreak, body: &body)
-    appendField("tag_audio_events", value: "false", boundary: boundary, lineBreak: lineBreak, body: &body)
+    form.appendField("model_id", value: "scribe_v2")
+    form.appendField("file_format", value: "pcm_s16le_16")
+    form.appendField("no_verbatim", value: "true")
+    form.appendField("tag_audio_events", value: "false")
 
     keyterms.forEach { keyterm in
-      appendField("keyterms", value: keyterm, boundary: boundary, lineBreak: lineBreak, body: &body)
+      form.appendField("keyterms", value: keyterm)
     }
 
     if let languageCode {
-      appendField("language_code", value: languageCode, boundary: boundary, lineBreak: lineBreak, body: &body)
+      form.appendField("language_code", value: languageCode)
     }
 
     if let transcriptEdit {
-      appendField("transcript_edit", value: transcriptEdit, boundary: boundary, lineBreak: lineBreak, body: &body)
+      form.appendField("transcript_edit", value: transcriptEdit)
     }
 
-    body.append("--\(boundary)\(lineBreak)")
-    body.append("Content-Disposition: form-data; name=\"file\"; filename=\"audio.pcm\"\(lineBreak)")
-    body.append("Content-Type: application/octet-stream\(lineBreak)\(lineBreak)")
-
-    return body
-  }
-
-  private func appendField(
-    _ name: String,
-    value: String,
-    boundary: String,
-    lineBreak: String,
-    body: inout Data
-  ) {
-    body.append("--\(boundary)\(lineBreak)")
-    body.append("Content-Disposition: form-data; name=\"\(name)\"\(lineBreak)\(lineBreak)")
-    body.append("\(value)\(lineBreak)")
+    form.appendFileHeader(name: "file", filename: "audio.pcm", contentType: "application/octet-stream")
+    return form
   }
 }
 
@@ -178,10 +135,6 @@ private struct TranscriptionResponse: Decodable {
     case text
     case editedTranscript = "edited_transcript"
   }
-}
-
-private struct ServerErrorResponse: Decodable {
-  let detail: String
 }
 
 /// Pipes bytes written from any thread into an `InputStream` that URLSession reads as the request body.
@@ -221,14 +174,6 @@ private nonisolated final class StreamedRequestBody: @unchecked Sendable {
         guard written > 0 else { return }
         offset += written
       }
-    }
-  }
-}
-
-private extension Data {
-  mutating func append(_ string: String) {
-    if let encoded = string.data(using: .utf8) {
-      append(encoded)
     }
   }
 }

@@ -3,19 +3,12 @@ import Foundation
 
 /// Streams audio to Voxtral Mini Transcribe Realtime over a WebSocket and waits for the final transcript once the audio ends.
 struct VoxtralRealtimeClient {
-  /// One second of 16 kHz s16le audio; the API accepts up to 256 KiB per message.
-  private static let maxChunkBytes = 32_000
-  private static let sampleRate = 16_000
+  private static let apiKeyProvider = TranscriptionProvider.voxtralRealtime.apiKeyProvider
 
-  private let apiKeyStore: KeychainStore
   private let session: URLSession
   private let endpoint: URL = URL(string: "wss://api.mistral.ai/v1/audio/transcriptions/realtime")!
 
-  init(
-    apiKeyStore: KeychainStore = KeychainStore(key: AppDefaultsKey.apiKeyMistral),
-    session: URLSession = .shared
-  ) {
-    self.apiKeyStore = apiKeyStore
+  init(session: URLSession = .shared) {
     self.session = session
   }
 
@@ -23,59 +16,26 @@ struct VoxtralRealtimeClient {
   /// The realtime model detects the language itself and takes no key terms.
   func transcribeAudio(_ audio: AsyncThrowingStream<Data, Error>, keyterms: [String]) async throws -> String {
     var request = URLRequest(url: makeURL())
-    request.setValue("Bearer \(try loadAPIKey())", forHTTPHeaderField: "Authorization")
+    request.setValue("Bearer \(try Self.apiKeyProvider.loadAPIKey())", forHTTPHeaderField: "Authorization")
 
     let webSocket = session.webSocketTask(with: request)
-    webSocket.resume()
 
-    return try await withTaskCancellationHandler {
-      do {
+    return try await RealtimeWebSocket.transcribe(
+      on: webSocket,
+      provider: Self.apiKeyProvider,
+      prepare: {
         try await Self.waitForSessionCreated(on: webSocket)
-        try await webSocket.send(.string(Self.encode(SessionUpdate())))
-
-        return try await withThrowingTaskGroup(of: String?.self) { group in
-          group.addTask {
-            try await Self.send(audio, to: webSocket)
-            return nil
-          }
-          group.addTask {
-            try await Self.receiveTranscript(from: webSocket)
-          }
-
-          // Closing the socket unblocks whichever side is still waiting, so the group can return.
-          while let result = try await group.next() {
-            guard let transcript = result else { continue }
-            webSocket.cancel(with: .normalClosure, reason: nil)
-            return transcript.trimmingCharacters(in: .whitespacesAndNewlines)
-          }
-          throw VoxtralError.invalidResponse
-        }
-      } catch {
-        webSocket.cancel(with: .goingAway, reason: nil)
-        throw error
-      }
-    } onCancel: {
-      webSocket.cancel(with: .goingAway, reason: nil)
-    }
+        try await webSocket.send(.string(RealtimeWebSocket.encodeJSON(SessionUpdate())))
+      },
+      send: { try await Self.send(audio, to: webSocket) },
+      receive: { try await Self.receiveTranscript(from: webSocket) }
+    )
   }
 
   private func makeURL() -> URL {
     var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)!
     components.queryItems = [URLQueryItem(name: "model", value: "voxtral-mini-transcribe-realtime-2602")]
     return components.url!
-  }
-
-  private func loadAPIKey() throws -> String {
-    guard let rawKey = apiKeyStore.load() else {
-      throw VoxtralError.missingAPIKey
-    }
-
-    let key = rawKey.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !key.isEmpty else {
-      throw VoxtralError.missingAPIKey
-    }
-
-    return key
   }
 
   /// The session must exist before its audio format can be set.
@@ -95,18 +55,11 @@ struct VoxtralRealtimeClient {
   }
 
   private static func send(_ audio: AsyncThrowingStream<Data, Error>, to webSocket: URLSessionWebSocketTask) async throws {
-    for try await chunk in audio {
-      var start = chunk.startIndex
-      while start < chunk.endIndex {
-        let end = min(start + maxChunkBytes, chunk.endIndex)
-        try await webSocket.send(.string(encode(InputAudioAppend(audio: chunk[start..<end]))))
-        start = end
-      }
+    try await RealtimeWebSocket.sendAudio(audio, over: webSocket) { chunk in
+      try RealtimeWebSocket.encodeJSON(InputAudioAppend(audio: chunk))
     }
-
-    try Task.checkCancellation()
-    try await webSocket.send(.string(encode(InputAudioControl(type: "input_audio.flush"))))
-    try await webSocket.send(.string(encode(InputAudioControl(type: "input_audio.end"))))
+    try await webSocket.send(.string(RealtimeWebSocket.encodeJSON(InputAudioControl(type: "input_audio.flush"))))
+    try await webSocket.send(.string(RealtimeWebSocket.encodeJSON(InputAudioControl(type: "input_audio.end"))))
   }
 
   /// Returns the final transcript, falling back on the streamed deltas if the socket closes before it arrives.
@@ -140,28 +93,19 @@ struct VoxtralRealtimeClient {
     }
   }
 
-  private static func realtimeError(from event: RealtimeEvent) -> VoxtralError {
-    .realtimeFailed(
-      code: event.error?.code,
-      message: event.error?.message ?? "Realtime transcription error"
+  /// Realtime error codes are not documented; HTTP-like ones are treated like the batch endpoint's statuses.
+  private static func realtimeError(from event: RealtimeEvent) -> TranscriptionError {
+    let code = event.error?.code
+    return .realtimeFailed(
+      apiKeyProvider,
+      code: code.map(String.init) ?? "unknown",
+      message: event.error?.message ?? "Realtime transcription error",
+      isTransient: code.map { $0 == 429 || (500..<600).contains($0) } ?? false
     )
   }
 
-  private static func encode<T: Encodable>(_ message: T) throws -> String {
-    String(decoding: try JSONEncoder().encode(message), as: UTF8.self)
-  }
-
   private static func decode(_ message: URLSessionWebSocketTask.Message) -> RealtimeEvent? {
-    let data: Data
-    switch message {
-    case .string(let text):
-      data = Data(text.utf8)
-    case .data(let binary):
-      data = binary
-    @unknown default:
-      return nil
-    }
-
+    guard let data = RealtimeWebSocket.data(of: message) else { return nil }
     return try? JSONDecoder().decode(RealtimeEvent.self, from: data)
   }
 }
@@ -170,7 +114,7 @@ private struct SessionUpdate: Encodable {
   struct Session: Encodable {
     struct AudioFormat: Encodable {
       let encoding = "pcm_s16le"
-      let sampleRate = 16_000
+      let sampleRate = TranscriptionAudio.sampleRate
 
       enum CodingKeys: String, CodingKey {
         case encoding

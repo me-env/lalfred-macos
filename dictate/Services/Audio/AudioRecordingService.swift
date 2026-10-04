@@ -28,7 +28,7 @@ final class AudioRecordingService {
   /// 16 kHz mono 16-bit little-endian PCM, the format ElevenLabs accepts as `pcm_s16le_16`.
   nonisolated static let outputFormat = AVAudioFormat(
     commonFormat: .pcmFormatInt16,
-    sampleRate: 16_000,
+    sampleRate: Double(TranscriptionAudio.sampleRate),
     channels: 1,
     interleaved: true
   )!

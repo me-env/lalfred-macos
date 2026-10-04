@@ -60,6 +60,21 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
     }
   }
 
+  /// How many dictionary words a request carries at most; the most recently added ones are kept.
+  var maxKeyterms: Int {
+    switch self {
+    case .scribeV2:
+      return KeyTermsStore.maxRequestTerms
+    case .scribeV2Realtime:
+      // Key terms travel in the WebSocket URL, which must stay a reasonable length.
+      return 100
+    case .voxtral:
+      return 100
+    case .voxtralRealtime:
+      return 0
+    }
+  }
+
   /// Why this provider doesn't receive a dictionary term; nil when the term is sent.
   nonisolated func ignoredKeytermReason(_ term: String) -> String? {
     switch self {
