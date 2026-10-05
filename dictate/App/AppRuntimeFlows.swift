@@ -72,7 +72,7 @@ struct ProcessingFlowHandler {
         } onCancel: {
           transcription.cancel()
         }
-      } catch where !Task.isCancelled && TranscriptionRetryPolicy.isAutoRetryEnabled && TranscriptionRetryPolicy.isTransient(error) {
+      } catch where !Task.isCancelled && TranscriptionRetryPolicy.isTransient(error) {
         try await Task.sleep(for: TranscriptionRetryPolicy.autoRetryDelay)
         transcript = try await runTransformationPipeline(recordedAudio: recordedAudio)
       }

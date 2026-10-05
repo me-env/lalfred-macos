@@ -40,7 +40,13 @@ struct KeychainStore {
 nonisolated struct Keychain {
   let service: String = "fr.lalfred.dictate"
 
+  /// Unit tests run inside the app, whose launch reads API keys. With the real Keychain, an
+  /// unsigned test build makes macOS ask for the password every run, and tests could touch
+  /// the user's keys. They get a store in memory instead.
+  private let memory: InMemoryKeychain? = AppEnvironment.isRunningTests ? .shared : nil
+
   func set(_ value: String, key: String) {
+    if let memory { return memory.set(value, key: key) }
     let data = value.data(using: .utf8)!
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
@@ -57,6 +63,7 @@ nonisolated struct Keychain {
   }
   
   func get(_ key: String) -> String? {
+    if let memory { return memory.get(key) }
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: service,
@@ -79,6 +86,7 @@ nonisolated struct Keychain {
   
   /// Checks that an item exists without fetching and decrypting its value.
   func contains(_ key: String) -> Bool {
+    if let memory { return memory.get(key) != nil }
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: service,
@@ -93,6 +101,7 @@ nonisolated struct Keychain {
   }
 
   func deleteAll() {
+    if let memory { return memory.deleteAll() }
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: service
@@ -104,6 +113,7 @@ nonisolated struct Keychain {
   }
   
   func delete(_ key: String) {
+    if let memory { return memory.delete(key) }
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: service,
@@ -114,4 +124,18 @@ nonisolated struct Keychain {
       logger.error("Keychain delete failed for \(key): \(status)")
     }
   }
+}
+
+
+/// The Keychain while unit tests run, see ``AppEnvironment/isRunningTests``.
+nonisolated final class InMemoryKeychain: @unchecked Sendable {
+  static let shared = InMemoryKeychain()
+
+  private let lock = NSLock()
+  private var items: [String: String] = [:]
+
+  func set(_ value: String, key: String) { lock.withLock { items[key] = value } }
+  func get(_ key: String) -> String? { lock.withLock { items[key] } }
+  func delete(_ key: String) { lock.withLock { items[key] = nil } }
+  func deleteAll() { lock.withLock { items.removeAll() } }
 }

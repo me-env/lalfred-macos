@@ -38,3 +38,4 @@ struct UserDefaultsCodableStore<Value: Codable> {
         userDefaults.removeObject(forKey: key)
     }
 }
+

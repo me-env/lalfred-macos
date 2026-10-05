@@ -1,3 +1,4 @@
+import AppKit
 import ApplicationServices
 import Foundation
 import OSLog
@@ -7,7 +8,8 @@ private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "CursorCo
 
 
 protocol CursorContextReading {
-  func readContext() -> CursorTextContext?
+  /// `nil` when nothing has focus.
+  func readContext() -> CursorContextReport?
 }
 
 func numberOfCharsForGroup(in element: AXUIElement) -> Int? {
@@ -130,6 +132,7 @@ func getLines(
 }
 
 struct CursorContextReader: CursorContextReading {
+  var userDefaults: UserDefaults = .standard
   
   func printTree(from element: AXUIElement, depth: Int = 0) {
     AXAttr.printAttributes(in: element, prefix: String(repeating: " ", count: depth))
@@ -201,18 +204,70 @@ struct CursorContextReader: CursorContextReading {
     print("============ ---- ============")
   }
   
-  func readContext() -> CursorTextContext? {
+  func readContext() -> CursorContextReport? {
     guard let element = AXAttr.copyFocusedElement() else {
       logger.info("[CursorContextReader] No focused element")
       return nil
     }
 
-    let resolution = CursorContextResolution.resolve(facts: CursorElementFacts(element: element)) {
+    let facts = CursorElementFacts(element: element)
+    let place = place(of: element)
+    let monacoWithoutScreenReader = MonacoEditor.isEditor(facts)
+      && noteMonacoScreenReaderMode(in: element, place: place)
+    let resolution = CursorContextResolution.resolve(facts: facts) {
       $0.read(element)
     }
     logger.info(
       "[CursorContextReader] rule=\(resolution.rule.name, privacy: .public) method=\(resolution.method?.rawValue ?? "none (paste unchanged)", privacy: .public)"
     )
-    return resolution.context
+    return CursorContextReport(
+      context: resolution.context,
+      quality: .of(resolution, isMonacoWithoutScreenReader: monacoWithoutScreenReader),
+      place: place
+    )
+  }
+
+  /// The app owning `element`, and the website when it's in a browser.
+  private func place(of element: AXUIElement) -> PastePlace {
+    var pid: pid_t = 0
+    AXUIElementGetPid(element, &pid)
+    let app = NSRunningApplication(processIdentifier: pid)
+    return PastePlace(
+      bundleIdentifier: app?.bundleIdentifier,
+      appName: app?.localizedName ?? "Unknown app",
+      website: webHost(around: element)
+    )
+  }
+
+  /// Adds a hint in the Text Insertion tab for the app or website where Monaco is pasted
+  /// into without screen reader mode, and removes it once a paste there finds the mode on.
+  /// Returns whether the mode is off.
+  private func noteMonacoScreenReaderMode(in element: AXUIElement, place: PastePlace) -> Bool {
+    let hint = SmartPasteHint(kind: .monacoScreenReaderMode, place: place.displayName)
+    guard MonacoEditor.lacksScreenReaderMode(value: AXAttr.string(kAXValueAttribute, in: element)) else {
+      SmartPasteHints.resolve(hint, in: userDefaults)
+      return false
+    }
+    logger.info("[CursorContextReader] Monaco without screen reader mode in \(place.displayName, privacy: .public)")
+    SmartPasteHints.note(hint, in: userDefaults)
+    return true
+  }
+
+  /// Host of the closest web page around `element` that was loaded over http(s). Electron
+  /// apps like Cursor are web pages too, but from local files, so they get `nil`.
+  private func webHost(around element: AXUIElement) -> String? {
+    var node = AXAttr.getParent(in: element)
+    for _ in 0..<80 {
+      guard let current = node else { return nil }
+      if AXAttr.string(kAXRoleAttribute, in: current) == "AXWebArea" {
+        var urlRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(current, kAXURLAttribute as CFString, &urlRef)
+        if let url = urlRef as? URL, ["http", "https"].contains(url.scheme), let host = url.host() {
+          return host
+        }
+      }
+      node = AXAttr.getParent(in: current)
+    }
+    return nil
   }
 }

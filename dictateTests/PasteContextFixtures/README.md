@@ -1,6 +1,6 @@
 # Paste context fixtures
 
-Real captures from the **Paste Context Inspector** (Settings → General → Experimental →
+Real captures from the **Paste Context Inspector** (Settings → Text Insertion →
 Inspect…). `PasteContextFixtureTests` routes each one through `CursorContextRules`, the
 same way pasting does, and checks the result against `expectedResult`. So they test both
 which method gets picked and what the transformer does with its reading. Snapshots
@@ -28,6 +28,11 @@ always pasting `Hello world`:
 
 Browser editors come from `tools/paste-context-testbed.html`.
 
+`tools/axlab` only captures cases 1, 2, 7, 8 and 9: across every app and reading method
+captured, the others never caught a failure these didn't. What they vary (a space, period
+or comma before the cursor) is transformer logic, covered by `PasteTextTransformerTests`.
+Their existing fixtures still run.
+
 ## Coverage
 
 What has been tested, which rule handles it, and what it should cover by extension. The
@@ -53,6 +58,9 @@ Also checked by hand, without fixtures:
 - **Arc textarea**: L'Alfred sees the focused field, routed to Default as expected.
 
 ## Adding one
+
+To capture whole apps at once, use `tools/axlab` instead: it types the matrix into every
+field in its checklist and saves the snapshots (see its README). By hand:
 
 1. In the inspector, click into the field, put the cursor where you'd paste, and type the
    **expected result**.

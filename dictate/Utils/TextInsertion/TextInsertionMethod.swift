@@ -8,7 +8,7 @@ private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "TextInse
 
 
 /// How the dictated text gets into the focused field. Picked by the user in
-/// Settings → General → Advanced; the same method is used in every app.
+/// Settings → Text Insertion; the same method is used in every app.
 ///
 /// Adding a method: add a case, its `title` + `explanation`, and a line in `insert`.
 enum TextInsertionMethod: String, CaseIterable, Identifiable {

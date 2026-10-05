@@ -2,7 +2,6 @@ import SwiftUI
 
 struct PreferencesInput: View {
   @AppStorage(AppDefaultsKey.launchAtLogin) private var launchAtLogin = false
-  @AppStorage(AppDefaultsKey.autoRetryFailedTranscription) private var autoRetryFailedTranscription = false
   @State private var launchAtLoginErrorMessage: String?
   private let launchAtLoginService = LaunchAtLoginService()
   
@@ -14,7 +13,6 @@ struct PreferencesInput: View {
           updateLaunchAtLogin(newValue)
         }
       ))
-      Toggle("Automatically retry failed transcriptions", isOn: $autoRetryFailedTranscription)
     }
     .onAppear {
       launchAtLogin = launchAtLoginService.isEnabledInSystem()

@@ -3,6 +3,8 @@ import SwiftUI
 
 enum Tabs: Hashable, CaseIterable {
   case home
+  case model
+  case textInsertion
   case dictionary
   case snippets
   case sounds
@@ -12,6 +14,10 @@ enum Tabs: Hashable, CaseIterable {
     switch self {
     case .home:
       "General"
+    case .model:
+      "Model"
+    case .textInsertion:
+      "Text Insertion"
     case .dictionary:
       "Dictionary"
     case .snippets:
@@ -27,6 +33,10 @@ enum Tabs: Hashable, CaseIterable {
     switch self {
     case .home:
       "gearshape"
+    case .model:
+      "waveform"
+    case .textInsertion:
+      "text.cursor"
     case .dictionary:
       "book"
     case .snippets:
@@ -42,6 +52,10 @@ enum Tabs: Hashable, CaseIterable {
     switch self {
     case .home:
       "gearshape.fill"
+    case .model:
+      "waveform"
+    case .textInsertion:
+      "text.cursor"
     case .dictionary:
       "book.fill"
     case .snippets:
@@ -57,6 +71,10 @@ enum Tabs: Hashable, CaseIterable {
     switch self {
     case .home:
       Color(red: 0.55, green: 0.55, blue: 0.58)
+    case .model:
+      Color(red: 1.0, green: 0.58, blue: 0.20)
+    case .textInsertion:
+      Color(red: 0.20, green: 0.70, blue: 0.62)
     case .dictionary:
       Color(red: 0.44, green: 0.32, blue: 0.90)
     case .snippets:

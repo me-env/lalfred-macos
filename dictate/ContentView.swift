@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import SwiftData
 
 
 private struct IgnoredWordsInput: Equatable {
@@ -12,6 +13,9 @@ struct TabsView: View {
   @AppStorage(AppDefaultsKey.savedWords) private var savedWordsData = Data()
   @AppStorage(AppDefaultsKey.transcriptionProvider) private var rawProvider = TranscriptionProvider.defaultProvider.rawValue
   @State private var hasIgnoredWords = false
+  @AppStorage(AppDefaultsKey.smartPasteFormatting) private var smartPasteFormatting = true
+  @AppStorage(AppDefaultsKey.smartPasteHints) private var smartPasteHints: Data?
+  @AppStorage(AppDefaultsKey.dismissedSmartPasteHints) private var dismissedSmartPasteHints: Data?
 
   init(initialTab: Tabs = .home) {
     _currentTab = State(initialValue: initialTab)
@@ -52,13 +56,20 @@ struct TabsView: View {
       return hasIgnoredWords
     case .account:
       return APIKeyHealth.shared.hasProblem
+    case .textInsertion:
+      return smartPasteFormatting
+        && !SmartPasteHints.active(found: smartPasteHints, dismissed: dismissedSmartPasteHints).isEmpty
     default:
       return false
     }
   }
 
   private func warningHelp(for tab: Tabs) -> String {
-    tab == .account ? "An API key was rejected by its provider" : "Some words are ignored by the selected model"
+    switch tab {
+    case .account: "An API key was rejected by its provider"
+    case .textInsertion: "Some apps could share more text around the cursor"
+    default: "Some words are ignored by the selected model"
+    }
   }
 
   var body: some View {
@@ -68,6 +79,7 @@ struct TabsView: View {
           Label {
             HStack(spacing: 6) {
               Text(tab.title)
+                .lineLimit(1)
                 .foregroundStyle(currentTab == tab ? Color.primary : .secondary)
 
               if showsWarning(for: tab) {
@@ -96,6 +108,8 @@ struct TabsView: View {
       }
       .padding(.horizontal, 8)
       .toolbar(removing: .sidebarToggle)
+      // Wide enough for a two-word tab title and its warning dot on one line.
+      .navigationSplitViewColumnWidth(min: 160, ideal: 180)
     } detail: {
       ScrollView {
         VStack(spacing: 8) {
@@ -124,6 +138,10 @@ struct TabsView: View {
     switch currentTab {
     case .home:
       GeneralTabView()
+    case .model:
+      ModelTabView()
+    case .textInsertion:
+      TextInsertionTabView()
     case .dictionary:
       DictionaryTabView()
     case .snippets:
@@ -148,6 +166,7 @@ struct ContentView: View {
   var body: some View {
     if hasCompletedOnboarding {
       TabsView(initialTab: initialTab)
+        .modelContainer(LocalStore.container)
     } else {
       OnboardingView()
         .frame(minHeight: 550, maxHeight: 560)
@@ -158,6 +177,16 @@ struct ContentView: View {
 
 #Preview("General") {
   ContentView(initialTab: .home)
+    .environment(Shortcuts())
+}
+
+#Preview("Model") {
+  ContentView(initialTab: .model)
+    .environment(Shortcuts())
+}
+
+#Preview("Text Insertion") {
+  ContentView(initialTab: .textInsertion)
     .environment(Shortcuts())
 }
 

@@ -1,12 +1,9 @@
 import Foundation
 
 
+/// A transcription that fails for a transient reason is retried once, after `autoRetryDelay`.
 enum TranscriptionRetryPolicy {
   static let autoRetryDelay: Duration = .seconds(1)
-
-  static var isAutoRetryEnabled: Bool {
-    UserDefaults.standard.bool(forKey: AppDefaultsKey.autoRetryFailedTranscription)
-  }
 
   /// Network failures and server-side errors are worth retrying; client errors (bad key, bad request) are not.
   static func isTransient(_ error: Error) -> Bool {

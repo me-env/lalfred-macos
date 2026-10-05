@@ -1,0 +1,42 @@
+#!/bin/bash
+# Builds axlab against the app's own sources when any of them changed, then runs it.
+# Usage: tools/axlab/axlab help
+set -e
+HERE="$(cd "$(dirname "$0")" && pwd)"
+REPO="$(cd "$HERE/../.." && pwd)"
+BIN="$HERE/.build/axlab"
+SOURCES=(
+  "$HERE"/Sources/*.swift
+  "$REPO"/dictate/Utils/AppDefaultsKey.swift
+  "$REPO"/dictate/Utils/CursorContextReader.swift
+  "$REPO"/dictate/Utils/PasteTextTransformer.swift
+  "$REPO"/dictate/Utils/TextInsertion/TextInsertionMethod.swift
+  "$REPO"/dictate/Utils/CursorContext/*.swift
+  "$REPO"/dictate/Utils/CursorContext/Strategies/*.swift
+)
+
+stale=0
+[ -x "$BIN" ] || stale=1
+for f in "${SOURCES[@]}"; do [ "$f" -nt "$BIN" ] && stale=1; done
+if [ $stale = 1 ]; then
+  mkdir -p "$HERE/.build"
+  echo "Building axlab…" >&2
+  swiftc -O -o "$BIN" "${SOURCES[@]}"
+  # macOS ties the Accessibility permission to the signature. Ad hoc, every build would
+  # be a new app; signed with a real identity, one grant survives rebuilds. Defaults to
+  # the Developer ID matching the project's team.
+  IDENTITY="$AXLAB_SIGN_IDENTITY"
+  if [ -z "$IDENTITY" ]; then
+    for team in $(grep -o 'DEVELOPMENT_TEAM = [A-Z0-9]*' "$REPO/dictate.xcodeproj/project.pbxproj" | awk '{print $3}' | sort -u); do
+      IDENTITY=$(security find-identity -v -p codesigning | grep -o "\"Developer ID Application: .*($team)\"" | head -1 | tr -d '"')
+      [ -n "$IDENTITY" ] && break
+    done
+  fi
+  if [ -n "$IDENTITY" ]; then
+    codesign -f -s "$IDENTITY" -i fr.lalfred.axlab "$BIN" 2>/dev/null
+  else
+    echo "No signing identity found: Accessibility permission will have to be granted again after each build." >&2
+  fi
+fi
+
+exec "$BIN" "$@"

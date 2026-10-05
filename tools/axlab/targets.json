@@ -1,0 +1,142 @@
+{
+  "targets": [
+    { "id": "textedit", "group": "native", "app": "com.apple.TextEdit",
+      "open": { "file": "axlab-textedit.txt" },
+      "field": { "role": "AXTextArea", "windowTitle": "axlab-textedit" } },
+
+    { "id": "notes", "group": "native", "app": "com.apple.Notes",
+      "open": { "shortcut": "cmd+n", "shortcutFirst": true },
+      "field": { "role": "AXTextArea" },
+      "setup": "A new note is created each run. Notes deletes it once it's empty again." },
+
+    { "id": "raycast", "group": "native", "app": "com.raycast.macos",
+      "open": {}, "multiline": false,
+      "field": { "role": "AXTextField" },
+      "setup": "If `open` doesn't show Raycast's window, put your Raycast hotkey in open.shortcut." },
+
+    { "id": "pages", "group": "documents", "app": "com.apple.iWork.Pages",
+      "open": { "file": "axlab-pages.docx" },
+      "field": { "description": "Body", "windowTitle": "axlab-pages" },
+      "setup": "Dismiss Pages' welcome / template dialogs once by hand." },
+
+    { "id": "word", "group": "documents", "app": "com.microsoft.Word",
+      "open": { "file": "axlab-word.docx" },
+      "field": { "description": "Page 1 content", "windowTitle": "axlab-word" },
+      "setup": "Dismiss Word's start screen once by hand." },
+
+    { "id": "mail", "group": "documents", "app": "com.apple.mail",
+      "open": { "url": "mailto:?subject=axlab%20test%20-%20do%20not%20send" },
+      "field": { "role": "AXWebArea", "windowTitle": "axlab test" },
+      "setup": "Leaves an unsent 'axlab test' draft: close it without saving." },
+
+    { "id": "outlook", "group": "documents", "app": "com.microsoft.Outlook",
+      "open": { "url": "mailto:?subject=axlab%20test%20-%20do%20not%20send" },
+      "field": { "domId": "ms-outlook-mac-text-editor", "windowTitle": "axlab test" },
+      "private": true, "settleMs": 150,
+      "setup": "Outlook must be the app that opens mailto: links, or the compose window won't appear. Leaves an unsent draft." },
+
+    { "id": "xcode", "group": "code", "app": "com.apple.dt.Xcode",
+      "open": { "file": "axlab-xcode.txt" },
+      "field": { "description": "Source Editor", "windowTitle": "axlab-xcode" },
+      "setup": "Works with Vim mode on: the harness switches it to insert mode." },
+
+    { "id": "cursor-chat", "group": "code", "app": "com.todesktop.230313mzl4w4u92",
+      "open": { "shortcut": "cmd+l" },
+      "field": { "domClass": "aislash-editor-input" },
+      "newline": "shift+return", "sends": true, "settleMs": 150 },
+
+    { "id": "cursor-editor", "group": "code", "app": "com.todesktop.230313mzl4w4u92",
+      "open": { "file": "axlab-cursor.txt" },
+      "field": { "domClass": "inputarea", "windowTitle": "axlab-cursor" }, "settleMs": 150,
+      "pasteText": true,
+      "setup": "Needs Monaco's screen reader mode (Shift+Option+F1, or \"editor.accessibilitySupport\": \"on\"): without it the field only holds what was typed since the cursor last moved." },
+
+    { "id": "zed", "group": "code", "app": "dev.zed.Zed",
+      "open": {}, "field": {},
+      "skip": "Zed exposes no text to accessibility" },
+
+    { "id": "safari-input", "group": "testbed", "app": "com.apple.Safari",
+      "open": { "testbed": true }, "multiline": false, "field": { "domId": "input" } },
+    { "id": "safari-textarea", "group": "testbed", "app": "com.apple.Safari",
+      "open": { "testbed": true }, "field": { "domId": "textarea" } },
+    { "id": "safari-ce-plain", "group": "testbed", "app": "com.apple.Safari",
+      "open": { "testbed": true }, "field": { "domId": "ce-plain" } },
+    { "id": "safari-ce-paragraphs", "group": "testbed", "app": "com.apple.Safari",
+      "open": { "testbed": true }, "field": { "domId": "ce-paragraphs" } },
+    { "id": "safari-quill", "group": "testbed", "app": "com.apple.Safari",
+      "open": { "testbed": true }, "field": { "domClass": "ql-editor" } },
+    { "id": "safari-tiptap", "group": "testbed", "app": "com.apple.Safari",
+      "open": { "testbed": true }, "field": { "domClass": "ProseMirror" } },
+    { "id": "safari-lexical", "group": "testbed", "app": "com.apple.Safari",
+      "open": { "testbed": true }, "field": { "domId": "lexical" } },
+    { "id": "safari-codemirror", "group": "testbed", "app": "com.apple.Safari",
+      "open": { "testbed": true }, "field": { "domClass": "cm-content" } },
+
+    { "id": "dia-input", "group": "testbed", "app": "company.thebrowser.dia",
+      "open": { "testbed": true }, "multiline": false, "field": { "domId": "input" }, "settleMs": 150 },
+    { "id": "dia-textarea", "group": "testbed", "app": "company.thebrowser.dia",
+      "open": { "testbed": true }, "field": { "domId": "textarea" }, "settleMs": 150 },
+    { "id": "dia-ce-plain", "group": "testbed", "app": "company.thebrowser.dia",
+      "open": { "testbed": true }, "field": { "domId": "ce-plain" }, "settleMs": 150 },
+    { "id": "dia-ce-paragraphs", "group": "testbed", "app": "company.thebrowser.dia",
+      "open": { "testbed": true }, "field": { "domId": "ce-paragraphs" }, "settleMs": 150 },
+    { "id": "dia-quill", "group": "testbed", "app": "company.thebrowser.dia",
+      "open": { "testbed": true }, "field": { "domClass": "ql-editor" }, "settleMs": 150 },
+    { "id": "dia-tiptap", "group": "testbed", "app": "company.thebrowser.dia",
+      "open": { "testbed": true }, "field": { "domClass": "ProseMirror" }, "settleMs": 150 },
+    { "id": "dia-lexical", "group": "testbed", "app": "company.thebrowser.dia",
+      "open": { "testbed": true }, "field": { "domId": "lexical" }, "settleMs": 150 },
+    { "id": "dia-codemirror", "group": "testbed", "app": "company.thebrowser.dia",
+      "open": { "testbed": true }, "field": { "domClass": "cm-content" }, "settleMs": 150 },
+
+    { "id": "arc-textarea", "group": "testbed", "app": "company.thebrowser.Browser",
+      "open": { "testbed": true }, "field": { "domId": "textarea" }, "settleMs": 150,
+      "skip": "Arc's app element reports its window as focused, so fields can't be found (smart paste itself works there)" },
+
+    { "id": "claude-desktop", "group": "chat", "app": "com.anthropic.claudefordesktop",
+      "open": {}, "field": { "domClass": "ProseMirror" },
+      "newline": "shift+return", "sends": true, "private": true, "settleMs": 150,
+      "setup": "Open a new chat so the message box is empty." },
+
+    { "id": "slack", "group": "chat", "app": "com.tinyspeck.slackmacgap",
+      "open": {}, "field": { "domClass": "ql-editor", "description": "TODO" },
+      "newline": "shift+return", "sends": true, "private": true, "settleMs": 150,
+      "skip": "personal: set open.url to your self-DM and field.description to its message box label in targets.local.json" },
+
+    { "id": "whatsapp", "group": "chat", "app": "net.whatsapp.WhatsApp",
+      "open": {},
+      "field": {
+        "identifier": "ChatBar_ComposerTextView",
+        "windowHas": { "identifier": "NavigationBar_HeaderViewButton", "text": "TODO" }
+      },
+      "newline": "shift+return", "sends": true, "private": true, "settleMs": 150,
+      "skip": "personal: set open.url to whatsapp://send?phone=<your number> and windowHas.text to your name in targets.local.json" },
+
+    { "id": "messages", "group": "chat", "app": "com.apple.MobileSMS",
+      "open": {}, "field": {},
+      "newline": "opt+return", "sends": true, "private": true,
+      "skip": "personal: needs a conversation with yourself, see targets.local.json" },
+
+    { "id": "notion", "group": "chat", "app": "notion.id",
+      "open": {}, "field": {},
+      "private": true, "settleMs": 150,
+      "skip": "personal: set open.url to an empty test page (notion://…) in targets.local.json" },
+
+    { "id": "gmail", "group": "web", "app": "company.thebrowser.dia",
+      "open": { "url": "https://mail.google.com/mail/?view=cm&fs=1&su=axlab%20test%20-%20do%20not%20send" },
+      "field": { "role": "AXTextArea", "domClass": "editable" },
+      "private": true, "settleMs": 150,
+      "setup": "Be logged in to Gmail in Dia. Leaves an 'axlab test' draft." },
+
+    { "id": "outlook-web", "group": "web", "app": "company.thebrowser.dia",
+      "open": { "url": "https://outlook.office.com/mail/deeplink/compose?subject=axlab%20test%20-%20do%20not%20send" },
+      "field": { "description": "Message body" },
+      "private": true, "settleMs": 150,
+      "setup": "Be logged in to Outlook on the web in Dia. Leaves an 'axlab test' draft." },
+
+    { "id": "linkedin", "group": "web", "app": "company.thebrowser.dia",
+      "open": {}, "field": { "domClass": "msg-form__contenteditable" },
+      "newline": "shift+return", "sends": true, "private": true, "settleMs": 150,
+      "skip": "needs a conversation where a stray message is harmless" }
+  ]
+}

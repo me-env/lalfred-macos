@@ -8,25 +8,69 @@ struct TranscriptionSection: View {
   @AppStorage(AppDefaultsKey.realtimeLanguageCode) private var realtimeLanguageCode = ""
   @AppStorage(AppDefaultsKey.realtimeSecondaryLanguages) private var rawSecondaryLanguages = ""
   @AppStorage(AppDefaultsKey.languageCodeVoxtral) private var voxtralLanguageCode = ""
-  @State private var isAPIKeyMissing = false
+  /// Key providers with no key saved, so the picker can say so for their models.
+  @State private var providersMissingKey: Set<APIKeyProvider> = []
+  @State private var apiKeys = APIKeyViewModel()
+  /// The model list is open, or a model was just picked: the parameters look unstable.
+  @State private var isPickingModel = false
+  @State private var isSwitchingModel = false
 
   private var provider: TranscriptionProvider {
     TranscriptionProvider(rawValue: rawProvider) ?? .defaultProvider
   }
 
+  private var hasParameters: Bool {
+    provider.languageCodeKey != nil || provider.supportsSecondaryLanguages || provider.transcriptEditKey != nil
+  }
+
   var body: some View {
-    SectionBoxWithTitle("Transcription", caption: caption) {
+    VStack {
+      VStack(alignment: .leading, spacing: 8) {
+        ModelPicker(
+          selection: provider,
+          providersMissingKey: providersMissingKey,
+          isPresented: $isPickingModel,
+          onPick: pick
+        )
+        if providersMissingKey.contains(provider.apiKeyProvider) {
+          missingAPIKeyRow
+            .padding(.horizontal, 4)
+        }
+      }
+      .padding(.bottom, 4)
+
+      parametersSection
+        .instability(isPickingModel || isSwitchingModel)
+    }
+    .task(id: apiKeys.refreshToken) {
+      let missing = await Task.detached {
+        Set(APIKeyProvider.allCases.filter { !Keychain().contains($0.key) })
+      }.value
+      guard !Task.isCancelled else { return }
+      providersMissingKey = missing
+    }
+    .sheet(item: $apiKeys.editingProvider) { keyProvider in
+      APIKeyEditorSheet(
+        provider: keyProvider,
+        onCancel: { apiKeys.cancelEditing() },
+        onSave: { apiKey in apiKeys.save(apiKey, for: keyProvider) }
+      )
+    }
+  }
+
+  /// Switches model, with the parameters glitching a moment before they settle.
+  private func pick(_ model: TranscriptionProvider) {
+    isSwitchingModel = true
+    rawProvider = model.rawValue
+    Task {
+      try? await Task.sleep(for: .seconds(0.4))
+      isSwitchingModel = false
+    }
+  }
+
+  private var parametersSection: some View {
+    SectionBoxWithTitle("Model parameters", caption: caption) {
       VStack(alignment: .leading, spacing: 10) {
-        Picker("Model", selection: $rawProvider) {
-          ForEach(TranscriptionProvider.allCases) { provider in
-            Text(provider.displayName).tag(provider.rawValue)
-          }
-        }
-
-        if isAPIKeyMissing {
-          missingAPIKeyMessage
-        }
-
         if provider.languageCodeKey != nil {
           mainLanguagePicker
         }
@@ -38,13 +82,12 @@ struct TranscriptionSection: View {
         if provider.transcriptEditKey != nil {
           transcriptEditField
         }
+
+        if !hasParameters {
+          Text("This model has no parameters.")
+            .foregroundStyle(.secondary)
+        }
       }
-    }
-    .task(id: provider.apiKeyProvider.key) {
-      let key = provider.apiKeyProvider.key
-      let isMissing = await Task.detached { !Keychain().contains(key) }.value
-      guard !Task.isCancelled else { return }
-      isAPIKeyMissing = isMissing
     }
   }
 
@@ -59,13 +102,16 @@ struct TranscriptionSection: View {
     }
   }
 
-  private var missingAPIKeyMessage: some View {
-    Label(
-      "No \(provider.apiKeyProvider.displayName) API key. Add one in Account → Bring your own keys.",
-      systemImage: "exclamationmark.triangle"
-    )
-    .foregroundStyle(.orange)
-    .font(.callout)
+  private var missingAPIKeyRow: some View {
+    HStack {
+      Label("No \(provider.apiKeyProvider.displayName) API key", systemImage: "exclamationmark.triangle")
+        .foregroundStyle(.orange)
+        .font(.callout)
+      Spacer()
+      Button("Set API Key…") {
+        apiKeys.beginEditing(provider.apiKeyProvider)
+      }
+    }
   }
 
   private var mainLanguagePicker: some View {

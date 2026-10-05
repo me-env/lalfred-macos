@@ -10,7 +10,6 @@ enum AppDefaultsKey {
     static let shortcutToggleRecording = "shortcut.toggleRecording"
     static let shortcutHoldToSpeak = "shortcut.holdToSpeak"
     static let shortcutRetryLastRecording = "shortcut.retryLastRecording"
-    static let autoRetryFailedTranscription = "transcription.autoRetryFailed"
     static let transcriptionProvider = "transcription.provider"
     static let transcriptEditScribeV2 = "transcription.scribeV2.transcriptEdit"
     static let transcriptEditScribeV2Realtime = "transcription.scribeV2Realtime.transcriptEdit"
@@ -27,8 +26,12 @@ enum AppDefaultsKey {
     static let soundEffectKind = "sound.effectKind"
 
     static let hasCompletedOnboarding = "ui.hasCompletedOnboarding"
+    /// Ids of the ``SmartPasteHint``s the user dismissed (JSON).
+    static let dismissedSmartPasteHints = "ui.dismissedSmartPasteHints"
 
     static let smartPasteFormatting = "experimental.smartPasteFormatting"
+    /// ``SmartPasteHint``s found while pasting, per app or website (JSON).
+    static let smartPasteHints = "experimental.smartPasteHints"
     static let textInsertionMethod = "advanced.textInsertionMethod"
 
     static let apiEnvironment = "api.environment"

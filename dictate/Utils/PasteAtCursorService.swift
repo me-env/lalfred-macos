@@ -9,13 +9,16 @@ private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "PasteAtC
 struct PasteAtCursorService {
   private let accessibilityPermissionService = AccessibilityPermissionService()
   private let cursorContextReader: CursorContextReading
+  private let contextPasteHistory: ContextPasteRecording
   private let userDefaults: UserDefaults
 
   init(
     cursorContextReader: CursorContextReading = CursorContextReader(),
+    contextPasteHistory: ContextPasteRecording = ContextPasteHistory(),
     userDefaults: UserDefaults = .standard
   ) {
     self.cursorContextReader = cursorContextReader
+    self.contextPasteHistory = contextPasteHistory
     self.userDefaults = userDefaults
   }
 
@@ -39,8 +42,9 @@ struct PasteAtCursorService {
 
     var textToPaste = text
     if userDefaults.bool(forKey: AppDefaultsKey.smartPasteFormatting) {
-      let cursorContext = cursorContextReader.readContext()
-      textToPaste = PasteTextTransformer.transform(text, context: cursorContext)
+      let report = cursorContextReader.readContext()
+      textToPaste = PasteTextTransformer.transform(text, context: report?.context)
+      if let report { contextPasteHistory.record(report) }
       if textToPaste != text {
         logger.info("[PasteAtCursorService] Adapted text for cursor context: '\(textToPaste)'")
       }

@@ -16,6 +16,14 @@ enum APIKeyProvider: String, CaseIterable, Identifiable {
     }
   }
 
+  /// Company logo in the asset catalog (from Simple Icons, CC0).
+  var logoImageName: String {
+    switch self {
+    case .elevenLabs: "ElevenLabsLogo"
+    case .mistral: "MistralLogo"
+    }
+  }
+
   var key: String {
     switch self {
     case .elevenLabs:
