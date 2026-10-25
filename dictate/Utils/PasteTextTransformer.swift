@@ -103,7 +103,14 @@ enum PasteTextTransformer {
           firstChar.isUppercase else {
       return text
     }
+    if startsWithOK(text) { return "ok" + text.dropFirst(2) }
     return String(firstChar).lowercased() + text.dropFirst()
+  }
+
+  /// "OK" is the one all-caps word that should be lowercased as a whole ("ok", not "oK").
+  private static func startsWithOK(_ text: String) -> Bool {
+    guard text.hasPrefix("OK") else { return false }
+    return !(text.dropFirst(2).first?.isLetter ?? false)
   }
 
   private static func applyLeadingSpaceIfTouchingPreviousWord(

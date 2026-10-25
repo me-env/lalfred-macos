@@ -73,6 +73,22 @@ struct PasteTextTransformerTests {
     #expect(result == "Hello")
   }
 
+  @Test func lowercasesWholeOK() {
+    let result = PasteTextTransformer.transform(
+      "OK, let's go",
+      context: CursorTextContext(previousCharacter: " ", previousNonWhitespaceCharacter: ",")
+    )
+    #expect(result == "ok, let's go")
+  }
+
+  @Test func lowercasesOnlyFirstLetterOfWordStartingWithOK() {
+    let result = PasteTextTransformer.transform(
+      "OKLAHOMA",
+      context: CursorTextContext(previousCharacter: " ", previousNonWhitespaceCharacter: ",")
+    )
+    #expect(result == "oKLAHOMA")
+  }
+
   @Test func lowercasesWhenPreviousNonWhitespaceIsLetter() {
     let result = PasteTextTransformer.transform(
       "Hello world",
