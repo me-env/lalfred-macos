@@ -49,7 +49,11 @@ final class AudioRecordingService {
   private var deviceCapture: DeviceCapture?
   private let callbackQueue = DispatchQueue(label: "lalfred.audio-capture", qos: .userInteractive)
   private var captureSession: AudioCaptureSession?
-  private var deviceListeners: [DeviceListener] = []
+  /// Objects whose property listeners are registered. They stay registered for the app's lifetime:
+  /// CoreAudio keeps a listener block, and everything it captures, even after
+  /// `AudioObjectRemovePropertyListenerBlock` succeeds, so removing them per recording leaked every
+  /// recording's capture session and audio.
+  private var observedObjects: Set<AudioObjectID> = []
   private var isDeviceChangeHandlingScheduled = false
   private var captureRestarts = 0
   /// Bumped on every (re)start, so a readiness fallback from an earlier capture is ignored.
@@ -96,7 +100,7 @@ final class AudioRecordingService {
     isRecording = true
     captureRestarts = 0
     captureGeneration += 1
-    observeDevices(of: inputDevice, session: session)
+    observeDevices(of: inputDevice)
 
     isInputReady = !needsHeadsetSwitch
     if needsHeadsetSwitch {
@@ -130,54 +134,55 @@ final class AudioRecordingService {
   /// A Bluetooth headset's own mode switch needs nothing from us: the system stops and restarts the
   /// device's I/O around it. Only a different input device, or a different input format, needs a
   /// new capture.
-  private func observeDevices(of inputDevice: AudioDeviceID, session: AudioCaptureSession) {
+  private func observeDevices(of inputDevice: AudioDeviceID) {
     let onChange: @Sendable () -> Void = { [weak self] in
       DispatchQueue.main.async {
-        self?.scheduleDeviceChangeHandling(for: session)
+        self?.scheduleDeviceChangeHandling()
       }
     }
 
-    addDeviceListener(AudioObjectID(kAudioObjectSystemObject), kAudioHardwarePropertyDefaultInputDevice, onChange: onChange)
-    addDeviceListener(inputDevice, kAudioDevicePropertyNominalSampleRate, onChange: onChange)
-    addDeviceListener(inputDevice, kAudioDevicePropertyStreamConfiguration, scope: kAudioObjectPropertyScopeInput, onChange: onChange)
+    let system = AudioObjectID(kAudioObjectSystemObject)
+    if !observedObjects.contains(system),
+       addDeviceListener(system, kAudioHardwarePropertyDefaultInputDevice, onChange: onChange) {
+      observedObjects.insert(system)
+    }
+    if !observedObjects.contains(inputDevice),
+       addDeviceListener(inputDevice, kAudioDevicePropertyNominalSampleRate, onChange: onChange),
+       addDeviceListener(inputDevice, kAudioDevicePropertyStreamConfiguration, scope: kAudioObjectPropertyScopeInput, onChange: onChange) {
+      observedObjects.insert(inputDevice)
+    }
   }
 
+  /// Returns whether the listener was registered.
   private func addDeviceListener(
     _ objectID: AudioObjectID,
     _ selector: AudioObjectPropertySelector,
     scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
     onChange: @escaping @Sendable () -> Void
-  ) {
+  ) -> Bool {
     var address = AudioObjectPropertyAddress(mSelector: selector, mScope: scope, mElement: kAudioObjectPropertyElementMain)
-    let block = Self.makeListenerBlock(onChange)
-    guard AudioObjectAddPropertyListenerBlock(objectID, &address, callbackQueue, block) == noErr else { return }
-    deviceListeners.append(DeviceListener(objectID: objectID, address: address, block: block))
+    return AudioObjectAddPropertyListenerBlock(objectID, &address, callbackQueue, Self.makeListenerBlock(onChange)) == noErr
   }
 
   private nonisolated static func makeListenerBlock(_ onChange: @escaping @Sendable () -> Void) -> AudioObjectPropertyListenerBlock {
     { _, _ in onChange() }
   }
 
-  private func removeDeviceListeners() {
-    for var listener in deviceListeners {
-      AudioObjectRemovePropertyListenerBlock(listener.objectID, &listener.address, callbackQueue, listener.block)
-    }
-    deviceListeners.removeAll()
-  }
-
   /// Several properties change together; they are handled once.
-  private func scheduleDeviceChangeHandling(for session: AudioCaptureSession) {
-    guard captureSession === session, !isDeviceChangeHandlingScheduled else { return }
+  private func scheduleDeviceChangeHandling() {
+    guard captureSession != nil, !isDeviceChangeHandlingScheduled else { return }
     isDeviceChangeHandlingScheduled = true
     DispatchQueue.main.async { [weak self] in
       guard let self else { return }
       self.isDeviceChangeHandlingScheduled = false
-      self.handleDeviceChange(for: session)
+      self.handleDeviceChange()
     }
   }
 
-  private func handleDeviceChange(for session: AudioCaptureSession) {
-    guard captureSession === session, isRecording, let deviceCapture else { return }
+  /// Listeners outlive recordings and watch every device used so far, so the change may concern
+  /// neither the current recording nor its device.
+  private func handleDeviceChange() {
+    guard isRecording, let session = captureSession, let deviceCapture else { return }
 
     let currentInput = (try? Self.defaultDevice(kAudioHardwarePropertyDefaultInputDevice)) ?? AudioDeviceID(kAudioObjectUnknown)
     let deviceChanged = currentInput != deviceCapture.device
@@ -191,7 +196,6 @@ final class AudioRecordingService {
     captureRestarts += 1
     captureGeneration += 1
     stopDeviceCapture()
-    removeDeviceListeners()
 
     // After the old capture's last callback, so it cannot count as the new capture's first sound.
     callbackQueue.async {
@@ -206,7 +210,7 @@ final class AudioRecordingService {
     }
 
     deviceCapture = capture
-    observeDevices(of: newInput, session: session)
+    observeDevices(of: newInput)
 
     let needsHeadsetSwitch = Self.needsHeadsetSwitch(newInput)
     if isInputReady, needsHeadsetSwitch {
@@ -252,7 +256,6 @@ final class AudioRecordingService {
     guard isRecording else { return }
 
     stopDeviceCapture()
-    removeDeviceListeners()
     captureGeneration += 1
     captureSession = nil
     isRecording = false
@@ -404,12 +407,6 @@ private nonisolated final class DeviceCapture: @unchecked Sendable {
   }
 }
 
-private struct DeviceListener {
-  let objectID: AudioObjectID
-  var address: AudioObjectPropertyAddress
-  let block: AudioObjectPropertyListenerBlock
-}
-
 /// Feeds the audio stream from the capture callbacks. Runs on the capture callback queue, except for
 /// `requestStop` and `forceFinish`, which the lock makes safe to call from the main thread.
 private nonisolated final class AudioCaptureSession: @unchecked Sendable {
@@ -426,10 +423,14 @@ private nonisolated final class AudioCaptureSession: @unchecked Sendable {
   private let state = OSAllocatedUnfairLock(initialState: StopState())
   /// 50 ms of 16 kHz 16-bit audio.
   private static let minimumChunkByteCount = 1_600
+  /// Devices deliver about 90 buffers a second; the indicator needs 30 levels a second.
+  private static let levelReportIntervalNanoseconds: UInt64 = 1_000_000_000 / 30
 
   /// Touched only on the capture callback queue.
   private var hasDeliveredSound = false
   private var pendingChunk = Data()
+  private var loudestLevelSinceReport: Float = 0
+  private var lastLevelReportUptime: UInt64 = 0
 
   init(
     continuation: AsyncThrowingStream<Data, Error>.Continuation,
@@ -476,6 +477,16 @@ private nonisolated final class AudioCaptureSession: @unchecked Sendable {
     onFinish?()
   }
 
+  /// Sends the loudest level since the last report, so short peaks still move the meter.
+  private func reportLevel(_ level: Float) {
+    loudestLevelSinceReport = max(loudestLevelSinceReport, level)
+    let now = DispatchTime.now().uptimeNanoseconds
+    guard now - lastLevelReportUptime >= Self.levelReportIntervalNanoseconds else { return }
+    lastLevelReportUptime = now
+    onLevel(loudestLevelSinceReport)
+    loudestLevelSinceReport = 0
+  }
+
   /// `inputData` is the device's buffer list; only its first buffer, described by `format`, is used.
   func process(
     _ inputData: UnsafePointer<AudioBufferList>,
@@ -505,7 +516,7 @@ private nonisolated final class AudioCaptureSession: @unchecked Sendable {
 
     chunk.withUnsafeBytes { rawBuffer in
       let samples = rawBuffer.bindMemory(to: Int16.self)
-      onLevel(Self.normalizedLevel(of: samples))
+      reportLevel(Self.normalizedLevel(of: samples))
       // Headsets send pure digital silence until their mic is live, so the first sound marks it ready.
       if !hasDeliveredSound, samples.contains(where: { $0 != 0 }) {
         hasDeliveredSound = true
