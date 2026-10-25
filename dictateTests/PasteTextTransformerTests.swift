@@ -17,6 +17,14 @@ struct PasteTextTransformerTests {
     #expect(result == "")
   }
 
+  @Test func ignoresZeroWidthCharacterInEmptySlateLine() {
+    let result = PasteTextTransformer.transform(
+      "Hello world",
+      context: CursorTextContext(textBeforeCursor: "\u{FEFF}")
+    )
+    #expect(result == "Hello world")
+  }
+
   @Test func keepsCapitalizationAfterSentenceTerminatorWithSpace() {
     let result = PasteTextTransformer.transform(
       "Hello world",

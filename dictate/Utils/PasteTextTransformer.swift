@@ -38,8 +38,13 @@ struct CursorTextContext: Equatable, Hashable {
     self.hasLineBreakBeforeCursor = hasLineBreakBeforeCursor
   }
 
+  /// Zero-width characters editors insert to hold the caret, like the U+FEFF Slate puts
+  /// in an empty line (Discord). They are invisible, so they don't count as text.
+  private static let zeroWidthCharacters: Set<Character> = ["\u{FEFF}", "\u{200B}", "\u{200C}", "\u{200D}", "\u{2060}"]
+
   /// Derives the context from whatever text sits before the cursor.
-  init<S: StringProtocol>(textBeforeCursor prefix: S) {
+  init<S: StringProtocol>(textBeforeCursor rawPrefix: S) {
+    let prefix = rawPrefix.filter { !Self.zeroWidthCharacters.contains($0) }
     var previousNonWhitespaceCharacter: Character? = nil
     var hasLineBreakBeforeCursor = false
 
