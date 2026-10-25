@@ -6,3 +6,5 @@ Certificates.p12
 AuthKey*
 .env
 sparkle_private_key.txt
+xcuserdata/
+buildServer.json
