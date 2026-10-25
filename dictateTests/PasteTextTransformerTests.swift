@@ -25,6 +25,22 @@ struct PasteTextTransformerTests {
     #expect(result == "Hello world")
   }
 
+  @Test func lowercasesWithoutSpaceAfterOpeningParenthesis() {
+    let result = PasteTextTransformer.transform(
+      "Hello world",
+      context: CursorTextContext(textBeforeCursor: "(")
+    )
+    #expect(result == "hello world")
+  }
+
+  @Test func lowercasesWithoutSpaceAfterOpeningBracketMidSentence() {
+    let result = PasteTextTransformer.transform(
+      "Hello",
+      context: CursorTextContext(textBeforeCursor: "See [")
+    )
+    #expect(result == "hello")
+  }
+
   @Test func keepsCapitalizationAfterSentenceTerminatorWithSpace() {
     let result = PasteTextTransformer.transform(
       "Hello world",

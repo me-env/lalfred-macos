@@ -78,6 +78,8 @@ struct CursorTextContext: Equatable, Hashable {
 
 enum PasteTextTransformer {
   private static let sentenceTerminators: Set<Character> = [".", "!", "?", "/"]
+  /// Characters that open a group and hug the text that follows, like "(hello".
+  private static let openingCharacters: Set<Character> = ["(", "[", "{", "“", "‘"]
 
   static func transform(_ text: String, context: CursorTextContext?) -> String {
     logger.info("transform \(String(describing: context), privacy: .public)")
@@ -110,6 +112,7 @@ enum PasteTextTransformer {
   ) -> String {
     guard let prev = context.previousCharacter,
           !prev.isWhitespace,
+          !openingCharacters.contains(prev),
           let firstChar = text.first,
           !firstChar.isWhitespace else {
       return text
