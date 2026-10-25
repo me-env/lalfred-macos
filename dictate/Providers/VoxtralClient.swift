@@ -1,7 +1,7 @@
 import Foundation
 
 
-/// Transcribes with Voxtral Mini Transcribe through Mistral's batch endpoint.
+/// Transcribes with Voxtral Small Transcribe 3, Mistral's most accurate transcription model, through Mistral's batch endpoint.
 struct VoxtralClient {
   private static let apiKeyProvider = TranscriptionProvider.voxtral.apiKeyProvider
 
@@ -59,7 +59,7 @@ struct VoxtralClient {
   private func makeForm(keyterms: [String]) -> MultipartFormData {
     var form = MultipartFormData()
 
-    form.appendField("model", value: "voxtral-mini-latest")
+    form.appendField("model", value: "voxtral-small-transcribe-3-0")
     form.appendField("temperature", value: "0")
 
     // Sent as repeated fields, like the official SDK does.

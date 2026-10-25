@@ -14,7 +14,7 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
     case .scribeV2:
       return "Scribe v2"
     case .voxtral:
-      return "Voxtral"
+      return "Voxtral 3"
     }
   }
 
@@ -116,7 +116,8 @@ nonisolated enum TranscriptionLanguages {
     "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh",
   ].sorted { displayName(for: $0).localizedCompare(displayName(for: $1)) == .orderedAscending }
 
-  /// The languages Voxtral Mini Transcribe supports.
+  /// Voxtral 3 covers about 50 languages, but Mistral hasn't published the list yet; these are the ones
+  /// Voxtral Mini Transcribe 2 was documented for.
   static let voxtralCodes: [String] = [
     "ar", "de", "en", "es", "fr", "hi", "it", "ja", "ko", "nl", "pt", "ru", "zh",
   ].sorted { displayName(for: $0).localizedCompare(displayName(for: $1)) == .orderedAscending }

@@ -5,14 +5,14 @@ Just dictation, done right.
 A native macOS app that turns speech into text in any application. Press a
 global hotkey, talk, and the transcription is pasted into whatever field you
 were in. Transcription runs on [ElevenLabs Scribe](https://elevenlabs.io/speech-to-text)
-or [Mistral AI Voxtral](https://mistral.ai/news/voxtral), with your own API key —
+or [Mistral AI Voxtral 3](https://mistral.ai/news/voxtral-3), with your own API key —
 there is no proxy in between.
 
 ## Features
 
 - **Global hotkey** — start and stop recording from any app (default: `⌃⌥Space`)
 - **Auto-paste** — text lands in the focused field, no clipboard juggling
-- **Choice of provider** — ElevenLabs Scribe v2 or Mistral AI Voxtral
+- **Choice of provider** — ElevenLabs Scribe v2 or Mistral AI Voxtral 3
 - **Bring your own key** — your ElevenLabs and Mistral AI keys are stored in the macOS Keychain
 - **Custom dictionary** — key terms, names and jargon that should transcribe correctly
 - **Snippets** — rewrite recognised phrases into canonical text
@@ -33,7 +33,7 @@ themselves in place via Sparkle.
 - macOS 14 Sonoma or later
 - An API key for at least one provider:
   - [ElevenLabs](https://elevenlabs.io) for Scribe v2
-  - [Mistral AI](https://console.mistral.ai) for Voxtral
+  - [Mistral AI](https://console.mistral.ai) for Voxtral 3
 
 ## Build from source
 
