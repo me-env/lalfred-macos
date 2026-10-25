@@ -6,8 +6,6 @@ nonisolated enum TranscriptionError: LocalizedError {
   case missingAPIKey(APIKeyProvider)
   case invalidResponse(APIKeyProvider)
   case requestFailed(APIKeyProvider, statusCode: Int, message: String?)
-  /// An error event received over a realtime connection.
-  case realtimeFailed(APIKeyProvider, code: String, message: String, isTransient: Bool)
 
   var errorDescription: String? {
     switch self {
@@ -17,8 +15,6 @@ nonisolated enum TranscriptionError: LocalizedError {
       return "Unexpected response from \(provider.displayName)"
     case let .requestFailed(provider, statusCode, message):
       return Self.requestFailedDescription(provider.displayName, statusCode: statusCode, message: message)
-    case let .realtimeFailed(provider, code, message, _):
-      return "\(provider.displayName) error (\(code)): \(message)"
     }
   }
 
@@ -29,17 +25,7 @@ nonisolated enum TranscriptionError: LocalizedError {
       return false
     case let .requestFailed(_, statusCode, _):
       return statusCode == 429 || statusCode >= 500
-    case let .realtimeFailed(_, _, _, isTransient):
-      return isTransient
     }
-  }
-
-  /// A rejected WebSocket handshake surfaces as a generic network error; this recovers its HTTP status.
-  static func handshakeFailure(of webSocket: URLSessionWebSocketTask, provider: APIKeyProvider) -> TranscriptionError? {
-    guard let response = webSocket.response as? HTTPURLResponse, response.statusCode != 101 else {
-      return nil
-    }
-    return .requestFailed(provider, statusCode: response.statusCode, message: nil)
   }
 
   private static func requestFailedDescription(_ provider: String, statusCode: Int, message: String?) -> String {

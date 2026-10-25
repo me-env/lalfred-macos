@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   /// to avoid a Dock-tile flash on launch.
   func applicationWillFinishLaunching(_ notification: Notification) {
     UserDefaults.standard.register(defaults: [AppDefaultsKey.smartPasteFormatting: true])
+    RemovedRealtimeModels.migrate()
 
     Task { @MainActor in
       applyActivationPolicy()

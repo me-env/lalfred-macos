@@ -28,15 +28,7 @@ private func makeAudioTranscriber(settings: TranscriptionSettings) -> STTProvide
   switch settings.provider {
   case .scribeV2:
     return ScribeClient(languageCode: settings.languageCode, transcriptEdit: settings.transcriptEdit)
-  case .scribeV2Realtime:
-    return ScribeRealtimeClient(options: .init(
-      languageCode: settings.languageCode,
-      secondaryLanguages: settings.realtimeSecondaryLanguages,
-      transcriptEdit: settings.transcriptEdit
-    ))
   case .voxtral:
     return VoxtralClient(languageCode: settings.languageCode)
-  case .voxtralRealtime:
-    return VoxtralRealtimeClient()
   }
 }

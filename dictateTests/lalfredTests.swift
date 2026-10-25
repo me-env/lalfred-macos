@@ -38,7 +38,24 @@ struct lalfredTests {
     #expect(TranscriptionProvider.voxtral.ignoredKeytermReason("A: U:") != nil)
     #expect(TranscriptionProvider.voxtral.ignoredKeytermReason("foo,bar") != nil)
     #expect(TranscriptionProvider.scribeV2.ignoredKeytermReason("A: U:") == nil)
-    #expect(TranscriptionProvider.voxtralRealtime.ignoredKeytermReason("Kubernetes") != nil)
+  }
+
+  @Test func removedRealtimeModelsMoveToTheBatchModelOfTheSameService() {
+    let voxtralUser = makeIsolatedUserDefaults()
+    voxtralUser.set("voxtral_mini_realtime", forKey: AppDefaultsKey.transcriptionProvider)
+    RemovedRealtimeModels.migrate(in: voxtralUser)
+    #expect(voxtralUser.string(forKey: AppDefaultsKey.transcriptionProvider) == TranscriptionProvider.voxtral.rawValue)
+
+    let scribeUser = makeIsolatedUserDefaults()
+    scribeUser.set("scribe_v2_realtime", forKey: AppDefaultsKey.transcriptionProvider)
+    scribeUser.set("fr", forKey: "transcription.scribeV2Realtime.languageCode")
+    scribeUser.set("Use digits", forKey: "transcription.scribeV2Realtime.transcriptEdit")
+    scribeUser.set("Keep mine", forKey: AppDefaultsKey.transcriptEditScribeV2)
+    RemovedRealtimeModels.migrate(in: scribeUser)
+    #expect(scribeUser.string(forKey: AppDefaultsKey.transcriptionProvider) == TranscriptionProvider.scribeV2.rawValue)
+    #expect(scribeUser.string(forKey: AppDefaultsKey.languageCodeScribeV2) == "fr")
+    #expect(scribeUser.string(forKey: AppDefaultsKey.transcriptEditScribeV2) == "Keep mine")
+    #expect(scribeUser.string(forKey: "transcription.scribeV2Realtime.languageCode") == nil)
   }
 
   @Test func snippetWithPlainEmailKeyMatchesHyphenatedEmailTranscript() {

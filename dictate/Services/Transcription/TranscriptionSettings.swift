@@ -3,9 +3,7 @@ import Foundation
 
 enum TranscriptionProvider: String, CaseIterable, Identifiable {
   case scribeV2 = "scribe_v2"
-  case scribeV2Realtime = "scribe_v2_realtime"
   case voxtral = "voxtral_mini"
-  case voxtralRealtime = "voxtral_mini_realtime"
 
   static let defaultProvider: TranscriptionProvider = .scribeV2
 
@@ -15,36 +13,27 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
     switch self {
     case .scribeV2:
       return "Scribe v2"
-    case .scribeV2Realtime:
-      return "Scribe v2 Realtime"
     case .voxtral:
       return "Voxtral"
-    case .voxtralRealtime:
-      return "Voxtral Realtime"
     }
   }
 
   /// The service whose API key this model needs.
   var apiKeyProvider: APIKeyProvider {
     switch self {
-    case .scribeV2, .scribeV2Realtime:
+    case .scribeV2:
       return .elevenLabs
-    case .voxtral, .voxtralRealtime:
+    case .voxtral:
       return .mistral
     }
   }
 
-  /// Nil when the provider always detects the language itself.
-  var languageCodeKey: String? {
+  var languageCodeKey: String {
     switch self {
     case .scribeV2:
       return AppDefaultsKey.languageCodeScribeV2
-    case .scribeV2Realtime:
-      return AppDefaultsKey.realtimeLanguageCode
     case .voxtral:
       return AppDefaultsKey.languageCodeVoxtral
-    case .voxtralRealtime:
-      return nil
     }
   }
 
@@ -53,9 +42,7 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
     switch self {
     case .scribeV2:
       return AppDefaultsKey.transcriptEditScribeV2
-    case .scribeV2Realtime:
-      return AppDefaultsKey.transcriptEditScribeV2Realtime
-    case .voxtral, .voxtralRealtime:
+    case .voxtral:
       return nil
     }
   }
@@ -65,39 +52,28 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
     switch self {
     case .scribeV2:
       return KeyTermsStore.maxRequestTerms
-    case .scribeV2Realtime:
-      // Key terms travel in the WebSocket URL, which must stay a reasonable length.
-      return 100
     case .voxtral:
       return 100
-    case .voxtralRealtime:
-      return 0
     }
   }
 
   /// Why this provider doesn't receive a dictionary term; nil when the term is sent.
   nonisolated func ignoredKeytermReason(_ term: String) -> String? {
     switch self {
-    case .scribeV2, .scribeV2Realtime:
+    case .scribeV2:
       return nil
     case .voxtral:
       let hasSeparator = term.contains { $0.isWhitespace || $0 == "," }
       return hasSeparator ? "Ignored by \(displayName): only single words without commas are supported." : nil
-    case .voxtralRealtime:
-      return "Ignored by \(displayName): dictionary words aren't supported."
     }
-  }
-
-  var supportsSecondaryLanguages: Bool {
-    self == .scribeV2Realtime
   }
 
   /// Codes offered in the main language picker.
   var languageCodes: [String] {
     switch self {
-    case .scribeV2, .scribeV2Realtime:
+    case .scribeV2:
       return TranscriptionLanguages.codes
-    case .voxtral, .voxtralRealtime:
+    case .voxtral:
       return TranscriptionLanguages.voxtralCodes
     }
   }
@@ -112,7 +88,6 @@ struct TranscriptionSettings {
   let transcriptEdit: String?
   /// Main language of the selected provider; nil lets the model detect it.
   let languageCode: String?
-  let realtimeSecondaryLanguages: [String]
 
   static func load(from userDefaults: UserDefaults = .standard) -> TranscriptionSettings {
     let provider = userDefaults.string(forKey: AppDefaultsKey.transcriptionProvider)
@@ -122,16 +97,12 @@ struct TranscriptionSettings {
       .trimmingCharacters(in: .whitespacesAndNewlines)
       .prefix(transcriptEditMaxLength)
 
-    let languageCode = provider.languageCodeKey.flatMap(userDefaults.string(forKey:)) ?? ""
-    let secondaryLanguages = TranscriptionLanguages.decode(
-      userDefaults.string(forKey: AppDefaultsKey.realtimeSecondaryLanguages) ?? ""
-    )
+    let languageCode = userDefaults.string(forKey: provider.languageCodeKey) ?? ""
 
     return TranscriptionSettings(
       provider: provider,
       transcriptEdit: transcriptEdit.isEmpty ? nil : String(transcriptEdit),
-      languageCode: languageCode.isEmpty ? nil : languageCode,
-      realtimeSecondaryLanguages: secondaryLanguages.filter { $0 != languageCode }
+      languageCode: languageCode.isEmpty ? nil : languageCode
     )
   }
 }
@@ -152,14 +123,5 @@ nonisolated enum TranscriptionLanguages {
 
   static func displayName(for code: String) -> String {
     Locale.current.localizedString(forLanguageCode: code)?.localizedCapitalized ?? code
-  }
-
-  /// Languages are stored as a comma-separated list of codes.
-  static func decode(_ rawValue: String) -> [String] {
-    rawValue.split(separator: ",").map(String.init).filter { !$0.isEmpty }
-  }
-
-  static func encode(_ codes: [String]) -> String {
-    codes.joined(separator: ",")
   }
 }

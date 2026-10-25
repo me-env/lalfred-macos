@@ -3,10 +3,7 @@ import SwiftUI
 struct TranscriptionSection: View {
   @AppStorage(AppDefaultsKey.transcriptionProvider) private var rawProvider = TranscriptionProvider.defaultProvider.rawValue
   @AppStorage(AppDefaultsKey.transcriptEditScribeV2) private var scribeV2TranscriptEdit = ""
-  @AppStorage(AppDefaultsKey.transcriptEditScribeV2Realtime) private var realtimeTranscriptEdit = ""
   @AppStorage(AppDefaultsKey.languageCodeScribeV2) private var scribeV2LanguageCode = ""
-  @AppStorage(AppDefaultsKey.realtimeLanguageCode) private var realtimeLanguageCode = ""
-  @AppStorage(AppDefaultsKey.realtimeSecondaryLanguages) private var rawSecondaryLanguages = ""
   @AppStorage(AppDefaultsKey.languageCodeVoxtral) private var voxtralLanguageCode = ""
   /// Key providers with no key saved, so the picker can say so for their models.
   @State private var providersMissingKey: Set<APIKeyProvider> = []
@@ -17,10 +14,6 @@ struct TranscriptionSection: View {
 
   private var provider: TranscriptionProvider {
     TranscriptionProvider(rawValue: rawProvider) ?? .defaultProvider
-  }
-
-  private var hasParameters: Bool {
-    provider.languageCodeKey != nil || provider.supportsSecondaryLanguages || provider.transcriptEditKey != nil
   }
 
   var body: some View {
@@ -71,21 +64,10 @@ struct TranscriptionSection: View {
   private var parametersSection: some View {
     SectionBoxWithTitle("Model parameters", caption: caption) {
       VStack(alignment: .leading, spacing: 10) {
-        if provider.languageCodeKey != nil {
-          mainLanguagePicker
-        }
-
-        if provider.supportsSecondaryLanguages {
-          secondaryLanguagesMenu
-        }
+        mainLanguagePicker
 
         if provider.transcriptEditKey != nil {
           transcriptEditField
-        }
-
-        if !hasParameters {
-          Text("This model has no parameters.")
-            .foregroundStyle(.secondary)
         }
       }
     }
@@ -93,12 +75,10 @@ struct TranscriptionSection: View {
 
   private var caption: String {
     switch provider {
-    case .scribeV2, .scribeV2Realtime:
+    case .scribeV2:
       return "Transcript edit applies your instruction to each transcript (up to 2000 characters). It adds 30% to the transcription cost."
     case .voxtral:
       return "Uses your Mistral AI key. Up to 100 dictionary words guide the spelling of names and terms."
-    case .voxtralRealtime:
-      return "Uses your Mistral AI key. The language is detected automatically and dictionary words are not used."
     }
   }
 
@@ -130,40 +110,7 @@ struct TranscriptionSection: View {
       return $scribeV2LanguageCode
     case .voxtral:
       return $voxtralLanguageCode
-    case .scribeV2Realtime, .voxtralRealtime:
-      return $realtimeLanguageCode
     }
-  }
-
-  private var secondaryLanguagesMenu: some View {
-    LabeledContent("Secondary languages") {
-      Menu(secondaryLanguagesSummary) {
-        ForEach(TranscriptionLanguages.codes.filter { $0 != realtimeLanguageCode }, id: \.self) { code in
-          Toggle(TranscriptionLanguages.displayName(for: code), isOn: secondaryLanguageBinding(code))
-        }
-      }
-      .fixedSize()
-    }
-  }
-
-  private var secondaryLanguagesSummary: String {
-    let names = TranscriptionLanguages.decode(rawSecondaryLanguages)
-      .filter { $0 != realtimeLanguageCode }
-      .map(TranscriptionLanguages.displayName(for:))
-    return names.isEmpty ? "None" : names.joined(separator: ", ")
-  }
-
-  private func secondaryLanguageBinding(_ code: String) -> Binding<Bool> {
-    Binding(
-      get: { TranscriptionLanguages.decode(rawSecondaryLanguages).contains(code) },
-      set: { isSelected in
-        var codes = TranscriptionLanguages.decode(rawSecondaryLanguages).filter { $0 != code }
-        if isSelected {
-          codes.append(code)
-        }
-        rawSecondaryLanguages = TranscriptionLanguages.encode(codes)
-      }
-    )
   }
 
   private var transcriptEditField: some View {
@@ -177,15 +124,8 @@ struct TranscriptionSection: View {
 
   private var transcriptEditBinding: Binding<String> {
     Binding(
-      get: { provider == .scribeV2 ? scribeV2TranscriptEdit : realtimeTranscriptEdit },
-      set: { newValue in
-        let limited = String(newValue.prefix(TranscriptionSettings.transcriptEditMaxLength))
-        if provider == .scribeV2 {
-          scribeV2TranscriptEdit = limited
-        } else {
-          realtimeTranscriptEdit = limited
-        }
-      }
+      get: { scribeV2TranscriptEdit },
+      set: { scribeV2TranscriptEdit = String($0.prefix(TranscriptionSettings.transcriptEditMaxLength)) }
     )
   }
 }
