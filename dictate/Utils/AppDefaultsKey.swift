@@ -21,6 +21,8 @@ enum AppDefaultsKey {
     static let accountLastName = "auth.account.lastName"
 
     static let soundEffectKind = "sound.effectKind"
+    /// ``MicrophonePreferences`` (JSON).
+    static let microphonePreferences = "audio.microphonePreferences"
 
     static let hasCompletedOnboarding = "ui.hasCompletedOnboarding"
     /// Ids of the ``SmartPasteHint``s the user dismissed (JSON).

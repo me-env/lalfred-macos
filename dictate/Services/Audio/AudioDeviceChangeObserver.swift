@@ -1,8 +1,8 @@
 import Foundation
 import CoreAudio
 
-/// Reports changes of the default input device, and of the sample rate or input format of every
-/// input device used so far.
+/// Reports changes of the device list, and of the liveness, sample rate or input format of every
+/// input device used so far. The default input is not watched: a dictation keeps its microphone.
 ///
 /// Listeners stay registered for the app's lifetime: CoreAudio keeps a listener block, and everything
 /// it captures, even after `AudioObjectRemovePropertyListenerBlock` succeeds, so removing them per
@@ -21,10 +21,11 @@ final class AudioDeviceChangeObserver {
   func observe(inputDevice: AudioDeviceID) {
     let system = AudioObjectID(kAudioObjectSystemObject)
     if !observedObjects.contains(system),
-       addListener(system, kAudioHardwarePropertyDefaultInputDevice) {
+       addListener(system, kAudioHardwarePropertyDevices) {
       observedObjects.insert(system)
     }
     if !observedObjects.contains(inputDevice),
+       addListener(inputDevice, kAudioDevicePropertyDeviceIsAlive),
        addListener(inputDevice, kAudioDevicePropertyNominalSampleRate),
        addListener(inputDevice, kAudioDevicePropertyStreamConfiguration, scope: kAudioObjectPropertyScopeInput) {
       observedObjects.insert(inputDevice)

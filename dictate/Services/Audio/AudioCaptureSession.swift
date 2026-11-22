@@ -2,8 +2,15 @@ import AVFoundation
 import os
 
 /// Feeds the audio stream from the capture callbacks. Runs on the capture callback queue, except for
-/// `requestStop` and `forceFinish`, which the lock makes safe to call from the main thread.
+/// `requestStop`, `forceFinish`, `beginCapture` and `activity`, which locks make safe to call from
+/// the main thread.
 nonisolated final class AudioCaptureSession: @unchecked Sendable {
+  /// The device capture whose buffers are accepted, and what it delivered.
+  private struct CaptureState {
+    var generation = 0
+    var activity = CaptureActivity(startTime: 0)
+  }
+
   private struct StopState {
     var stopHostTime: UInt64?
     var onFinish: (@Sendable () -> Void)?
@@ -15,11 +22,11 @@ nonisolated final class AudioCaptureSession: @unchecked Sendable {
   private let onLevel: @Sendable (Float) -> Void
   private let onSound: @Sendable (AudioCaptureSession) -> Void
   private let state = OSAllocatedUnfairLock(initialState: StopState())
+  private let capture = OSAllocatedUnfairLock(initialState: CaptureState())
   /// 50 ms of 16 kHz 16-bit audio.
   private static let minimumChunkByteCount = 1_600
 
   /// Touched only on the capture callback queue.
-  private var hasDeliveredSound = false
   private var pendingChunk = Data()
   private var levelMeter = AudioLevelMeter()
 
@@ -33,9 +40,22 @@ nonisolated final class AudioCaptureSession: @unchecked Sendable {
     self.onSound = onSound
   }
 
-  /// Called on the capture callback queue, between two captures of the same recording.
-  func resetSoundDetection() {
-    hasDeliveredSound = false
+  /// Seconds on the clock `CaptureActivity` uses.
+  static func now() -> TimeInterval {
+    AVAudioTime.seconds(forHostTime: mach_absolute_time())
+  }
+
+  /// Accepts only `generation`'s buffers from now on, so a late callback of a stopped capture can
+  /// neither add audio nor count as the new capture's first callback or first sound.
+  func beginCapture(generation: Int) {
+    capture.withLock { state in
+      state.generation = generation
+      state.activity = CaptureActivity(startTime: Self.now())
+    }
+  }
+
+  var activity: CaptureActivity {
+    capture.withLock { $0.activity }
   }
 
   /// Every chunk sent to the stream so far.
@@ -72,9 +92,11 @@ nonisolated final class AudioCaptureSession: @unchecked Sendable {
   func process(
     _ inputData: UnsafePointer<AudioBufferList>,
     inputTime: AudioTimeStamp,
+    generation: Int,
     format: AVAudioFormat,
     converter: AVAudioConverter
   ) {
+    guard recordCallback(of: generation) else { return }
     let buffers = UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: inputData))
     guard let firstBuffer = buffers.first, firstBuffer.mData != nil, firstBuffer.mDataByteSize > 0 else { return }
 
@@ -99,17 +121,41 @@ nonisolated final class AudioCaptureSession: @unchecked Sendable {
     send(chunk, isLastBuffer: isLastBuffer)
   }
 
+  /// Returns whether the buffer belongs to the current capture, and notes its arrival if so.
+  private func recordCallback(of generation: Int) -> Bool {
+    capture.withLock { state in
+      guard state.generation == generation else { return false }
+      state.activity.lastCallbackTime = Self.now()
+      return true
+    }
+  }
+
   /// Reports the level, and the first sound: headsets send pure digital silence until their mic is live.
   private func inspect(_ chunk: Data) {
-    chunk.withUnsafeBytes { rawBuffer in
+    guard !chunk.isEmpty else { return }
+    let hasSound = chunk.withUnsafeBytes { rawBuffer in
       let samples = rawBuffer.bindMemory(to: Int16.self)
       if let level = levelMeter.levelToReport(for: samples) {
         onLevel(level)
       }
-      if !hasDeliveredSound, samples.contains(where: { $0 != 0 }) {
-        hasDeliveredSound = true
-        onSound(self)
+      return samples.contains { $0 != 0 }
+    }
+    if recordSound(hasSound) {
+      onSound(self)
+    }
+  }
+
+  /// Tracks runs of exact zeros; returns true for the capture's first buffer holding sound.
+  private func recordSound(_ hasSound: Bool) -> Bool {
+    capture.withLock { state in
+      guard hasSound else {
+        state.activity.zeroRunStartTime = state.activity.zeroRunStartTime ?? Self.now()
+        return false
       }
+      state.activity.zeroRunStartTime = nil
+      guard !state.activity.hasDeliveredSound else { return false }
+      state.activity.hasDeliveredSound = true
+      return true
     }
   }
 

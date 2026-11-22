@@ -12,7 +12,8 @@ nonisolated final class DeviceCapture: @unchecked Sendable {
   private let format: AVAudioFormat
   private var procID: AudioDeviceIOProcID?
 
-  init(device: AudioDeviceID, session: AudioCaptureSession, queue: DispatchQueue) throws {
+  /// Only buffers of the session's current `generation` are recorded.
+  init(device: AudioDeviceID, generation: Int, session: AudioCaptureSession, queue: DispatchQueue) throws {
     guard let format = AudioDevices.inputFormat(of: device),
           let converter = AVAudioConverter(from: format, to: AudioRecordingService.outputFormat) else {
       throw AudioRecordingService.RecordingError.failedToCreateRecorder
@@ -23,7 +24,7 @@ nonisolated final class DeviceCapture: @unchecked Sendable {
 
     var procID: AudioDeviceIOProcID?
     let status = AudioDeviceCreateIOProcIDWithBlock(&procID, device, queue) { _, inputData, inputTime, _, _ in
-      session.process(inputData, inputTime: inputTime.pointee, format: format, converter: converter)
+      session.process(inputData, inputTime: inputTime.pointee, generation: generation, format: format, converter: converter)
     }
     guard status == noErr, let procID else {
       throw AudioRecordingService.RecordingError.failedToCreateRecorder

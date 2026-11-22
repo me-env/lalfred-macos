@@ -50,8 +50,10 @@ struct ProcessingFlowHandler {
   let indicator: IndicatorPresenting
   let deactivateListeningHotKeys: () -> Void
   
+  /// `wasCaptureLost`: the microphone failed mid-recording and the recording ended on its own.
   func performProcessing(
     transcription: Task<String, Error>,
+    wasCaptureLost: Bool,
     errorMessage: (Error) -> String
   ) async {
     deactivateListeningHotKeys()
@@ -62,6 +64,11 @@ struct ProcessingFlowHandler {
 
     do {
       let recordedAudio = try await recordingService.stopRecording()
+      guard !RecordedAudio.isDigitallySilent(recordedAudio) else {
+        transcription.cancel()
+        indicator.showStatus(message: wasCaptureLost ? "Microphone lost" : "No sound from the microphone", autoHideAfter: 2.2)
+        return
+      }
       lastRecording.save(recordedAudio)
 
       let transcript: String
@@ -77,7 +84,7 @@ struct ProcessingFlowHandler {
         transcript = try await runTransformationPipeline(recordedAudio: recordedAudio)
       }
       try Task.checkCancellation()
-      onTranscriptionPipelineResult(transcript)
+      onTranscriptionPipelineResult(transcript, wasCaptureLost: wasCaptureLost)
     } catch {
       transcription.cancel()
       // A cancelled processing already shows its own status.
@@ -103,7 +110,7 @@ struct ProcessingFlowHandler {
     }
   }
   
-  private func onTranscriptionPipelineResult(_ transcript: String) {
+  private func onTranscriptionPipelineResult(_ transcript: String, wasCaptureLost: Bool = false) {
     let cleanedTranscript = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !cleanedTranscript.isEmpty else {
       indicator.showStatus(message: "NoSpeech", autoHideAfter: 1.4)
@@ -116,6 +123,10 @@ struct ProcessingFlowHandler {
       return
     }
     
+    guard !wasCaptureLost else {
+      indicator.showStatus(message: "Microphone lost, pasted what was recorded", autoHideAfter: 2.5)
+      return
+    }
     indicator.showStatus(message: "Pasted", autoHideAfter: 1.0)
   }
 }

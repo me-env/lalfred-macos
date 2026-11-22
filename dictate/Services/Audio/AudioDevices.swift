@@ -7,6 +7,27 @@ nonisolated enum AudioDevices {
     defaultDevice(kAudioHardwarePropertyDefaultInputDevice)
   }
 
+  /// Every device with an input stream.
+  static func inputDevices() -> [InputDevice] {
+    allDeviceIDs().compactMap(inputDevice)
+  }
+
+  /// Unmutes the device's input, when it has a mute control.
+  static func clearInputMute(_ device: AudioDeviceID) {
+    var address = AudioObjectPropertyAddress(
+      mSelector: kAudioDevicePropertyMute,
+      mScope: kAudioObjectPropertyScopeInput,
+      mElement: kAudioObjectPropertyElementMain
+    )
+    var isSettable: DarwinBoolean = false
+    guard AudioObjectHasProperty(device, &address),
+          AudioObjectIsPropertySettable(device, &address, &isSettable) == noErr, isSettable.boolValue else {
+      return
+    }
+    var isMuted: UInt32 = 0
+    AudioObjectSetPropertyData(device, &address, 0, nil, UInt32(MemoryLayout<UInt32>.size), &isMuted)
+  }
+
   /// A Bluetooth headset whose mic no app is using, and whose playback still runs at a music-mode
   /// sample rate, has to switch to headset mode before its mic delivers audio. Right after a
   /// recording the headset is still in headset mode (same rate as the mic) and needs no switch.
@@ -41,6 +62,74 @@ nonisolated enum AudioDevices {
     return AVAudioFormat(commonFormat: format.commonFormat, sampleRate: format.sampleRate, channels: 1, interleaved: false)
   }
 
+  private static func inputDevice(_ device: AudioDeviceID) -> InputDevice? {
+    guard hasInputStream(device), let uid = stringProperty(device, kAudioDevicePropertyDeviceUID) else { return nil }
+    let transport = transport(of: device)
+    var isAlive: UInt32 = 0
+    _ = readProperty(device, kAudioDevicePropertyDeviceIsAlive, into: &isAlive)
+    return InputDevice(
+      id: device,
+      uid: uid,
+      name: stringProperty(device, kAudioObjectPropertyName) ?? uid,
+      transport: transport,
+      isInternalMic: transport == .builtIn && !isExternalBuiltInInput(device),
+      isAlive: isAlive != 0
+    )
+  }
+
+  private static func allDeviceIDs() -> [AudioDeviceID] {
+    let system = AudioObjectID(kAudioObjectSystemObject)
+    var address = AudioObjectPropertyAddress(
+      mSelector: kAudioHardwarePropertyDevices,
+      mScope: kAudioObjectPropertyScopeGlobal,
+      mElement: kAudioObjectPropertyElementMain
+    )
+    var size: UInt32 = 0
+    guard AudioObjectGetPropertyDataSize(system, &address, 0, nil, &size) == noErr else { return [] }
+    var devices = [AudioDeviceID](repeating: kAudioObjectUnknown, count: Int(size) / MemoryLayout<AudioDeviceID>.size)
+    guard AudioObjectGetPropertyData(system, &address, 0, nil, &size, &devices) == noErr else { return [] }
+    return devices
+  }
+
+  private static func hasInputStream(_ device: AudioDeviceID) -> Bool {
+    var address = AudioObjectPropertyAddress(
+      mSelector: kAudioDevicePropertyStreams,
+      mScope: kAudioObjectPropertyScopeInput,
+      mElement: kAudioObjectPropertyElementMain
+    )
+    var size: UInt32 = 0
+    return AudioObjectGetPropertyDataSize(device, &address, 0, nil, &size) == noErr && size > 0
+  }
+
+  private static func transport(of device: AudioDeviceID) -> InputDevice.Transport {
+    var transportType: UInt32 = 0
+    guard readProperty(device, kAudioDevicePropertyTransportType, into: &transportType) == noErr else { return .other }
+    switch transportType {
+    case kAudioDeviceTransportTypeBuiltIn: return .builtIn
+    case kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE: return .bluetooth
+    case kAudioDeviceTransportTypeVirtual, kAudioDeviceTransportTypeAggregate: return .virtual
+    default: return .other
+    }
+  }
+
+  /// A built-in input whose data source is the headphone jack ('emic') rather than the internal mic.
+  private static func isExternalBuiltInInput(_ device: AudioDeviceID) -> Bool {
+    var dataSource: UInt32 = 0
+    let status = readProperty(device, kAudioDevicePropertyDataSource, scope: kAudioObjectPropertyScopeInput, into: &dataSource)
+    return status == noErr && dataSource == externalMicDataSource
+  }
+
+  /// 'emic'
+  private static let externalMicDataSource: UInt32 = 0x656D_6963
+
+  private static func stringProperty(_ objectID: AudioObjectID, _ selector: AudioObjectPropertySelector) -> String? {
+    var value: Unmanaged<CFString>?
+    var size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
+    var address = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+    guard AudioObjectGetPropertyData(objectID, &address, 0, nil, &size, &value) == noErr, let value else { return nil }
+    return value.takeRetainedValue() as String
+  }
+
   private static func defaultDevice(_ selector: AudioObjectPropertySelector) -> AudioDeviceID? {
     var deviceID = AudioDeviceID(kAudioObjectUnknown)
     let status = readProperty(AudioObjectID(kAudioObjectSystemObject), selector, into: &deviceID)
@@ -55,9 +144,7 @@ nonisolated enum AudioDevices {
   }
 
   private static func isBluetooth(_ device: AudioDeviceID) -> Bool {
-    var transportType: UInt32 = 0
-    return readProperty(device, kAudioDevicePropertyTransportType, into: &transportType) == noErr
-      && transportType == kAudioDeviceTransportTypeBluetooth
+    transport(of: device) == .bluetooth
   }
 
   private static func readProperty<Value: BitwiseCopyable>(

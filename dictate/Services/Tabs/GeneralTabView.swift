@@ -26,6 +26,7 @@ struct GeneralTabView: View {
   var body: some View {
     VStack {
       PreferencesInput()
+      MicrophoneSection()
       SectionBoxWithTitle("Keyboard Shortcuts") {
         ShortcutInput(
           label: "Toggle Recording",

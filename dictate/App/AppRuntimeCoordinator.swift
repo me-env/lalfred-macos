@@ -17,6 +17,7 @@ final class AppRuntimeCoordinator {
   /// Presses sooner than this after processing starts are ignored, so a double press doesn't throw away the dictation.
   private let minimumProcessingCancelDelay: TimeInterval = 0.5
   private var hasPlayedStartSound = false
+  private var wasCaptureLost = false
 
   private var toggleRecordingMonitor: UnifiedShortcutMonitor?
   private var holdToSpeakMonitor: UnifiedShortcutMonitor?
@@ -78,10 +79,22 @@ final class AppRuntimeCoordinator {
       guard let self, self.sessionState.isListening else { return }
       if isReady {
         self.indicator.showListening()
-        self.playStartSoundOnce()
       } else {
         self.indicator.showPreparing()
       }
+    }
+
+    // During a headset switch the sound fails to play and blocks the main thread, and playing on
+    // the headset while its mic starts can drop the mic link, so it waits for audio to flow.
+    recordingService.onInputLive = { [weak self] in
+      guard let self, self.sessionState.isListening else { return }
+      self.playStartSoundOnce()
+    }
+
+    recordingService.onCaptureLost = { [weak self] in
+      guard let self, self.sessionState.isListening else { return }
+      self.wasCaptureLost = true
+      self.startProcessing { await self.finishListeningAndProcess() }
     }
   }
 
@@ -265,6 +278,7 @@ final class AppRuntimeCoordinator {
     defer { sessionState.transitionToIdle() }
     await processingFlowHandler.performProcessing(
       transcription: transcription,
+      wasCaptureLost: wasCaptureLost,
       errorMessage: Self.errorMessage(for:)
     )
   }
@@ -275,17 +289,13 @@ final class AppRuntimeCoordinator {
 
   private func beginListening() {
     hasPlayedStartSound = false
+    wasCaptureLost = false
     let transcription = listeningFlow.beginListening(
       sessionState: &sessionState,
       errorMessage: Self.errorMessage(for:)
     )
     if let transcription {
       pendingTranscription = transcription
-      // Otherwise it plays once the mic is live: during a headset switch the sound fails to play
-      // and blocks the main thread, which kept the indicator from appearing.
-      if recordingService.isInputReady {
-        playStartSoundOnce()
-      }
     }
   }
 

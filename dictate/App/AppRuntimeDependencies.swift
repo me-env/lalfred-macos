@@ -5,6 +5,10 @@ protocol AudioRecordingServicing: AnyObject {
     var onAudioLevelUpdate: ((Float) -> Void)? { get set }
     /// Called when the microphone becomes ready, or stops being ready while the capture restarts.
     var onInputReadinessChange: ((Bool) -> Void)? { get set }
+    /// Called once per recording, when audio starts flowing.
+    var onInputLive: (() -> Void)? { get set }
+    /// Called when no microphone could be recovered; the stream has ended with the audio captured so far.
+    var onCaptureLost: (() -> Void)? { get set }
     /// False while the input device is still switching on, e.g. a Bluetooth headset changing profile.
     var isInputReady: Bool { get }
     func startRecording() throws -> AsyncThrowingStream<Data, Error>

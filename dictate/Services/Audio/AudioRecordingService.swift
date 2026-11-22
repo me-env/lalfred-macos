@@ -1,6 +1,9 @@
 import Foundation
 import AVFoundation
 import CoreAudio
+import os
+
+private let logger = Logger(subsystem: "fr.lalfred.dictate", category: "Audio")
 
 @MainActor
 final class AudioRecordingService {
@@ -36,12 +39,16 @@ final class AudioRecordingService {
   private static let stopFallbackDelay: TimeInterval = 1.0
   /// A Bluetooth headset switching from music to headset mode delivers pure silence until its mic
   /// is live, measured at ~0.97 s. Its noise gate also sends silence while the user is quiet, so the
-  /// input counts as ready on the first sound or after this delay, whichever comes first.
-  private static let inputReadyFallbackDelay: TimeInterval = 1.2
-  /// Guards against a device that keeps changing; each restart reopens the microphone.
-  private static let maxCaptureRestarts = 3
+  /// input counts as live on the first sound or after this delay, whichever comes first.
+  private static let inputLiveFallbackDelay: TimeInterval = 1.2
+  /// One Bluetooth connection fires several properties over 1–2 s, and starting a capture can fire
+  /// them too; they are handled once things settle.
+  private static let deviceChangeDebounce: TimeInterval = 0.3
+  private static let watchdogInterval: TimeInterval = 0.5
 
   private var deviceCapture: DeviceCapture?
+  /// The microphone of the running capture; nil once recovery gave up.
+  private var activeMicrophone: InputDevice?
   private let callbackQueue = DispatchQueue(label: "lalfred.audio-capture", qos: .userInteractive)
   private var captureSession: AudioCaptureSession?
   private lazy var deviceChangeObserver = AudioDeviceChangeObserver(queue: callbackQueue) { [weak self] in
@@ -49,13 +56,18 @@ final class AudioRecordingService {
       self?.scheduleDeviceChangeHandling()
     }
   }
-  private var isDeviceChangeHandlingScheduled = false
-  private var captureRestarts = 0
-  /// Bumped on every (re)start, so a readiness fallback from an earlier capture is ignored.
+  private let preferencesStore = MicrophonePreferencesStore()
+  private var pendingDeviceChange: DispatchWorkItem?
+  private var watchdogTimer: Timer?
+  private var recoveryBudget = CaptureRecoveryBudget()
+  /// Bumped on every (re)start, so buffers and fallbacks of an earlier capture are ignored.
   private var captureGeneration = 0
+  private var hasSignaledInputLive = false
 
   var onAudioLevelUpdate: ((Float) -> Void)?
   var onInputReadinessChange: ((Bool) -> Void)?
+  var onInputLive: (() -> Void)?
+  var onCaptureLost: (() -> Void)?
 
   private(set) var isRecording = false
   /// False while a Bluetooth headset switches to its mic mode; level updates are held back until then.
@@ -65,31 +77,26 @@ final class AudioRecordingService {
   func startRecording() throws -> AsyncThrowingStream<Data, Error> {
     try ensureMicrophonePermission()
     try ensureNotRecording()
-    guard let inputDevice = AudioDevices.defaultInput() else {
+    guard let microphone = selectMicrophone(excluding: []) else {
       throw RecordingError.failedToCreateRecorder
     }
-    let needsHeadsetSwitch = AudioDevices.needsHeadsetSwitch(inputDevice)
 
     let (stream, continuation) = AsyncThrowingStream<Data, Error>.makeStream()
     let session = makeCaptureSession(continuation: continuation)
 
     do {
-      deviceCapture = try DeviceCapture(device: inputDevice, session: session, queue: callbackQueue)
+      try startCapture(on: microphone, for: session)
     } catch {
+      activeMicrophone = nil
       session.forceFinish(throwing: error)
       throw error
     }
 
     captureSession = session
     isRecording = true
-    captureRestarts = 0
-    captureGeneration += 1
-    deviceChangeObserver.observe(inputDevice: inputDevice)
-
-    isInputReady = !needsHeadsetSwitch
-    if needsHeadsetSwitch {
-      scheduleReadinessFallback(for: session)
-    }
+    recoveryBudget = CaptureRecoveryBudget()
+    hasSignaledInputLive = false
+    startWatchdog()
     return stream
   }
 
@@ -134,16 +141,46 @@ final class AudioRecordingService {
       },
       onSound: { [weak self] session in
         DispatchQueue.main.async {
-          self?.markInputReady(for: session)
+          self?.markInputLive(for: session)
         }
       }
     )
+  }
+
+  private func selectMicrophone(excluding excludedUIDs: Set<String>) -> InputDevice? {
+    MicrophoneSelector.select(in: MicrophoneSelector.Context(
+      devices: AudioDevices.inputDevices(),
+      systemDefault: AudioDevices.defaultInput(),
+      preferences: preferencesStore.load(),
+      isLidClosed: ClamshellState.isLidClosed(),
+      excludedUIDs: excludedUIDs
+    ))
+  }
+
+  /// Starts a new device capture of `microphone`, whose buffers are the only ones `session` accepts.
+  private func startCapture(on microphone: InputDevice, for session: AudioCaptureSession) throws {
+    captureGeneration += 1
+    activeMicrophone = microphone
+    session.beginCapture(generation: captureGeneration)
+    AudioDevices.clearInputMute(microphone.id)
+    // Read before starting: the capture itself makes the device run.
+    let needsHeadsetSwitch = AudioDevices.needsHeadsetSwitch(microphone.id)
+
+    deviceCapture = try DeviceCapture(device: microphone.id, generation: captureGeneration, session: session, queue: callbackQueue)
+    deviceChangeObserver.observe(inputDevice: microphone.id)
+    setInputReady(!needsHeadsetSwitch)
+    scheduleInputLiveFallback(for: session)
+    logger.info("Capturing from \(microphone.name, privacy: .public) (\(String(describing: microphone.transport), privacy: .public))")
   }
 
   private func stopCapture() {
     guard isRecording else { return }
 
     stopDeviceCapture()
+    stopWatchdog()
+    pendingDeviceChange?.cancel()
+    pendingDeviceChange = nil
+    activeMicrophone = nil
     captureGeneration += 1
     captureSession = nil
     isRecording = false
@@ -157,77 +194,106 @@ final class AudioRecordingService {
 
   // MARK: - Input readiness
 
-  private func scheduleReadinessFallback(for session: AudioCaptureSession) {
+  private func scheduleInputLiveFallback(for session: AudioCaptureSession) {
     let generation = captureGeneration
-    DispatchQueue.main.asyncAfter(deadline: .now() + Self.inputReadyFallbackDelay) { [weak self] in
+    DispatchQueue.main.asyncAfter(deadline: .now() + Self.inputLiveFallbackDelay) { [weak self] in
       guard let self, self.captureGeneration == generation else { return }
-      self.markInputReady(for: session)
+      self.markInputLive(for: session)
     }
   }
 
-  private func markInputReady(for session: AudioCaptureSession) {
-    guard captureSession === session, !isInputReady else { return }
-    isInputReady = true
-    onInputReadinessChange?(true)
+  private func markInputLive(for session: AudioCaptureSession) {
+    guard captureSession === session else { return }
+    setInputReady(true)
+    guard !hasSignaledInputLive else { return }
+    hasSignaledInputLive = true
+    onInputLive?()
   }
 
-  // MARK: - Input device changes
+  private func setInputReady(_ isReady: Bool) {
+    guard isInputReady != isReady else { return }
+    isInputReady = isReady
+    onInputReadinessChange?(isReady)
+  }
 
-  /// Several properties change together; they are handled once.
+  // MARK: - Disruptions and recovery
+
+  /// Listeners outlive recordings and watch every device used so far, so the change may concern
+  /// neither the current recording nor its microphone.
   private func scheduleDeviceChangeHandling() {
-    guard captureSession != nil, !isDeviceChangeHandlingScheduled else { return }
-    isDeviceChangeHandlingScheduled = true
-    DispatchQueue.main.async { [weak self] in
-      guard let self else { return }
-      self.isDeviceChangeHandlingScheduled = false
-      self.handleDeviceChange()
+    guard isRecording else { return }
+    pendingDeviceChange?.cancel()
+    let handling = DispatchWorkItem { [weak self] in
+      self?.handleDeviceChange()
+    }
+    pendingDeviceChange = handling
+    DispatchQueue.main.asyncAfter(deadline: .now() + Self.deviceChangeDebounce, execute: handling)
+  }
+
+  private func handleDeviceChange() {
+    pendingDeviceChange = nil
+    guard isRecording, let activeMicrophone, let deviceCapture else { return }
+    let disruption = CaptureDisruption.detect(
+      activeUID: activeMicrophone.uid,
+      in: AudioDevices.inputDevices(),
+      formatMatches: deviceCapture.matchesCurrentFormat()
+    )
+    guard let disruption else { return }
+    recover(from: disruption)
+  }
+
+  private func startWatchdog() {
+    watchdogTimer = Timer.scheduledTimer(withTimeInterval: Self.watchdogInterval, repeats: true) { [weak self] _ in
+      MainActor.assumeIsolated {
+        self?.checkCaptureHealth()
+      }
     }
   }
 
-  /// A Bluetooth headset's own mode switch needs nothing from us: the system stops and restarts the
-  /// device's I/O around it. Only a different input device, or a different input format, needs a
-  /// new capture. Listeners outlive recordings and watch every device used so far, so the change may
-  /// concern neither the current recording nor its device.
-  private func handleDeviceChange() {
-    guard isRecording, let session = captureSession, let deviceCapture else { return }
-
-    let currentInput = AudioDevices.defaultInput()
-    let deviceChanged = currentInput != deviceCapture.device
-    let formatChanged = !deviceChanged && !deviceCapture.matchesCurrentFormat()
-
-    guard deviceChanged || formatChanged, captureRestarts < Self.maxCaptureRestarts else { return }
-    restartCapture(for: session, inputDevice: currentInput)
+  private func stopWatchdog() {
+    watchdogTimer?.invalidate()
+    watchdogTimer = nil
   }
 
-  private func restartCapture(for session: AudioCaptureSession, inputDevice newInput: AudioDeviceID?) {
-    captureRestarts += 1
-    captureGeneration += 1
+  /// Device changes waiting to be handled are left to `handleDeviceChange`, as they likely explain
+  /// what the watchdog sees.
+  private func checkCaptureHealth() {
+    guard pendingDeviceChange == nil, let captureSession, let activeMicrophone, deviceCapture != nil else { return }
+    let disruption = CaptureWatchdog.verdict(
+      for: captureSession.activity,
+      at: AudioCaptureSession.now(),
+      isInternalMic: activeMicrophone.isInternalMic
+    )
+    guard let disruption else { return }
+    recover(from: disruption)
+  }
+
+  /// Rebuilds the capture on the microphone the recovery budget picks, or ends the recording with
+  /// the audio captured so far.
+  private func recover(from disruption: CaptureDisruption) {
+    guard let session = captureSession, let failedMicrophone = activeMicrophone else { return }
+    let nextMicrophone = recoveryBudget.nextMicrophone(after: disruption, on: failedMicrophone) { excludedUIDs in
+      selectMicrophone(excluding: excludedUIDs)
+    }
+    logger.notice("\(String(describing: disruption), privacy: .public) on \(failedMicrophone.name, privacy: .public), next: \(nextMicrophone?.name ?? "none", privacy: .public)")
     stopDeviceCapture()
 
-    // After the old capture's last callback, so it cannot count as the new capture's first sound.
-    callbackQueue.async {
-      session.resetSoundDetection()
-    }
-
-    guard let newInput,
-          let capture = try? DeviceCapture(device: newInput, session: session, queue: callbackQueue) else {
-      // Ends the recording with an error rather than silently capturing nothing.
-      session.forceFinish(throwing: RecordingError.failedToCreateRecorder)
+    guard let nextMicrophone else {
+      giveUp(on: session)
       return
     }
-
-    deviceCapture = capture
-    deviceChangeObserver.observe(inputDevice: newInput)
-    updateInputReadiness(after: newInput, for: session)
+    do {
+      try startCapture(on: nextMicrophone, for: session)
+    } catch {
+      recover(from: .deviceLost)
+    }
   }
 
-  private func updateInputReadiness(after newInput: AudioDeviceID, for session: AudioCaptureSession) {
-    guard AudioDevices.needsHeadsetSwitch(newInput) else { return }
-    if isInputReady {
-      isInputReady = false
-      onInputReadinessChange?(false)
-    }
-    scheduleReadinessFallback(for: session)
+  private func giveUp(on session: AudioCaptureSession) {
+    activeMicrophone = nil
+    stopWatchdog()
+    session.forceFinish()
+    onCaptureLost?()
   }
 
   // MARK: - Preconditions
