@@ -7,11 +7,17 @@ func runTransformationPipeline(audio: AsyncThrowingStream<Data, Error>) async th
   let snippetProcessor: SnippetTranscriptProcessor = SnippetTranscriptProcessor()
   let keyTermsStore = KeyTermsStore()
 
-  let keyterms = keyTermsStore.keyTermsForRequest()
+  let keyterms = Array(keyTermsStore.keyTermsForRequest()
     .filter { settings.provider.ignoredKeytermReason($0) == nil }
-    .suffix(settings.provider.maxKeyterms)
+    .suffix(settings.provider.maxKeyterms))
 
-  let transcript = try await audioTranscriber.transcribeAudio(audio, keyterms: Array(keyterms))
+  let segmentedTranscriber = SegmentedTranscriber(
+    transcribeSegment: { @MainActor segment in
+      try await audioTranscriber.transcribeAudio(segment, keyterms: keyterms)
+    },
+    makeDetector: { try? SoundAnalysisVoiceActivityDetector() }
+  )
+  let transcript = try await segmentedTranscriber.transcribe(audio)
 
   return snippetProcessor.process(transcript: transcript.trimmingCharacters(in: .whitespacesAndNewlines))
 }
