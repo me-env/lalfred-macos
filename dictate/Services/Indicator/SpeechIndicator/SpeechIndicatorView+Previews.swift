@@ -10,7 +10,7 @@ import SwiftUI
 
 #Preview("Listening (Low)") {
   SpeechIndicatorView(
-    content: .listening(level: 0.2),
+    content: .listening(levels: ListeningLevels(clamping: [0.2, 0.15, 0.1, 0.05, 0, 0, 0, 0])),
     shouldAnimateAppearance: false
   )
   .padding()
@@ -18,7 +18,7 @@ import SwiftUI
 
 #Preview("Listening (High)") {
   SpeechIndicatorView(
-    content: .listening(level: 0.9),
+    content: .listening(levels: ListeningLevels(clamping: [0.5, 0.9, 0.7, 0.4, 0.6, 0.3, 0, 0])),
     shouldAnimateAppearance: false
   )
   .padding()

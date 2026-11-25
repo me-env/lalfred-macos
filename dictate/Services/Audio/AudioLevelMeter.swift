@@ -5,19 +5,42 @@ import Foundation
 nonisolated struct AudioLevelMeter {
   private static let reportIntervalNanoseconds: UInt64 = 1_000_000_000 / 30
 
-  private var normalizer = SpeechLevelNormalizer()
+  /// Gates every band: when the whole signal reads as silence or noise, all bars rest.
+  private var overallNormalizer = SpeechLevelNormalizer()
+  /// Each band against its own recent range, so the bars move apart.
+  private var bandNormalizers = Array(repeating: SpeechLevelNormalizer(), count: ListeningLevels.bandCount)
+  private let spectrum = VoiceSpectrumAnalyzer()
   private var loudestDecibelsSinceReport = SpeechLevelNormalizer.silenceDecibels
   private var lastReportUptime: UInt64 = 0
 
-  /// The loudest level since the last report, so short peaks still move the meter; nil between reports.
-  mutating func levelToReport(for samples: UnsafeBufferPointer<Int16>) -> Float? {
+  /// The gate uses the loudest level since the last report, so short peaks still open it; the bands
+  /// use the latest frame. Nil between reports.
+  mutating func levelsToReport(
+    for samples: UnsafeBufferPointer<Int16>,
+    uptimeNanoseconds now: UInt64 = DispatchTime.now().uptimeNanoseconds
+  ) -> ListeningLevels? {
     loudestDecibelsSinceReport = max(loudestDecibelsSinceReport, Self.decibels(of: samples))
-    let now = DispatchTime.now().uptimeNanoseconds
-    let elapsedNanoseconds = now - lastReportUptime
+    spectrum.append(samples)
+    let elapsedNanoseconds = now &- lastReportUptime
     guard elapsedNanoseconds >= Self.reportIntervalNanoseconds else { return nil }
     lastReportUptime = now
     defer { loudestDecibelsSinceReport = SpeechLevelNormalizer.silenceDecibels }
-    return normalizer.level(for: loudestDecibelsSinceReport, elapsedSeconds: Float(elapsedNanoseconds) / 1_000_000_000)
+
+    let elapsedSeconds = Float(elapsedNanoseconds) / 1_000_000_000
+    let overallLevel = overallNormalizer.level(for: loudestDecibelsSinceReport, elapsedSeconds: elapsedSeconds)
+    // Analyzed even in silence, so each band's noise floor stays current.
+    let bandLevels = updatedBandLevels(elapsedSeconds: elapsedSeconds)
+    guard overallLevel > 0 else { return .silent }
+    return ListeningLevels(clamping: bandLevels)
+  }
+
+  private mutating func updatedBandLevels(elapsedSeconds: Float) -> SIMD8<Float> {
+    let decibels = spectrum.bandDecibels()
+    var levels = SIMD8<Float>.zero
+    for band in 0..<ListeningLevels.bandCount {
+      levels[band] = bandNormalizers[band].level(for: decibels[band], elapsedSeconds: elapsedSeconds)
+    }
+    return levels
   }
 
   /// RMS power in dBFS.

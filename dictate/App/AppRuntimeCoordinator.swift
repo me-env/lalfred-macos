@@ -81,9 +81,9 @@ final class AppRuntimeCoordinator {
   /// Never mutate `sessionState` across a call into a service, not even through `inout`: a service
   /// call can reach these callbacks, which read it, and Swift aborts on the overlapping access.
   private func registerRecordingServiceCallbacks() {
-    recordingService.onAudioLevelUpdate = { [weak self] level in
+    recordingService.onAudioLevelsUpdate = { [weak self] levels in
       guard let self, self.sessionState.isListening else { return }
-      self.indicator.updateListeningLevel(CGFloat(level))
+      self.indicator.updateListeningLevels(levels)
     }
 
     recordingService.onInputReadinessChange = { [weak self] isReady in

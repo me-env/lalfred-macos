@@ -19,7 +19,7 @@ nonisolated final class AudioCaptureSession: @unchecked Sendable {
   }
 
   private let continuation: AsyncThrowingStream<Data, Error>.Continuation
-  private let onLevel: @Sendable (Float) -> Void
+  private let onLevels: @Sendable (ListeningLevels) -> Void
   private let onSound: @Sendable (AudioCaptureSession) -> Void
   private let state = OSAllocatedUnfairLock(initialState: StopState())
   private let capture = OSAllocatedUnfairLock(initialState: CaptureState())
@@ -32,11 +32,11 @@ nonisolated final class AudioCaptureSession: @unchecked Sendable {
 
   init(
     continuation: AsyncThrowingStream<Data, Error>.Continuation,
-    onLevel: @escaping @Sendable (Float) -> Void,
+    onLevels: @escaping @Sendable (ListeningLevels) -> Void,
     onSound: @escaping @Sendable (AudioCaptureSession) -> Void
   ) {
     self.continuation = continuation
-    self.onLevel = onLevel
+    self.onLevels = onLevels
     self.onSound = onSound
   }
 
@@ -130,13 +130,13 @@ nonisolated final class AudioCaptureSession: @unchecked Sendable {
     }
   }
 
-  /// Reports the level, and the first sound: headsets send pure digital silence until their mic is live.
+  /// Reports the levels, and the first sound: headsets send pure digital silence until their mic is live.
   private func inspect(_ chunk: Data) {
     guard !chunk.isEmpty else { return }
     let hasSound = chunk.withUnsafeBytes { rawBuffer in
       let samples = rawBuffer.bindMemory(to: Int16.self)
-      if let level = levelMeter.levelToReport(for: samples) {
-        onLevel(level)
+      if let levels = levelMeter.levelsToReport(for: samples) {
+        onLevels(levels)
       }
       return samples.contains { $0 != 0 }
     }

@@ -1,9 +1,8 @@
 import Foundation
-import CoreGraphics
 
 /// Callbacks are delivered on a later main-queue turn, never from inside a call to the service.
 protocol AudioRecordingServicing: AnyObject {
-    var onAudioLevelUpdate: ((Float) -> Void)? { get set }
+    var onAudioLevelsUpdate: ((ListeningLevels) -> Void)? { get set }
     /// Called when the microphone becomes ready, or stops being ready while the capture restarts.
     var onInputReadinessChange: ((Bool) -> Void)? { get set }
     /// Called once per recording, when audio starts flowing.
@@ -25,7 +24,7 @@ protocol PastingAtCursor {
 protocol IndicatorPresenting: AnyObject {
     func showPreparing()
     func showListening()
-    func updateListeningLevel(_ level: CGFloat)
+    func updateListeningLevels(_ levels: ListeningLevels)
     func showStatus(message: String, autoHideAfter delay: TimeInterval?)
     func hideIndicator()
 }

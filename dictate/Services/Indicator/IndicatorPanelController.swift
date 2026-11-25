@@ -25,8 +25,8 @@ final class IndicatorPanelController {
     showIndicator(autoHideAfter: nil)
   }
 
-  func updateListeningLevel(_ level: CGFloat) {
-    indicatorController.updateListeningLevel(level)
+  func updateListeningLevels(_ levels: ListeningLevels) {
+    indicatorController.updateListeningLevels(levels)
   }
 
   func showStatus(message: String, autoHideAfter delay: TimeInterval? = nil) {

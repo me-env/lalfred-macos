@@ -64,7 +64,7 @@ final class AudioRecordingService {
   private var captureGeneration = 0
   private var hasSignaledInputLive = false
 
-  var onAudioLevelUpdate: ((Float) -> Void)?
+  var onAudioLevelsUpdate: ((ListeningLevels) -> Void)?
   var onInputReadinessChange: ((Bool) -> Void)?
   var onInputLive: (() -> Void)?
   var onCaptureLost: (() -> Void)?
@@ -133,10 +133,10 @@ final class AudioRecordingService {
   private func makeCaptureSession(continuation: AsyncThrowingStream<Data, Error>.Continuation) -> AudioCaptureSession {
     AudioCaptureSession(
       continuation: continuation,
-      onLevel: { [weak self] level in
+      onLevels: { [weak self] levels in
         DispatchQueue.main.async {
           guard let self, self.isInputReady else { return }
-          self.onAudioLevelUpdate?(level)
+          self.onAudioLevelsUpdate?(levels)
         }
       },
       onSound: { [weak self] session in

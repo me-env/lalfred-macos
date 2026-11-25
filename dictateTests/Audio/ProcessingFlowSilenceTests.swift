@@ -1,4 +1,3 @@
-import CoreGraphics
 import Foundation
 import Testing
 @testable import L_Alfred
@@ -6,7 +5,7 @@ import Testing
 @MainActor
 struct ProcessingFlowSilenceTests {
   private final class FakeRecordingService: AudioRecordingServicing {
-    var onAudioLevelUpdate: ((Float) -> Void)?
+    var onAudioLevelsUpdate: ((ListeningLevels) -> Void)?
     var onInputReadinessChange: ((Bool) -> Void)?
     var onInputLive: (() -> Void)?
     var onCaptureLost: (() -> Void)?
@@ -32,7 +31,7 @@ struct ProcessingFlowSilenceTests {
     private(set) var statuses: [String] = []
     func showPreparing() {}
     func showListening() {}
-    func updateListeningLevel(_ level: CGFloat) {}
+    func updateListeningLevels(_ levels: ListeningLevels) {}
     func showStatus(message: String, autoHideAfter delay: TimeInterval?) { statuses.append(message) }
     func hideIndicator() {}
   }

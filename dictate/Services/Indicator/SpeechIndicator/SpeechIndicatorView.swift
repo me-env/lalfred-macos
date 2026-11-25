@@ -35,8 +35,8 @@ struct SpeechIndicatorView: View {
     switch content {
     case .preparing:
       PreparingWaveView()
-    case .listening(let level):
-      ListeningWaveView(level: level)
+    case .listening(let levels):
+      ListeningWaveView(levels: levels)
     case .status(let message):
       if isProcessingStatus(message) {
         ProcessingActivityView()

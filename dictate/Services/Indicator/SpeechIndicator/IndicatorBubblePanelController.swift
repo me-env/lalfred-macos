@@ -37,11 +37,11 @@ final class IndicatorBubblePanelController {
   }
 
   func showListening() {
-    viewModel.bubbleContent = .listening(level: 0)
+    viewModel.bubbleContent = .listening(levels: .silent)
   }
 
-  func updateListeningLevel(_ level: CGFloat) {
-    viewModel.bubbleContent = .listening(level: max(0, min(level, 1)))
+  func updateListeningLevels(_ levels: ListeningLevels) {
+    viewModel.bubbleContent = .listening(levels: levels)
   }
 
   func showStatus(message: String) {

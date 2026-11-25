@@ -1,4 +1,3 @@
-import CoreGraphics
 import Foundation
 import Testing
 @testable import L_Alfred
@@ -10,7 +9,7 @@ struct DictationLifecycleTests {
   /// Calls back synchronously from inside every call, the worst case for re-entrancy: the real
   /// service defers its callbacks, but the coordinator must not depend on it.
   final class ReentrantRecordingService: AudioRecordingServicing {
-    var onAudioLevelUpdate: ((Float) -> Void)?
+    var onAudioLevelsUpdate: ((ListeningLevels) -> Void)?
     var onInputReadinessChange: ((Bool) -> Void)?
     var onInputLive: (() -> Void)?
     var onCaptureLost: (() -> Void)?
@@ -22,7 +21,7 @@ struct DictationLifecycleTests {
       let (stream, continuation) = AsyncThrowingStream<Data, Error>.makeStream()
       self.continuation = continuation
       setInputReady(!needsHeadsetSwitch)
-      onAudioLevelUpdate?(0.5)
+      onAudioLevelsUpdate?(ListeningLevels(clamping: SIMD8(repeating: 0.5)))
       return stream
     }
 
@@ -68,7 +67,7 @@ struct DictationLifecycleTests {
       self.needsHeadsetSwitchPerStart = needsHeadsetSwitchPerStart
     }
 
-    var onAudioLevelUpdate: ((Float) -> Void)? { get { service.onAudioLevelUpdate } set { service.onAudioLevelUpdate = newValue } }
+    var onAudioLevelsUpdate: ((ListeningLevels) -> Void)? { get { service.onAudioLevelsUpdate } set { service.onAudioLevelsUpdate = newValue } }
     var onInputReadinessChange: ((Bool) -> Void)? { get { service.onInputReadinessChange } set { service.onInputReadinessChange = newValue } }
     var onInputLive: (() -> Void)? { get { service.onInputLive } set { service.onInputLive = newValue } }
     var onCaptureLost: (() -> Void)? { get { service.onCaptureLost } set { service.onCaptureLost = newValue } }
@@ -85,7 +84,7 @@ struct DictationLifecycleTests {
   final class FakeIndicator: IndicatorPresenting {
     func showPreparing() {}
     func showListening() {}
-    func updateListeningLevel(_ level: CGFloat) {}
+    func updateListeningLevels(_ levels: ListeningLevels) {}
     func showStatus(message: String, autoHideAfter delay: TimeInterval?) {}
     func hideIndicator() {}
   }

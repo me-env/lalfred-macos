@@ -24,7 +24,7 @@ struct IndicatorBubbleView: View {
   Text("Hello world")
 //  IndicatorBubbleView(viewModel: {
 //    let vm = IndicatorViewModel()
-//    vm.bubbleContent = .listening(level: 0.62)
+//    vm.bubbleContent = .listening(levels: .silent)
 //    vm.shouldAnimateAppearance = true
 //    return vm
 //  }())

@@ -1,25 +1,25 @@
 import SwiftUI
 
+/// One bar per voice band, lowest frequencies on the left.
 struct ListeningWaveView: View {
-  let level: CGFloat
+  let levels: ListeningLevels
 
-  private let barWeights: [CGFloat] = [0.6, 0.85, 1.0, 1.0, 0.85, 0.6]
   private let minHeight: CGFloat = 3
   private let maxHeight: CGFloat = 13
 
   var body: some View {
     HStack(spacing: 3) {
-      ForEach(Array(barWeights.enumerated()), id: \.offset) { _, weight in
+      ForEach(0..<ListeningLevels.bandCount, id: \.self) { band in
         Capsule(style: .continuous)
           .fill(Color.white)
-          .frame(width: 2, height: barHeight(weight: weight))
+          .frame(width: 2, height: barHeight(for: band))
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .animation(.easeOut(duration: 0.08), value: level)
+    .animation(.easeOut(duration: 0.08), value: levels)
   }
 
-  private func barHeight(weight: CGFloat) -> CGFloat {
-    minHeight + ((maxHeight - minHeight) * level * weight)
+  private func barHeight(for band: Int) -> CGFloat {
+    minHeight + ((maxHeight - minHeight) * CGFloat(levels[band]))
   }
 }
