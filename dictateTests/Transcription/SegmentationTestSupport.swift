@@ -42,19 +42,22 @@ struct TestRecording {
 }
 
 /// Classifies like the SoundAnalysis detector: 0.5 s windows every 0.25 s from the first sample fed,
-/// each returned once all of its audio arrived. Confidences come from the recording's description.
+/// each returned once all of its audio arrived, but none ending after `classifiedEnd`. Confidences
+/// come from the recording's description.
 final class FakeVoiceActivityDetector: VoiceActivityDetecting {
   static let windowLength = 8_000
   static let hop = 4_000
 
   private let recording: TestRecording
+  private let classifiedEnd: Int
   private var origin: Int?
   private var fedEnd = 0
   private var nextWindowStart = 0
   private(set) var firstPositionFed: Int?
 
-  init(recording: TestRecording) {
+  init(recording: TestRecording, classifiedEnd: Int = .max) {
     self.recording = recording
+    self.classifiedEnd = classifiedEnd
   }
 
   func analyze(_ chunk: Data, startingAt position: Int) -> [SpeechWindow] {
@@ -65,7 +68,7 @@ final class FakeVoiceActivityDetector: VoiceActivityDetecting {
     }
     fedEnd = position + chunk.count / 2
     var windows: [SpeechWindow] = []
-    while nextWindowStart + Self.windowLength <= fedEnd {
+    while nextWindowStart + Self.windowLength <= min(fedEnd, classifiedEnd) {
       let range = nextWindowStart ..< nextWindowStart + Self.windowLength
       windows.append(SpeechWindow(samples: range, speechConfidence: recording.speechConfidence(in: range)))
       nextWindowStart += Self.hop
@@ -77,10 +80,12 @@ final class FakeVoiceActivityDetector: VoiceActivityDetecting {
 /// Makes fake detectors and remembers them.
 final class FakeDetectorFactory: @unchecked Sendable {
   private let recording: TestRecording
+  private let classifiedEnd: Int
   private let detectors = OSAllocatedUnfairLock(initialState: [FakeVoiceActivityDetector]())
 
-  init(recording: TestRecording) {
+  init(recording: TestRecording, classifiedEnd: Int = .max) {
     self.recording = recording
+    self.classifiedEnd = classifiedEnd
   }
 
   var created: [FakeVoiceActivityDetector] {
@@ -88,7 +93,7 @@ final class FakeDetectorFactory: @unchecked Sendable {
   }
 
   func make() -> VoiceActivityDetecting? {
-    let detector = FakeVoiceActivityDetector(recording: recording)
+    let detector = FakeVoiceActivityDetector(recording: recording, classifiedEnd: classifiedEnd)
     detectors.withLock { $0.append(detector) }
     return detector
   }
@@ -118,6 +123,17 @@ func segments(of actions: [AudioSegmenter.Action]) -> [Data] {
       segments.append(Data())
     }
   }
+}
+
+/// Recording positions where each segment after the first starts.
+func cutPositions(of segments: [Data]) -> [Int] {
+  segments.dropLast().reduce(into: [Int]()) { cuts, segment in
+    cuts.append((cuts.last ?? 0) + segment.count / 2)
+  }
+}
+
+func samples(atSecond second: Double) -> Int {
+  Int(second * Double(TestRecording.rate))
 }
 
 func seconds(_ samples: Int) -> Double {

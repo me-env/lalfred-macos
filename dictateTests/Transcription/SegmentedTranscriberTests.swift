@@ -11,6 +11,7 @@ struct SegmentedTranscriberTests {
   /// concurrently, so they are told apart by their audio, not by their start order.
   private final class FakeProvider: @unchecked Sendable {
     private let requests = OSAllocatedUnfairLock(initialState: [Data]())
+    private let startCount = OSAllocatedUnfairLock(initialState: 0)
     private let reply: @Sendable (Data) async throws -> String
 
     init(reply: @escaping @Sendable (Data) async throws -> String) {
@@ -22,7 +23,12 @@ struct SegmentedTranscriberTests {
       requests.withLock { $0.sorted { $0.count < $1.count } }
     }
 
+    var startedRequestCount: Int {
+      startCount.withLock { $0 }
+    }
+
     func transcribe(_ audio: AsyncThrowingStream<Data, Error>) async throws -> String {
+      startCount.withLock { $0 += 1 }
       var received = Data()
       for try await chunk in audio {
         received.append(chunk)
@@ -32,10 +38,22 @@ struct SegmentedTranscriberTests {
     }
   }
 
-  /// The segments `AudioSegmenter` cuts the recording into.
+  /// The segments `AudioSegmenter` cuts the recording into, without a silent tail it drops.
   private func expectedSegments(of recording: TestRecording) -> [Data] {
     var segmenter = AudioSegmenter(makeDetector: FakeDetectorFactory(recording: recording).make)
-    return segments(of: segmenter.append(recording.pcm) + segmenter.finish())
+    return segments(of: segmenter.append(recording.pcm) + segmenter.finish()).filter { !$0.isEmpty }
+  }
+
+  private func replyingWithByteCount() -> FakeProvider {
+    FakeProvider { audio in "\(audio.count) bytes." }
+  }
+
+  /// Waits until `condition` holds, at most 5 s.
+  private func waitUntil(_ condition: () -> Bool) async throws {
+    let deadline = ContinuousClock.now + .seconds(5)
+    while !condition(), ContinuousClock.now < deadline {
+      try await Task.sleep(for: .milliseconds(10))
+    }
   }
 
   private func audioStream(of recording: TestRecording, endingWith error: Error? = nil) -> AsyncThrowingStream<Data, Error> {
@@ -60,7 +78,7 @@ struct SegmentedTranscriberTests {
 
     #expect(text == "Hello there.")
     #expect(provider.requestAudio == [recording.pcm])
-    #expect(factory.created.isEmpty)
+    #expect(factory.created.count == 1)
   }
 
   @Test func joinsTextsInOrderWhenRequestsFinishOutOfOrder() async throws {
@@ -88,6 +106,77 @@ struct SegmentedTranscriberTests {
     let segments = expectedSegments(of: recording)
     #expect(segments.reduce(Data(), +) == recording.pcm)
     #expect(provider.requestAudio == segments.sorted { $0.count < $1.count })
+  }
+
+  @Test func silenceAfterTheLastCutIsNotRequested() async throws {
+    let recording = TestRecording(duration: 70, pauses: [22 ..< 25.5, 47 ..< 70])
+    let provider = replyingWithByteCount()
+
+    let text = try await makeTranscriber(provider, FakeDetectorFactory(recording: recording)).transcribe(audioStream(of: recording))
+
+    let segments = expectedSegments(of: recording)
+    let sentByteCount = segments.reduce(0) { $0 + $1.count }
+    #expect(segments.count == 2)
+    #expect(provider.startedRequestCount == 2)
+    #expect(text == segments.map { "\($0.count) bytes." }.joined(separator: " "))
+    #expect(segments.reduce(Data(), +) == recording.pcm.prefix(sentByteCount))
+    #expect(recording.pauseSamples[1].contains(sentByteCount / 2))
+  }
+
+  @Test func finalSegmentIsRequestedWhenNotClearlySilent() async throws {
+    let ambiguous = TestRecording(duration: 70, pauses: [22 ..< 25.5, 47 ..< 69], unclear: [69 ..< 70])
+    let speech = TestRecording(duration: 70, pauses: [22 ..< 25.5, 47 ..< 69.5])
+
+    for recording in [ambiguous, speech] {
+      let provider = replyingWithByteCount()
+
+      _ = try await makeTranscriber(provider, FakeDetectorFactory(recording: recording)).transcribe(audioStream(of: recording))
+
+      #expect(provider.startedRequestCount == 3)
+      #expect(provider.requestAudio.reduce(0) { $0 + $1.count } == recording.pcm.count)
+    }
+  }
+
+  @Test func segmentRequestOpensOnlyOnceSoundIsHeard() async throws {
+    let recording = TestRecording(duration: 40, pauses: [10 ..< 30])
+    let pcm = recording.pcm
+    let silenceEnd = 2 * samples(atSecond: 29)
+    let provider = replyingWithByteCount()
+    let (audio, continuation) = AsyncThrowingStream<Data, Error>.makeStream()
+    let transcriber = makeTranscriber(provider, FakeDetectorFactory(recording: recording))
+    let transcription = Task { try await transcriber.transcribe(audio) }
+
+    for chunk in chunked(pcm.prefix(silenceEnd), sizes: [3_200]) {
+      continuation.yield(chunk)
+    }
+    try await waitUntil { provider.requestAudio.count == 1 }
+    try await Task.sleep(for: .milliseconds(100))
+    let startedDuringSilence = provider.startedRequestCount
+    continuation.yield(pcm.suffix(from: silenceEnd))
+    continuation.finish()
+    _ = try await transcription.value
+
+    #expect(startedDuringSilence == 1)
+    #expect(provider.startedRequestCount == 2)
+    #expect(provider.requestAudio.reduce(Data()) { $0 + $1 }.count == pcm.count)
+  }
+
+  @Test func shortDictationWithSpeechIsOneRequest() async throws {
+    let recording = TestRecording(duration: 8, pauses: [])
+    let provider = replyingWithByteCount()
+
+    _ = try await makeTranscriber(provider, FakeDetectorFactory(recording: recording)).transcribe(audioStream(of: recording))
+
+    #expect(provider.requestAudio == [recording.pcm])
+  }
+
+  @Test func silentDictationIsStillOneRequest() async throws {
+    let recording = TestRecording(duration: 12, pauses: [0 ..< 12])
+    let provider = replyingWithByteCount()
+
+    _ = try await makeTranscriber(provider, FakeDetectorFactory(recording: recording)).transcribe(audioStream(of: recording))
+
+    #expect(provider.requestAudio == [recording.pcm])
   }
 
   @Test func failedSegmentFailsTheDictationAndCancelsTheOthers() async throws {
