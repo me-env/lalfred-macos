@@ -29,6 +29,21 @@ struct MicrophonePreferencesTests {
     #expect(preferences.moving(uid: "usb", by: 5).priority.map(\.uid) == ["airpods", "internal", "usb"])
   }
 
+  @Test func movingToIndexPlacesTheMicrophoneThere() {
+    let preferences = MicrophonePreferences().remembering([Devices.usbMic, Devices.airPods, Devices.internalMic])
+    #expect(preferences.moving(uid: "internal", toIndex: 0).priority.map(\.uid) == ["internal", "usb", "airpods"])
+    #expect(preferences.moving(uid: "usb", toIndex: 2).priority.map(\.uid) == ["airpods", "internal", "usb"])
+    #expect(preferences.moving(uid: "usb", toIndex: 1).priority.map(\.uid) == ["airpods", "usb", "internal"])
+    #expect(preferences.moving(uid: "airpods", toIndex: 1) == preferences)
+  }
+
+  @Test func movingToIndexClampsAndIgnoresUnknownMicrophones() {
+    let preferences = MicrophonePreferences().remembering([Devices.usbMic, Devices.airPods, Devices.internalMic])
+    #expect(preferences.moving(uid: "airpods", toIndex: -3).priority.map(\.uid) == ["airpods", "usb", "internal"])
+    #expect(preferences.moving(uid: "airpods", toIndex: 9).priority.map(\.uid) == ["usb", "internal", "airpods"])
+    #expect(preferences.moving(uid: "unknown", toIndex: 0) == preferences)
+  }
+
   @Test func removingForgetsTheMicrophone() {
     let preferences = MicrophonePreferences().remembering([Devices.usbMic, Devices.airPods])
     #expect(preferences.removing(uid: "usb").priority.map(\.uid) == ["airpods"])
