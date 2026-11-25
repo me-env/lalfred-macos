@@ -38,9 +38,15 @@ nonisolated struct MicrophonePreferences: Codable, Equatable, Sendable {
 
   func moving(uid: String, by offset: Int) -> MicrophonePreferences {
     guard let index = priority.firstIndex(where: { $0.uid == uid }) else { return self }
-    let destination = min(max(index + offset, 0), priority.count - 1)
+    return moving(uid: uid, toIndex: index + offset)
+  }
+
+  /// Moves the microphone so it ends up at `destination` in the list, clamped to the list's bounds.
+  func moving(uid: String, toIndex destination: Int) -> MicrophonePreferences {
+    guard let index = priority.firstIndex(where: { $0.uid == uid }) else { return self }
     var updated = self
-    updated.priority.insert(updated.priority.remove(at: index), at: destination)
+    let microphone = updated.priority.remove(at: index)
+    updated.priority.insert(microphone, at: min(max(destination, 0), updated.priority.count))
     return updated
   }
 
