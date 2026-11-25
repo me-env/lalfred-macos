@@ -4,16 +4,23 @@ import Foundation
 /// Joins segment transcripts into one text.
 nonisolated enum TranscriptJoiner {
   /// Trims each text, drops empty ones, and separates them with a space, except between two
-  /// characters of scripts written without spaces.
-  static func join(_ texts: [String]) -> String {
+  /// characters of scripts written without spaces. A text continuing a sentence starts in lowercase
+  /// unless its first word keeps its capital; `properNouns` are words that always do.
+  static func join(_ texts: [String], properNouns: Set<String> = []) -> String {
     texts
       .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
       .filter { !$0.isEmpty }
       .reduce("") { joined, text in
         guard let last = joined.unicodeScalars.last, let first = text.unicodeScalars.first else { return joined + text }
         let separator = isWrittenWithoutSpaces(last) && isWrittenWithoutSpaces(first) ? "" : " "
-        return joined + separator + text
+        return joined + separator + continuing(joined, with: text, properNouns: properNouns)
       }
+  }
+
+  /// `text` as it reads after `joined`: the transcriber capitalized it only because it started a request.
+  private static func continuing(_ joined: String, with text: String, properNouns: Set<String>) -> String {
+    guard !SentenceContinuation.endsSentence(joined) else { return text }
+    return SentenceContinuation.continuingSentence(text, properNouns: properNouns)
   }
 
   /// Chinese, Japanese and Thai characters, and CJK punctuation.

@@ -15,6 +15,6 @@ struct SoundAnalysisVoiceActivityDetectorTests {
 
     #expect(windows.first?.samples == start ..< start + 8_000)
     #expect(windows.count >= 4)
-    #expect(windows.allSatisfy { $0.speechConfidence < PauseCutPoint.speechConfidenceThreshold })
+    #expect(windows.allSatisfy { $0.speechConfidence < PauseTracker.silenceConfidence })
   }
 }

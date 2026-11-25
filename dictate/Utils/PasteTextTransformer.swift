@@ -77,7 +77,7 @@ struct CursorTextContext: Equatable, Hashable {
 
 
 enum PasteTextTransformer {
-  private static let sentenceTerminators: Set<Character> = [".", "!", "?", "/"]
+  private static let sentenceTerminators = SentenceContinuation.sentenceTerminators.union(["/"])
   /// Characters that open a group and hug the text that follows, like "(hello".
   private static let openingCharacters: Set<Character> = ["(", "[", "{", "“", "‘"]
 
@@ -104,7 +104,7 @@ enum PasteTextTransformer {
       return text
     }
     if startsWithOK(text) { return "ok" + text.dropFirst(2) }
-    return String(firstChar).lowercased() + text.dropFirst()
+    return SentenceContinuation.lowercasingFirstLetter(of: text)
   }
 
   /// "OK" is the one all-caps word that should be lowercased as a whole ("ok", not "oK").

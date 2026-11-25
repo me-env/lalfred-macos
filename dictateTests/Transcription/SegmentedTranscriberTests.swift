@@ -48,11 +48,11 @@ struct SegmentedTranscriberTests {
   }
 
   private func makeTranscriber(_ provider: FakeProvider, _ factory: FakeDetectorFactory) -> SegmentedTranscriber {
-    SegmentedTranscriber(transcribeSegment: provider.transcribe, makeDetector: factory.make)
+    SegmentedTranscriber(transcribeSegment: provider.transcribe, makeDetector: factory.make, properNouns: [])
   }
 
   @Test func shortDictationIsOneRequest() async throws {
-    let recording = TestRecording(duration: 12, pauses: [4 ..< 5])
+    let recording = TestRecording(duration: 12, pauses: [4 ..< 8])
     let provider = FakeProvider { _ in " Hello there. " }
     let factory = FakeDetectorFactory(recording: recording)
 
@@ -64,7 +64,7 @@ struct SegmentedTranscriberTests {
   }
 
   @Test func joinsTextsInOrderWhenRequestsFinishOutOfOrder() async throws {
-    let recording = TestRecording(duration: 70, pauses: [22 ..< 23, 45 ..< 46])
+    let recording = TestRecording(duration: 70, pauses: [22 ..< 25.5, 47 ..< 50.5])
     let segments = expectedSegments(of: recording)
     let firstSegmentByteCount = segments[0].count
     let provider = FakeProvider { audio in
@@ -80,7 +80,7 @@ struct SegmentedTranscriberTests {
   }
 
   @Test func everyByteGoesToExactlyOneRequest() async throws {
-    let recording = TestRecording(duration: 70, pauses: [22 ..< 23, 45 ..< 46])
+    let recording = TestRecording(duration: 70, pauses: [22 ..< 25.5, 47 ..< 50.5])
     let provider = FakeProvider { _ in "text" }
 
     _ = try await makeTranscriber(provider, FakeDetectorFactory(recording: recording)).transcribe(audioStream(of: recording))
@@ -91,7 +91,7 @@ struct SegmentedTranscriberTests {
   }
 
   @Test func failedSegmentFailsTheDictationAndCancelsTheOthers() async throws {
-    let recording = TestRecording(duration: 50, pauses: [22 ..< 23])
+    let recording = TestRecording(duration: 50, pauses: [22 ..< 25.5])
     let firstSegmentByteCount = expectedSegments(of: recording)[0].count
     let provider = FakeProvider { audio in
       guard audio.count == firstSegmentByteCount else {
@@ -110,7 +110,7 @@ struct SegmentedTranscriberTests {
   }
 
   @Test func recordingErrorFailsTheDictationAndCancelsRequests() async throws {
-    let recording = TestRecording(duration: 30, pauses: [22 ..< 23])
+    let recording = TestRecording(duration: 30, pauses: [22 ..< 25.5])
     let provider = FakeProvider { _ in
       try await Task.sleep(for: .seconds(30))
       return "too late"
@@ -126,7 +126,7 @@ struct SegmentedTranscriberTests {
   }
 
   @Test func cancellingTheTranscriptionCancelsEveryRequest() async throws {
-    let recording = TestRecording(duration: 50, pauses: [22 ..< 23])
+    let recording = TestRecording(duration: 50, pauses: [22 ..< 25.5])
     let provider = FakeProvider { _ in
       try await Task.sleep(for: .seconds(30))
       return "too late"

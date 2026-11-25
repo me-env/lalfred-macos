@@ -23,8 +23,24 @@ struct AudioSegmenterTests {
     }
   }
 
+  private func heldBackSeconds(_ recording: TestRecording) -> (maximum: Double, cutCount: Int) {
+    var segmenter = AudioSegmenter(makeDetector: FakeDetectorFactory(recording: recording).make)
+    var receivedByteCount = 0
+    var sentByteCount = 0
+    var maximumHeldBack = 0
+    var cutCount = 0
+    for chunk in chunked(recording.pcm, sizes: [3_200]) {
+      let actions = segmenter.append(chunk)
+      receivedByteCount += chunk.count
+      sentByteCount += segments(of: actions).reduce(0) { $0 + $1.count }
+      cutCount += actions.filter { $0 == .cut }.count
+      maximumHeldBack = max(maximumHeldBack, receivedByteCount - sentByteCount)
+    }
+    return (seconds(maximumHeldBack / 2), cutCount)
+  }
+
   @Test func noCutBeforeTwentySeconds() {
-    let recording = TestRecording(duration: 30, pauses: [5 ..< 6, 12 ..< 14, 19 ..< 19.9, 24 ..< 25])
+    let recording = TestRecording(duration: 30, pauses: [5 ..< 8.5, 12 ..< 15.5, 19 ..< 19.9, 24 ..< 27.5])
 
     let result = segment(recording)
 
@@ -35,7 +51,7 @@ struct AudioSegmenterTests {
   }
 
   @Test func shortDictationIsOneSegmentWithoutDetector() {
-    let recording = TestRecording(duration: 15, pauses: [5 ..< 7])
+    let recording = TestRecording(duration: 15, pauses: [5 ..< 9])
 
     let result = segment(recording)
 
@@ -51,8 +67,16 @@ struct AudioSegmenterTests {
     #expect(result.segments == [recording.pcm])
   }
 
-  @Test func cutLandsInsideThePause() {
-    let recording = TestRecording(duration: 40, pauses: [25 ..< 25.8])
+  @Test func pausesBetweenSentencesDoNotCut() {
+    let recording = TestRecording(duration: 40, pauses: [22 ..< 23, 26 ..< 28, 31 ..< 32.9])
+
+    let result = segment(recording)
+
+    #expect(result.segments == [recording.pcm])
+  }
+
+  @Test func threeSecondPauseAfterSpeechCutsInsideIt() {
+    let recording = TestRecording(duration: 40, pauses: [25 ..< 28])
 
     let result = segment(recording)
 
@@ -61,17 +85,53 @@ struct AudioSegmenterTests {
     #expect(cuts.allSatisfy { recording.pauseSamples[0].contains($0) })
   }
 
-  @Test func eachSegmentLastsAtLeastTwentySeconds() {
-    let recording = TestRecording(duration: 70, pauses: [22 ..< 23, 30 ..< 31, 44 ..< 45, 60 ..< 61])
+  @Test func speechFadingOutBeforeThePauseStillCuts() {
+    let recording = TestRecording(duration: 40, pauses: [25.5 ..< 29], unclear: [25 ..< 25.5])
 
     let result = segment(recording)
 
     let cuts = cutPositions(of: result.segments)
-    #expect(cuts.map { Int(seconds($0)) } == [22, 44])
+    #expect(cuts.count == 1)
+    #expect(cuts.allSatisfy { recording.pauseSamples[0].contains($0) })
+  }
+
+  @Test func ambiguousWindowsDoNotCountAsAPause() {
+    let longUnclear = TestRecording(duration: 40, pauses: [], unclear: [25 ..< 29])
+    let brokenPause = TestRecording(duration: 40, pauses: [25 ..< 26.5, 27 ..< 28.6], unclear: [26.5 ..< 27])
+
+    #expect(segment(longUnclear).segments == [longUnclear.pcm])
+    #expect(segment(brokenPause).segments == [brokenPause.pcm])
+  }
+
+  @Test func silenceNotPrecededByConfidentSpeechDoesNotCut() {
+    let recording = TestRecording(duration: 40, pauses: [25 ..< 29], unclear: [0 ..< 40])
+
+    let result = segment(recording)
+
+    #expect(result.segments == [recording.pcm])
+  }
+
+  @Test func loudAudioClassifiedAsSilenceDoesNotCut() {
+    let recording = TestRecording(duration: 40, pauses: [], missedSpeech: [25 ..< 29])
+
+    let result = segment(recording)
+
+    #expect(result.segments == [recording.pcm])
+  }
+
+  @Test func eachSegmentLastsAtLeastTwentySeconds() {
+    let recording = TestRecording(duration: 75, pauses: [22 ..< 25.5, 30 ..< 33.5, 50 ..< 53.5, 60 ..< 63.5])
+
+    let result = segment(recording)
+
+    let cuts = cutPositions(of: result.segments)
+    #expect(cuts.count == 2)
+    #expect(recording.pauseSamples[0].contains(cuts[0]))
+    #expect(recording.pauseSamples[2].contains(cuts[1]))
   }
 
   @Test func everyByteGoesToExactlyOneSegment() {
-    let recording = TestRecording(duration: 90, pauses: [21 ..< 22, 43 ..< 44, 70 ..< 71])
+    let recording = TestRecording(duration: 90, pauses: [21 ..< 24.5, 45 ..< 48.5, 70 ..< 73.5])
 
     for chunkSizes in [Self.captureChunkSizes, [32], [7_998, 30_002], [recording.pcm.count]] {
       let result = segment(recording, chunkSizes: chunkSizes)
@@ -82,7 +142,7 @@ struct AudioSegmenterTests {
   }
 
   @Test func wholeRecordingInOneChunkIsCutLikeAStream() {
-    let recording = TestRecording(duration: 90, pauses: [21 ..< 22, 43 ..< 44, 70 ..< 71])
+    let recording = TestRecording(duration: 90, pauses: [21 ..< 24.5, 45 ..< 48.5, 70 ..< 73.5])
 
     let streamed = segment(recording)
     let atOnce = segment(recording, chunkSizes: [recording.pcm.count])
@@ -91,7 +151,7 @@ struct AudioSegmenterTests {
   }
 
   @Test func withoutDetectorTheRecordingIsOneSegment() {
-    let recording = TestRecording(duration: 40, pauses: [25 ..< 26])
+    let recording = TestRecording(duration: 40, pauses: [25 ..< 29])
     var segmenter = AudioSegmenter(makeDetector: { nil })
 
     var actions: [AudioSegmenter.Action] = []
@@ -103,16 +163,17 @@ struct AudioSegmenterTests {
     #expect(segments(of: actions + segmenter.finish()) == [recording.pcm])
   }
 
-  @Test func holdsBackUnderASecondWhileSearching() {
-    let recording = TestRecording(duration: 40, pauses: [])
-    var segmenter = AudioSegmenter(makeDetector: FakeDetectorFactory(recording: recording).make)
+  @Test func holdsBackUnderASecondDuringSpeech() {
+    let result = heldBackSeconds(TestRecording(duration: 40, pauses: []))
 
-    var sentByteCount = 0
-    for chunk in chunked(recording.pcm, sizes: [3_200]) {
-      sentByteCount += segments(of: segmenter.append(chunk)).reduce(0) { $0 + $1.count }
-    }
+    #expect(result.maximum < 1)
+  }
 
-    let heldBackSeconds = seconds((recording.pcm.count - sentByteCount) / 2)
-    #expect(heldBackSeconds < 1)
+  @Test func holdsBackAPossiblePauseUntilItIsClassified() {
+    let result = heldBackSeconds(TestRecording(duration: 40, pauses: [25 ..< 27.9]))
+
+    #expect(result.cutCount == 0)
+    #expect(result.maximum > 2.5)
+    #expect(result.maximum < 4)
   }
 }

@@ -2,38 +2,47 @@ import Foundation
 import os
 @testable import L_Alfred
 
-/// A recording described by its pauses; every other sample is speech.
+/// A recording described by its pauses; every other sample is speech. `unclear` stretches are quiet
+/// but classified as neither speech nor silence; `missedSpeech` stretches are loud but classified as
+/// silence. All ranges are in seconds.
 struct TestRecording {
   static let rate = TranscriptionAudio.sampleRate
 
   let duration: Double
-  /// Pauses as ranges of seconds.
   let pauses: [Range<Double>]
+  var unclear: [Range<Double>] = []
+  var missedSpeech: [Range<Double>] = []
 
   var sampleCount: Int { Int(duration * Double(Self.rate)) }
 
-  var pauseSamples: [Range<Int>] {
-    pauses.map { Int($0.lowerBound * Double(Self.rate)) ..< Int($0.upperBound * Double(Self.rate)) }
+  var pauseSamples: [Range<Int>] { pauses.map(Self.samples) }
+
+  private static func samples(_ seconds: Range<Double>) -> Range<Int> {
+    Int(seconds.lowerBound * Double(rate)) ..< Int(seconds.upperBound * Double(rate))
   }
 
-  func hasSpeech(in range: Range<Int>) -> Bool {
-    !pauseSamples.contains { $0.contains(range.lowerBound) && range.upperBound <= $0.upperBound }
+  /// 0.1 inside a pause or missed speech, 0.5 touching an unclear stretch, 0.9 otherwise.
+  func speechConfidence(in range: Range<Int>) -> Double {
+    let silent = (pauses + missedSpeech).map(Self.samples)
+    if silent.contains(where: { $0.contains(range.lowerBound) && range.upperBound <= $0.upperBound }) { return 0.1 }
+    if unclear.map(Self.samples).contains(where: { $0.overlaps(range) }) { return 0.5 }
+    return 0.9
   }
 
-  /// Loud square wave for speech, faint noise in pauses.
+  /// Loud square wave for speech, faint noise in pauses and unclear stretches.
   var pcm: Data {
-    let pauses = pauseSamples
+    let quiet = (pauses + unclear).map(Self.samples)
     var samples = [Int16](repeating: 0, count: sampleCount)
     for index in samples.indices {
-      let isPause = pauses.contains { $0.contains(index) }
-      samples[index] = isPause ? Int16(index % 7) - 3 : (index % 40 < 20 ? 8_000 : -8_000)
+      let isQuiet = quiet.contains { $0.contains(index) }
+      samples[index] = isQuiet ? Int16(index % 7) - 3 : (index % 40 < 20 ? 8_000 : -8_000)
     }
     return samples.withUnsafeBytes { Data($0) }
   }
 }
 
 /// Classifies like the SoundAnalysis detector: 0.5 s windows every 0.25 s from the first sample fed,
-/// each returned once all of its audio arrived. Speech comes from the recording's description.
+/// each returned once all of its audio arrived. Confidences come from the recording's description.
 final class FakeVoiceActivityDetector: VoiceActivityDetecting {
   static let windowLength = 8_000
   static let hop = 4_000
@@ -58,7 +67,7 @@ final class FakeVoiceActivityDetector: VoiceActivityDetecting {
     var windows: [SpeechWindow] = []
     while nextWindowStart + Self.windowLength <= fedEnd {
       let range = nextWindowStart ..< nextWindowStart + Self.windowLength
-      windows.append(SpeechWindow(samples: range, speechConfidence: recording.hasSpeech(in: range) ? 0.9 : 0.1))
+      windows.append(SpeechWindow(samples: range, speechConfidence: recording.speechConfidence(in: range)))
       nextWindowStart += Self.hop
     }
     return windows

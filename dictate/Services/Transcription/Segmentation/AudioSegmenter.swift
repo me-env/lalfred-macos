@@ -1,9 +1,10 @@
 import Foundation
 
 
-/// Splits a recording into segments cut at pauses, at least `minimumSegmentDuration` long.
-/// Audio passes straight through until then; after it, audio is held back until the detector has
-/// classified it, so a cut can still land in it.
+/// Splits a recording into segments cut in clear pauses (see `PauseTracker`), at least
+/// `minimumSegmentDuration` long. Audio passes straight through until then; after it, audio is held
+/// back until the detector has classified it and it can no longer be part of a pause, so a cut can
+/// still land in it.
 nonisolated struct AudioSegmenter {
   enum Action: Equatable {
     /// Audio for the current segment.
@@ -19,6 +20,7 @@ nonisolated struct AudioSegmenter {
   /// Nil when no detector can be created; the recording is then never cut.
   private let makeDetector: () -> VoiceActivityDetecting?
   private var detector: VoiceActivityDetecting?
+  private var pauseTracker = PauseTracker()
   private var isDetectorUnavailable = false
   private var segmentStart = 0
   /// End of the audio sent to the current segment.
@@ -46,11 +48,11 @@ nonisolated struct AudioSegmenter {
       }
 
       let windows = analyzeUnseenAudio(with: detector)
-      guard let cut = PauseCutPoint.find(in: windows, audio: heldBack, audioStart: sentEnd) else {
-        // Audio before the latest window's start can't be in a window still to come.
-        actions += send(upTo: windows.last?.samples.lowerBound ?? sentEnd)
+      guard let pause = firstPause(in: windows) else {
+        actions += send(upTo: releasableEnd(after: windows))
         return actions
       }
+      let cut = PauseCutPoint.quietestFrameCenter(in: pause.clamped(to: sentEnd ..< receivedEnd), audio: heldBack, audioStart: sentEnd)
       actions += send(upTo: cut)
       actions.append(.cut)
       startSegment(at: cut)
@@ -80,6 +82,21 @@ nonisolated struct AudioSegmenter {
     return windows
   }
 
+  private mutating func firstPause(in windows: [SpeechWindow]) -> Range<Int>? {
+    for window in windows {
+      let energy = PauseCutPoint.meanEnergy(of: window.samples, audio: heldBack, audioStart: sentEnd)
+      if let pause = pauseTracker.pause(after: window, energy: energy) { return pause }
+    }
+    return nil
+  }
+
+  /// Audio before the latest window's start can't be in a window still to come, nor audio before
+  /// the silence that may become a pause.
+  private func releasableEnd(after windows: [SpeechWindow]) -> Int {
+    let classifiedEnd = windows.last?.samples.lowerBound ?? sentEnd
+    return min(classifiedEnd, pauseTracker.silence?.lowerBound ?? classifiedEnd)
+  }
+
   /// Sends the held-back audio before `position`, as far as it was received.
   private mutating func send(upTo position: Int) -> [Action] {
     let end = min(position, receivedEnd)
@@ -94,6 +111,7 @@ nonisolated struct AudioSegmenter {
   private mutating func startSegment(at position: Int) {
     segmentStart = position
     detector = nil
+    pauseTracker = PauseTracker()
   }
 
   /// Offset in `heldBack` of the sample at recording `position`.

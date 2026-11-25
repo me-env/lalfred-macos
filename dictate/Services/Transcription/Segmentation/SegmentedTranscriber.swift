@@ -15,6 +15,8 @@ nonisolated struct SegmentedTranscriber {
 
   let transcribeSegment: SegmentTranscription
   let makeDetector: @Sendable () -> VoiceActivityDetecting?
+  /// Words that keep their capital where a segment continues the previous one's sentence.
+  let properNouns: Set<String>
 
   /// Throws the recording's error, or the first failed segment's; the other requests are then cancelled.
   @concurrent
@@ -64,6 +66,6 @@ nonisolated struct SegmentedTranscriber {
     for try await result in requests {
       texts[result.index] = result.text
     }
-    return TranscriptJoiner.join(texts.sorted { $0.key < $1.key }.map(\.value))
+    return TranscriptJoiner.join(texts.sorted { $0.key < $1.key }.map(\.value), properNouns: properNouns)
   }
 }

@@ -15,7 +15,8 @@ func runTransformationPipeline(audio: AsyncThrowingStream<Data, Error>) async th
     transcribeSegment: { @MainActor segment in
       try await audioTranscriber.transcribeAudio(segment, keyterms: keyterms)
     },
-    makeDetector: { try? SoundAnalysisVoiceActivityDetector() }
+    makeDetector: { try? SoundAnalysisVoiceActivityDetector() },
+    properNouns: capitalizedWords(of: keyTermsStore.load())
   )
   let transcript = try await segmentedTranscriber.transcribe(audio)
 
@@ -28,6 +29,11 @@ func runTransformationPipeline(recordedAudio: Data) async throws -> String {
     continuation.finish()
   }
   return try await runTransformationPipeline(audio: audio)
+}
+
+/// The capitalized words of the user's dictionary terms: "Claude" and "Code" in "Claude Code".
+private func capitalizedWords(of terms: [String]) -> Set<String> {
+  Set(terms.flatMap { $0.split(whereSeparator: \.isWhitespace) }.filter { $0.first?.isUppercase == true }.map(String.init))
 }
 
 private func makeAudioTranscriber(settings: TranscriptionSettings) -> STTProvider {
