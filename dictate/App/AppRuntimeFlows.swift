@@ -9,37 +9,32 @@ struct ListeningFlowHandler {
   let deactivateListeningHotKeys: () -> Void
   
   /// Starts recording and the transcription request, which receives audio while the user speaks.
-  func beginListening(
-    sessionState: inout DictationSessionStateMachine,
-    errorMessage: (Error) -> String
-  ) -> Task<String, Error>? {
-    guard sessionState.state == .idle else { return nil }
-
+  /// Takes no session state: the recording service may call back into its owner while starting.
+  func startListening(errorMessage: (Error) -> String) -> Task<String, Error>? {
     do {
       let audio = try recordingService.startRecording()
-      let transcription = Task { try await runTransformationPipeline(audio: audio) }
-      _ = sessionState.transitionToListening()
-      activateListeningHotKeys()
-      if recordingService.isInputReady {
-        indicator.showListening()
-      } else {
-        indicator.showPreparing()
-      }
-      return transcription
+      return Task { try await runTransformationPipeline(audio: audio) }
     } catch {
       indicator.showStatus(message: errorMessage(error), autoHideAfter: 2.2)
       return nil
     }
   }
-  
-  func cancelListeningIfNeeded(sessionState: inout DictationSessionStateMachine) {
-    guard sessionState.isListening else { return }
+
+  func showListening() {
+    activateListeningHotKeys()
+    if recordingService.isInputReady {
+      indicator.showListening()
+    } else {
+      indicator.showPreparing()
+    }
+  }
+
+  func cancelListening() {
     recordingService.cancelRecording()
-    sessionState.transitionToIdle()
     deactivateListeningHotKeys()
     indicator.hideIndicator()
   }
-  
+
 }
 
 @MainActor

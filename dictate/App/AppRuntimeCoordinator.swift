@@ -10,7 +10,7 @@ final class AppRuntimeCoordinator {
   private let recordingService: AudioRecordingServicing
   private let lastRecording = LastRecordingStore()
 
-  private var sessionState = DictationSessionStateMachine()
+  private(set) var sessionState = DictationSessionStateMachine()
   private var pendingTranscription: Task<String, Error>?
   private var processingTask: Task<Void, Never>?
   private var processingStartDate: Date = .distantPast
@@ -25,6 +25,9 @@ final class AppRuntimeCoordinator {
   private var escapeHotKeyMonitor: CarbonHotKeyMonitor?
 
   private var shortcutCaptureObserver: NSObjectProtocol?
+#if DEBUG
+  private var debugCommandObserver: NSObjectProtocol?
+#endif
   private var isShortcutCaptureActive = false
   private var isHoldToSpeakActive = false
   private var lastPressDate: Date = .distantPast
@@ -61,15 +64,23 @@ final class AppRuntimeCoordinator {
     self.indicator = indicator ?? IndicatorPanelController()
     self.pasteService = pasteService ?? PasteAtCursorService()
     self.recordingService = recordingService ?? AudioRecordingService()
+    registerRecordingServiceCallbacks()
   }
 
   deinit {
     if let shortcutCaptureObserver {
       NotificationCenter.default.removeObserver(shortcutCaptureObserver)
     }
+#if DEBUG
+    if let debugCommandObserver {
+      NotificationCenter.default.removeObserver(debugCommandObserver)
+    }
+#endif
   }
 
-  private func registerAudioLevelUpdateCallback() {
+  /// Never mutate `sessionState` across a call into a service, not even through `inout`: a service
+  /// call can reach these callbacks, which read it, and Swift aborts on the overlapping access.
+  private func registerRecordingServiceCallbacks() {
     recordingService.onAudioLevelUpdate = { [weak self] level in
       guard let self, self.sessionState.isListening else { return }
       self.indicator.updateListeningLevel(CGFloat(level))
@@ -103,8 +114,6 @@ final class AppRuntimeCoordinator {
       return
     }
 
-    registerAudioLevelUpdateCallback()
-
     let toggleMonitor = UnifiedShortcutMonitor(
       store: shortcuts.toggleRecording,
       onKeyDown: { [weak self] in self?.handleShortcutPress() }
@@ -132,6 +141,10 @@ final class AppRuntimeCoordinator {
       onKeyDown: { [weak self] in self?.handleEscapePress() }
     )
 
+#if DEBUG
+    observeDebugDictationCommands()
+#endif
+
     shortcutCaptureObserver = NotificationCenter.default.addObserver(
       forName: .shortcutCaptureStateDidChange,
       object: nil,
@@ -149,7 +162,11 @@ final class AppRuntimeCoordinator {
 
   private func handleShortcutPress() {
     guard !isDebouncedPress() else { return }
+    toggleDictation()
+  }
 
+  /// What the recording shortcut does: start, stop and process, or cancel processing.
+  func toggleDictation() {
     switch sessionState.state {
     case .idle:
       beginListening()
@@ -172,10 +189,16 @@ final class AppRuntimeCoordinator {
 
   private func handleEscapePress() {
     isHoldToSpeakActive = false
+    cancelDictation()
+  }
+
+  /// Throws the current dictation away.
+  func cancelDictation() {
     guard sessionState.isListening else { return }
     pendingTranscription?.cancel()
     pendingTranscription = nil
-    listeningFlow.cancelListeningIfNeeded(sessionState: &sessionState)
+    sessionState.transitionToIdle()
+    listeningFlow.cancelListening()
   }
 
   private func handleShortcutCaptureStateChange(_ isCapturing: Bool) {
@@ -288,15 +311,13 @@ final class AppRuntimeCoordinator {
   }
 
   private func beginListening() {
+    guard sessionState.state == .idle else { return }
     hasPlayedStartSound = false
     wasCaptureLost = false
-    let transcription = listeningFlow.beginListening(
-      sessionState: &sessionState,
-      errorMessage: Self.errorMessage(for:)
-    )
-    if let transcription {
-      pendingTranscription = transcription
-    }
+    guard let transcription = listeningFlow.startListening(errorMessage: Self.errorMessage(for:)) else { return }
+    _ = sessionState.transitionToListening()
+    pendingTranscription = transcription
+    listeningFlow.showListening()
   }
 
   /// `NSSound.play()` can block the main thread, so it waits for the indicator to be drawn first.
@@ -308,3 +329,37 @@ final class AppRuntimeCoordinator {
     }
   }
 }
+
+#if DEBUG
+extension Notification.Name {
+  /// Posted for `lalfred://debug/start` and `lalfred://debug/cancel`; the object is the command.
+  static let debugDictationCommand = Notification.Name("fr.lalfred.dictate.debugDictationCommand")
+}
+
+/// Lets `ci/smoke-test.sh` drive real dictations of a Debug build, with the real microphone.
+extension AppRuntimeCoordinator {
+  fileprivate func observeDebugDictationCommands() {
+    debugCommandObserver = NotificationCenter.default.addObserver(
+      forName: .debugDictationCommand,
+      object: nil,
+      queue: .main
+    ) { [weak self] notification in
+      let command = notification.object as? String
+      Task { @MainActor [weak self] in
+        self?.runDebugDictationCommand(command)
+      }
+    }
+  }
+
+  private func runDebugDictationCommand(_ command: String?) {
+    switch command {
+    case "start" where sessionState.state == .idle:
+      toggleDictation()
+    case "cancel":
+      cancelDictation()
+    default:
+      break
+    }
+  }
+}
+#endif

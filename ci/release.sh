@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Local helper to cut a new release.
 #
-# Usage: ./ci/release.sh <version> [--yes|-y]
+# Usage: ./ci/release.sh <version> [--yes|-y] [--skip-smoke]
 #   e.g. ./ci/release.sh 1.16.6
 #        ./ci/release.sh 1.16.6 --yes
 #
@@ -15,9 +15,11 @@ set -euo pipefail
 #      it wasn't bumped past the currently published build (same check that
 #      `ci/check-build-bump.sh` does in CI, but earlier — before the tag is
 #      pushed and CI is spent).
-#   4. Prints a summary of what's about to happen and asks for confirmation
+#   4. Runs the unit tests (ci/test.sh) and refuses to tag if any fails, or
+#      if ci/smoke-test.sh hasn't passed on this commit (skip: --skip-smoke).
+#   5. Prints a summary of what's about to happen and asks for confirmation
 #      (skip with --yes / -y).
-#   5. Creates an annotated tag `v<version>` and pushes it.
+#   6. Creates an annotated tag `v<version>` and pushes it.
 #
 # CI takes over from there: builds, signs, notarizes, uploads to Scaleway,
 # then creates the GitHub Release with an AI-generated one-line summary
@@ -25,13 +27,17 @@ set -euo pipefail
 
 VERSION=""
 ASSUME_YES=0
+SKIP_SMOKE=0
 for arg in "$@"; do
   case "${arg}" in
     -y|--yes)
       ASSUME_YES=1
       ;;
+    --skip-smoke)
+      SKIP_SMOKE=1
+      ;;
     -h|--help)
-      sed -n '4,22p' "$0" | sed 's/^# \{0,1\}//'
+      sed -n '4,24p' "$0" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     -*)
@@ -122,6 +128,25 @@ if [ -n "${REMOTE_JSON}" ]; then
   fi
 fi
 
+# --- Unit tests must pass ---
+# CI runs them again before publishing; failing here saves a tag and a CI run.
+TEST_LOG="build/release-tests.log"
+mkdir -p build
+echo "==> Running unit tests (log: ${TEST_LOG})"
+if ! ./ci/test.sh > "${TEST_LOG}" 2>&1; then
+  grep -E "error:|failed" "${TEST_LOG}" | tail -20 >&2
+  echo "ERROR: unit tests failed — not tagging." >&2
+  exit 1
+fi
+
+# --- Smoke test with the real microphone must have passed on this commit ---
+if [ "${SKIP_SMOKE}" -eq 1 ]; then
+  echo "WARNING: --skip-smoke: releasing without a smoke test on the real microphone." >&2
+elif [ ! -f "build/smoke-passed-$(git rev-parse HEAD)" ]; then
+  echo "ERROR: no smoke test passed on this commit. Run ./ci/smoke-test.sh first" >&2
+  echo "       (or pass --skip-smoke to release anyway)." >&2
+  exit 1
+fi
 
 # --- Confirmation ---
 # Show what's about to happen, including the commits that will become the

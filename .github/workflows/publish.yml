@@ -13,8 +13,13 @@ permissions:
   contents: write  # needed to create the GitHub Release and upload assets
 
 jobs:
+  test:
+    # A tag never ships without passing tests.
+    uses: ./.github/workflows/test.yml
+
   build:
     name: Build & sign macOS app
+    needs: test
     runs-on: macos-latest
     environment: prod
 

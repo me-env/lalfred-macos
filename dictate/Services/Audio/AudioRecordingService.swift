@@ -184,6 +184,8 @@ final class AudioRecordingService {
     captureGeneration += 1
     captureSession = nil
     isRecording = false
+    // Every recording starts from the same readiness, whatever the previous one ended with.
+    isInputReady = false
   }
 
   private func stopDeviceCapture() {
@@ -207,13 +209,22 @@ final class AudioRecordingService {
     setInputReady(true)
     guard !hasSignaledInputLive else { return }
     hasSignaledInputLive = true
-    onInputLive?()
+    notify { $0.onInputLive?() }
   }
 
   private func setInputReady(_ isReady: Bool) {
     guard isInputReady != isReady else { return }
     isInputReady = isReady
-    onInputReadinessChange?(isReady)
+    notify { $0.onInputReadinessChange?(isReady) }
+  }
+
+  /// Callbacks run on their own main-queue turn, never inside a call into this service, so the
+  /// owner is never re-entered while it is changing its own state.
+  private func notify(_ deliver: @escaping (AudioRecordingService) -> Void) {
+    DispatchQueue.main.async { [weak self] in
+      guard let self else { return }
+      deliver(self)
+    }
   }
 
   // MARK: - Disruptions and recovery
@@ -293,7 +304,7 @@ final class AudioRecordingService {
     activeMicrophone = nil
     stopWatchdog()
     session.forceFinish()
-    onCaptureLost?()
+    notify { $0.onCaptureLost?() }
   }
 
   // MARK: - Preconditions

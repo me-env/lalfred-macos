@@ -107,6 +107,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     case "main":
       // Handled by the Window scene via `.handlesExternalEvents(matching:)`.
       break
+#if DEBUG
+    case "debug":
+      NotificationCenter.default.post(name: .debugDictationCommand, object: url.lastPathComponent)
+#endif
     default:
       logger.error("unknown lalfred host: \(host, privacy: .public)")
     }

@@ -1,6 +1,7 @@
 import Foundation
 import CoreGraphics
 
+/// Callbacks are delivered on a later main-queue turn, never from inside a call to the service.
 protocol AudioRecordingServicing: AnyObject {
     var onAudioLevelUpdate: ((Float) -> Void)? { get set }
     /// Called when the microphone becomes ready, or stops being ready while the capture restarts.

@@ -21,17 +21,17 @@ struct UserFacingErrorMessageTests {
 
   @Test func cannotFindHostReturnsServerUnreachableMessage() {
     let error = URLError(.cannotFindHost)
-    #expect(UserFacingErrorMessage.format(error) == "Can't reach Lalfred server")
+    #expect(UserFacingErrorMessage.format(error) == "Can't reach the transcription service")
   }
 
   @Test func dnsLookupFailedReturnsServerUnreachableMessage() {
     let error = URLError(.dnsLookupFailed)
-    #expect(UserFacingErrorMessage.format(error) == "Can't reach Lalfred server")
+    #expect(UserFacingErrorMessage.format(error) == "Can't reach the transcription service")
   }
 
   @Test func cannotConnectToHostReturnsServerUnreachableMessage() {
     let error = URLError(.cannotConnectToHost)
-    #expect(UserFacingErrorMessage.format(error) == "Can't reach Lalfred server")
+    #expect(UserFacingErrorMessage.format(error) == "Can't reach the transcription service")
   }
 
   @Test func secureConnectionFailedReturnsTLSMessage() {
