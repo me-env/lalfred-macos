@@ -71,4 +71,9 @@ struct KeyTermsStore {
   func keyTermsForRequest() -> [String] {
     Array(load().suffix(Self.maxRequestTerms))
   }
+
+  /// The capitalized words of the terms: "Claude" and "Code" in "Claude Code".
+  func capitalizedWords() -> Set<String> {
+    Set(load().flatMap { $0.split(whereSeparator: \.isWhitespace) }.filter { $0.first?.isUppercase == true }.map(String.init))
+  }
 }

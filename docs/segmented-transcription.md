@@ -36,10 +36,13 @@ last segment (at most about 20 s of audio) is still waiting for its text.
    because it started a request. When the text so far doesn't end with sentence punctuation
    (`.` `?` `!` `…` and CJK `。` `？` `！`, possibly followed by a closing quote or bracket), the
    joined segment's first letter is lowercased, unless its first word keeps its capital anywhere in
-   a sentence: an all-caps word or acronym ("OK", "API"), "I" and its contractions ("I'm"), a word of
-   the user's dictionary terms, or a name the on-device `NLTagger` (`.nameType`, run on the segment
-   alone) tags as a person, place or organization. The rules live in `SentenceContinuation`, shared
-   with `PasteTextTransformer`, which lowercases a dictation continuing the sentence at the cursor.
+   a sentence: an acronym, i.e. a word whose second letter is a capital too ("OK", "USA", "API"),
+   "I" alone or followed by an apostrophe ("I'm", "I’ll"), a word of the user's dictionary terms,
+   or a name the on-device `NLTagger` (`.nameType`, run on the segment alone) tags as a person,
+   place or organization. At the start of a sentence the text stays as transcribed. The rule lives in
+   `SentenceContinuation` and `PasteTextTransformer` applies the same one to a dictation pasted
+   after a sentence left unfinished at the cursor (where a `/` before the cursor also counts as a
+   start, as in a path or a slash command).
 
 ## Detector: SoundAnalysis
 

@@ -77,40 +77,34 @@ struct CursorTextContext: Equatable, Hashable {
 
 
 enum PasteTextTransformer {
+  /// A slash also starts the text anew, as in a path or a slash command.
   private static let sentenceTerminators = SentenceContinuation.sentenceTerminators.union(["/"])
   /// Characters that open a group and hug the text that follows, like "(hello".
   private static let openingCharacters: Set<Character> = ["(", "[", "{", "“", "‘"]
 
-  static func transform(_ text: String, context: CursorTextContext?) -> String {
+  /// `properNouns` are words that keep their capital when the text continues a sentence.
+  static func transform(_ text: String, context: CursorTextContext?, properNouns: Set<String> = []) -> String {
     logger.info("transform \(String(describing: context), privacy: .public)")
     
     guard !text.isEmpty, let context else { return text }
 
     var output = text
-    output = applyLowercaseIfContinuingSentence(output, context: context)
+    output = applyLowercaseIfContinuingSentence(output, context: context, properNouns: properNouns)
     output = applyLeadingSpaceIfTouchingPreviousWord(output, context: context)
     return output
   }
 
   private static func applyLowercaseIfContinuingSentence(
     _ text: String,
-    context: CursorTextContext
+    context: CursorTextContext,
+    properNouns: Set<String>
   ) -> String {
     guard let prevNonWS = context.previousNonWhitespaceCharacter,
           !context.hasLineBreakBeforeCursor,
-          !sentenceTerminators.contains(prevNonWS),
-          let firstChar = text.first,
-          firstChar.isUppercase else {
+          !sentenceTerminators.contains(prevNonWS) else {
       return text
     }
-    if startsWithOK(text) { return "ok" + text.dropFirst(2) }
-    return SentenceContinuation.lowercasingFirstLetter(of: text)
-  }
-
-  /// "OK" is the one all-caps word that should be lowercased as a whole ("ok", not "oK").
-  private static func startsWithOK(_ text: String) -> Bool {
-    guard text.hasPrefix("OK") else { return false }
-    return !(text.dropFirst(2).first?.isLetter ?? false)
+    return SentenceContinuation.continuingSentence(text, properNouns: properNouns)
   }
 
   private static func applyLeadingSpaceIfTouchingPreviousWord(

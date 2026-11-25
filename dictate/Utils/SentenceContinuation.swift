@@ -2,7 +2,8 @@ import Foundation
 import NaturalLanguage
 
 
-/// Capitalization of text that continues a sentence instead of starting one.
+/// Capitalization of text that continues a sentence instead of starting one, shared by the paste
+/// at the cursor and the join of segment transcripts.
 nonisolated enum SentenceContinuation {
   /// Punctuation that ends a sentence, Latin and CJK.
   static let sentenceTerminators: Set<Character> = [".", "!", "?", "…", "。", "！", "？", "．"]
@@ -23,11 +24,11 @@ nonisolated enum SentenceContinuation {
   }
 
   /// `text` lowercased at its start, unless its first word keeps its capital anywhere in a sentence:
-  /// an all-caps word or acronym, "I" and its contractions, or a proper noun.
+  /// an acronym ("OK", "USA"), "I" and its contractions, or a proper noun.
   static func continuingSentence(_ text: String, properNouns: Set<String> = []) -> String {
     let word = firstWord(of: text)
     guard word.first?.isUppercase == true,
-          !isAllCaps(word),
+          !isAcronym(word),
           !isFirstPersonPronoun(word),
           !properNouns.contains(String(word)),
           !isTaggedAsName(firstWordOf: text) else { return text }
@@ -39,9 +40,9 @@ nonisolated enum SentenceContinuation {
     text.prefix { $0.isLetter || apostrophes.contains($0) }
   }
 
-  private static func isAllCaps(_ word: Substring) -> Bool {
-    let letters = word.filter(\.isLetter)
-    return letters.count > 1 && letters.allSatisfy(\.isUppercase)
+  /// A word whose second letter is a capital too: "OK", "USA", "APIs".
+  private static func isAcronym(_ word: Substring) -> Bool {
+    word.dropFirst().first?.isUppercase == true
   }
 
   /// "I", "I'm", "I'll", "I’d"...

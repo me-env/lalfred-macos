@@ -43,7 +43,11 @@ struct PasteAtCursorService {
     var textToPaste = text
     if userDefaults.bool(forKey: AppDefaultsKey.smartPasteFormatting) {
       let report = cursorContextReader.readContext()
-      textToPaste = PasteTextTransformer.transform(text, context: report?.context)
+      textToPaste = PasteTextTransformer.transform(
+        text,
+        context: report?.context,
+        properNouns: KeyTermsStore(userDefaults: userDefaults).capitalizedWords()
+      )
       if let report { contextPasteHistory.record(report) }
       if textToPaste != text {
         logger.info("[PasteAtCursorService] Adapted text for cursor context: '\(textToPaste)'")

@@ -73,20 +73,34 @@ struct PasteTextTransformerTests {
     #expect(result == "Hello")
   }
 
-  @Test func lowercasesWholeOK() {
+  @Test(arguments: [
+    "OK, let's go",
+    "OKLAHOMA",
+    "USA today",
+    "API calls",
+    "I left",
+    "I'm here",
+    "I’ll go",
+    "Paris is nice",
+  ])
+  func keepsTheCapitalOfWordsCapitalizedMidSentence(text: String) {
     let result = PasteTextTransformer.transform(
-      "OK, let's go",
+      text,
       context: CursorTextContext(previousCharacter: " ", previousNonWhitespaceCharacter: ",")
     )
-    #expect(result == "ok, let's go")
+    #expect(result == text)
   }
 
-  @Test func lowercasesOnlyFirstLetterOfWordStartingWithOK() {
-    let result = PasteTextTransformer.transform(
-      "OKLAHOMA",
-      context: CursorTextContext(previousCharacter: " ", previousNonWhitespaceCharacter: ",")
-    )
-    #expect(result == "oKLAHOMA")
+  @Test func keepsTheCapitalOfProperNouns() {
+    let context = CursorTextContext(previousCharacter: " ", previousNonWhitespaceCharacter: "k")
+    #expect(PasteTextTransformer.transform("Lalfred knows", context: context, properNouns: ["Lalfred"]) == "Lalfred knows")
+    #expect(PasteTextTransformer.transform("Lalfred knows", context: context) == "lalfred knows")
+  }
+
+  @Test func lowercasesWordsWithALowercaseSecondLetter() {
+    let context = CursorTextContext(previousCharacter: " ", previousNonWhitespaceCharacter: ",")
+    #expect(PasteTextTransformer.transform("Ok, let's go", context: context) == "ok, let's go")
+    #expect(PasteTextTransformer.transform("It works", context: context) == "it works")
   }
 
   @Test func lowercasesWhenPreviousNonWhitespaceIsLetter() {
