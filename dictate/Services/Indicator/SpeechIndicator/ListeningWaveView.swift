@@ -3,9 +3,9 @@ import SwiftUI
 struct ListeningWaveView: View {
   let level: CGFloat
 
-  private let barWeights: [CGFloat] = [0.55, 0.8, 1.0, 1.0, 0.8, 0.55]
+  private let barWeights: [CGFloat] = [0.6, 0.85, 1.0, 1.0, 0.85, 0.6]
   private let minHeight: CGFloat = 3
-  private let maxHeight: CGFloat = 10
+  private let maxHeight: CGFloat = 13
 
   var body: some View {
     HStack(spacing: 3) {
