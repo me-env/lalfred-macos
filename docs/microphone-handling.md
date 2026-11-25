@@ -101,6 +101,30 @@ watchdog verdict ─────────────────────
 `ProcessingFlowHandler.performProcessing` gains `captureWasLost: Bool` and checks
 `RecordedAudio.isDigitallySilent` before awaiting the transcription.
 
+## Callbacks and session state
+
+v1.16.16 crashed on dictation start: the coordinator passed `sessionState` `inout` into the
+listening flow, which called `startRecording()`, whose readiness callback read `sessionState`, and
+Swift aborts on overlapping accesses. Two rules, the same ones FluidVoice, VoiceInk, Hex and Handy
+follow:
+
+1. The coordinator never mutates `sessionState` across a call into a service, `inout` included: it
+   calls the service, then changes its state.
+2. `AudioRecordingService` delivers every callback (`onInputReadinessChange`, `onInputLive`,
+   `onCaptureLost`) on a later main-queue turn (`notify`), never from inside a call to it.
+
+`DictationLifecycleTests` checks rule 1 with a fake service that breaks rule 2 on purpose (it calls
+back synchronously from inside every call), over several dictations in a row, cancel and lost
+capture. Each scenario runs in an exit test, so a violation fails that test instead of the run.
+
+## How it is tested
+
+- `ci/test.sh`: unit tests, run by CI on every push (`.github/workflows/test.yml`), required by the
+  publish workflow, and run by `release.sh` before tagging.
+- `ci/smoke-test.sh`: starts and cancels real dictations of a Debug build with the real microphone
+  (CI runners have none). `release.sh` refuses to tag a commit without a passing run, unless
+  `--skip-smoke`. Run it once per input device worth covering (built-in, Bluetooth, USB).
+
 ## Tests that must pass (`dictateTests`, Swift Testing)
 
 `MicrophoneSelectorTests`
