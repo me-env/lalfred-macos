@@ -6,6 +6,7 @@ set -euo pipefail
 #
 # The test host is signed ad hoc, so tests need no certificate. They never
 # touch the microphone: the dictation lifecycle runs against fake services.
+# SDK_STAT_CACHE_ENABLE=NO skips clang-stat-cache, which hangs when fseventsd is stuck.
 
 DERIVED_DATA="${DERIVED_DATA:-build/test-derived-data}"
 
@@ -18,4 +19,5 @@ xcodebuild test \
   CODE_SIGN_IDENTITY=- \
   CODE_SIGN_STYLE=Manual \
   DEVELOPMENT_TEAM= \
-  PROVISIONING_PROFILE_SPECIFIER=
+  PROVISIONING_PROFILE_SPECIFIER= \
+  SDK_STAT_CACHE_ENABLE=NO

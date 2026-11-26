@@ -28,7 +28,7 @@ rm -f build/smoke-passed-*
 
 echo "==> Building Debug app"
 xcodebuild build -project dictate.xcodeproj -scheme lalfred -configuration Debug \
-  -destination 'platform=macOS' -derivedDataPath "${DERIVED_DATA}" > build/smoke-build.log 2>&1 \
+  -destination 'platform=macOS' -derivedDataPath "${DERIVED_DATA}" SDK_STAT_CACHE_ENABLE=NO > build/smoke-build.log 2>&1 \
   || { tail -20 build/smoke-build.log >&2; echo "ERROR: build failed." >&2; exit 1; }
 
 INSTALLED_WAS_RUNNING=0
