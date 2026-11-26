@@ -18,7 +18,7 @@ set -euo pipefail
 DICTATIONS="${1:-10}"
 BUNDLE_ID="fr.lalfred.dictate"
 DERIVED_DATA="build/smoke-derived-data"
-APP="${DERIVED_DATA}/Build/Products/Debug/L'Alfred.app"
+APP="$(pwd)/${DERIVED_DATA}/Build/Products/Debug/L'Alfred.app"
 LOG="build/smoke-test.log"
 CRASH_REPORTS="${HOME}/Library/Logs/DiagnosticReports"
 COMMIT="$(git rev-parse HEAD)"
