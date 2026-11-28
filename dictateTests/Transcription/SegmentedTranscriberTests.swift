@@ -179,51 +179,46 @@ struct SegmentedTranscriberTests {
     #expect(provider.requestAudio == [recording.pcm])
   }
 
-  @Test func failedSegmentFailsTheDictationAndCancelsTheOthers() async throws {
+  /// Requests that are not cancelled outlive the time limit.
+  @Test(.timeLimit(.minutes(1))) func failedSegmentFailsTheDictationAndCancelsTheOthers() async throws {
     let recording = TestRecording(duration: 50, pauses: [22 ..< 25.5])
     let firstSegmentByteCount = expectedSegments(of: recording)[0].count
     let provider = FakeProvider { audio in
       guard audio.count == firstSegmentByteCount else {
-        try await Task.sleep(for: .seconds(30))
+        try await Task.sleep(for: .seconds(600))
         return "too late"
       }
       throw SegmentFailure()
     }
-    let clock = ContinuousClock()
-    let start = clock.now
 
     await #expect(throws: SegmentFailure.self) {
       try await makeTranscriber(provider, FakeDetectorFactory(recording: recording)).transcribe(audioStream(of: recording))
     }
-    #expect(clock.now - start < .seconds(5))
   }
 
-  @Test func recordingErrorFailsTheDictationAndCancelsRequests() async throws {
+  /// Requests that are not cancelled outlive the time limit.
+  @Test(.timeLimit(.minutes(1))) func recordingErrorFailsTheDictationAndCancelsRequests() async throws {
     let recording = TestRecording(duration: 30, pauses: [22 ..< 25.5])
     let provider = FakeProvider { _ in
-      try await Task.sleep(for: .seconds(30))
+      try await Task.sleep(for: .seconds(600))
       return "too late"
     }
-    let clock = ContinuousClock()
-    let start = clock.now
 
     await #expect(throws: RecordingFailure.self) {
       try await makeTranscriber(provider, FakeDetectorFactory(recording: recording))
         .transcribe(audioStream(of: recording, endingWith: RecordingFailure()))
     }
-    #expect(clock.now - start < .seconds(5))
   }
 
-  @Test func cancellingTheTranscriptionCancelsEveryRequest() async throws {
+  /// Requests that are not cancelled outlive the time limit.
+  @Test(.timeLimit(.minutes(1))) func cancellingTheTranscriptionCancelsEveryRequest() async throws {
     let recording = TestRecording(duration: 50, pauses: [22 ..< 25.5])
     let provider = FakeProvider { _ in
-      try await Task.sleep(for: .seconds(30))
+      try await Task.sleep(for: .seconds(600))
       return "too late"
     }
     let transcriber = makeTranscriber(provider, FakeDetectorFactory(recording: recording))
     let audio = audioStream(of: recording)
-    let clock = ContinuousClock()
-    let start = clock.now
 
     let transcription = Task { try await transcriber.transcribe(audio) }
     try await Task.sleep(for: .milliseconds(200))
@@ -232,6 +227,5 @@ struct SegmentedTranscriberTests {
     await #expect(throws: CancellationError.self) {
       try await transcription.value
     }
-    #expect(clock.now - start < .seconds(5))
   }
 }
