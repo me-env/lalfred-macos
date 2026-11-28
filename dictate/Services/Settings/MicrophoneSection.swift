@@ -45,13 +45,20 @@ struct MicrophoneSection: View {
 
   private var systemDefaultSettings: some View {
     VStack(alignment: .leading, spacing: 8) {
-      bluetoothAvoidanceToggle
+      if hasInternalMic {
+        bluetoothAvoidanceToggle
+      }
       if let microphoneInUse {
         Label("Records from \(microphoneInUse.name)", systemImage: MicrophonePriorityRow.symbolName(for: microphoneInUse))
           .font(.caption)
           .foregroundStyle(.secondary)
       }
     }
+  }
+
+  /// A Mac mini or Studio has no microphone of its own to fall back on.
+  private var hasInternalMic: Bool {
+    devices.contains { $0.isInternalMic }
   }
 
   private var bluetoothAvoidanceToggle: some View {
